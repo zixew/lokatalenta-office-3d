@@ -1,0 +1,26 @@
+{
+  "name": "lokatalenta-office-3d-e2e",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Opaque-box E2E test suite for LokaTalenta Multi-Repo Ecosystem & Multi-Floor 3D Office",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "playwright test",
+    "test:tier1": "playwright test --grep @tier1",
+    "test:tier2": "playwright test --grep @tier2",
+    "test:tier3": "playwright test --grep @tier3",
+    "test:tier4": "playwright test --grep @tier4",
+    "test:list": "playwright test --list",
+    "check:contracts": "node --experimental-strip-types helpers/contract-selfcheck.ts"
+  },
+  "dependencies": {
+    "ws": "^8.18.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.52.0",
+    "@types/node": "^22.15.0",
+    "@types/ws": "^8.5.14",
+    "typescript": "^5.8.2"
+  }
+}
