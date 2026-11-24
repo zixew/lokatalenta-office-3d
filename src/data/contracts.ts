@@ -161,27 +161,27 @@ export const AGENTS: readonly AgentProfile[] = [
     avatar: '💼',
     skills: {
       primary: [
-        'B2B Revenue & Monetization Strategy (96%)',
+        'Free-Access Community Growth (96%)',
         'Enterprise ATS Pipeline Sourcing (95%)',
-        'Midtrans Payment Gateway Architecture (94%)',
-        'Unit Economics & MRR Modeling (95%)',
+        'Open Institutional Onboarding (94%)',
+        'Adoption & Retention Modeling (95%)',
       ],
       stack: [
-        'Midtrans Snap API',
+        'Open-Access Telemetry',
         'Mixpanel Analytics',
         'PostgreSQL BI Queries',
         'Google Analytics 4',
-        'Stripe Billing Sandbox',
+        'Community Funnel Sandbox',
       ],
     },
     methodology: [
       'Product-Led Growth (PLG)',
-      'B2B SaaS Funnel Optimization',
+      'Open-Access Adoption Funnel',
       'Cohort Retention Analysis',
     ],
     certifications: [
-      'Chief Commercial Strategist',
-      'Reforge Growth & Monetization',
+      'Chief Community Growth Strategist',
+      'Reforge Product-Led Growth',
       'Certified Product Executive',
     ],
     avatarStyle: {

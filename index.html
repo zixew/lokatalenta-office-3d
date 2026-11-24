@@ -322,13 +322,41 @@
           </div>
 
           <!-- Quick Action Commands for Testing Interaction -->
-          <div class="mt-2.5 pt-2 border-t border-zinc-800/80 grid grid-cols-3 gap-1">
-            <button onclick="triggerAgentActivity(selectedAgent.id, 'coffee')" class="py-1 px-1 rounded bg-zinc-800 hover:bg-zinc-700 text-[10px] font-medium text-amber-200 transition">☕ Ke Kafe</button>
+          <div class="mt-2.5 pt-2 border-t border-zinc-800/80 grid grid-cols-4 gap-1">
+            <button onclick="triggerAgentActivity(selectedAgent.id, 'coffee')" class="py-1 px-1 rounded bg-zinc-800 hover:bg-zinc-700 text-[10px] font-medium text-amber-200 transition">☕ Kafe</button>
             <button onclick="triggerAgentActivity(selectedAgent.id, 'sholat')" class="py-1 px-1 rounded bg-zinc-800 hover:bg-zinc-700 text-[10px] font-medium text-emerald-200 transition">🕌 Sholat</button>
             <button onclick="triggerAgentActivity(selectedAgent.id, 'meeting')" class="py-1 px-1 rounded bg-zinc-800 hover:bg-zinc-700 text-[10px] font-medium text-indigo-200 transition">📊 Meeting</button>
-            <button onclick="triggerAgentActivity(selectedAgent.id, 'collaborate')" class="py-1 px-1 rounded bg-zinc-800 hover:bg-zinc-700 text-[10px] font-medium text-teal-200 transition">💬 Kolaborasi</button>
-            <button onclick="triggerAgentActivity(selectedAgent.id, 'gym')" class="py-1 px-1 rounded bg-zinc-800 hover:bg-zinc-700 text-[10px] font-medium text-cyan-200 transition">🏃 Ke Gym</button>
-            <button onclick="triggerAgentActivity(selectedAgent.id, 'work')" class="py-1 px-1 rounded bg-teal-950/80 hover:bg-teal-900 border border-teal-800 text-[10px] font-medium text-teal-300 transition">💻 Kerja</button>
+            <button onclick="triggerAgentActivity(selectedAgent.id, 'rest')" class="py-1 px-1 rounded bg-zinc-800 hover:bg-zinc-700 text-[10px] font-medium text-violet-200 transition">🛋️ Istirahat</button>
+            <button onclick="triggerAgentActivity(selectedAgent.id, 'collaborate')" class="py-1 px-1 rounded bg-zinc-800 hover:bg-zinc-700 text-[10px] font-medium text-teal-200 transition">💬 Kolab</button>
+            <button onclick="triggerAgentActivity(selectedAgent.id, 'gym')" class="py-1 px-1 rounded bg-zinc-800 hover:bg-zinc-700 text-[10px] font-medium text-cyan-200 transition">🏃 Gym</button>
+            <button onclick="triggerAgentActivity(selectedAgent.id, 'work')" class="col-span-2 py-1 px-1 rounded bg-teal-950/80 hover:bg-teal-900 border border-teal-800 text-[10px] font-medium text-teal-300 transition">💻 Kembali Kerja</button>
+          </div>
+        </div>
+
+        <!-- Human Needs, Physiological Meters & Mood HUD -->
+        <div class="mt-3 bg-zinc-900/90 p-2.5 rounded-xl border border-zinc-800">
+          <div class="flex items-center justify-between gap-2 mb-2">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-zinc-300">🧬 Kondisi & Emosi Manusiawi</span>
+            <span id="dossier-mood-badge" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">😌 Fokus</span>
+          </div>
+          <div id="dossier-traits" class="flex flex-wrap gap-1 mb-2.5"></div>
+          <div class="grid grid-cols-2 gap-x-3 gap-y-2 text-[10px] font-mono">
+            <div>
+              <div class="flex justify-between text-zinc-400 mb-0.5"><span>⚡ Energi</span><span id="need-energy-val" class="text-emerald-300 font-bold">85%</span></div>
+              <div class="w-full bg-zinc-800 rounded-full h-1.5"><div id="need-energy-bar" class="bg-emerald-400 h-1.5 rounded-full transition-all duration-300" style="width:85%"></div></div>
+            </div>
+            <div>
+              <div class="flex justify-between text-zinc-400 mb-0.5"><span>😴 Capai</span><span id="need-fatigue-val" class="text-amber-300 font-bold">25%</span></div>
+              <div class="w-full bg-zinc-800 rounded-full h-1.5"><div id="need-fatigue-bar" class="bg-amber-400 h-1.5 rounded-full transition-all duration-300" style="width:25%"></div></div>
+            </div>
+            <div>
+              <div class="flex justify-between text-zinc-400 mb-0.5"><span>🍔 Lapar</span><span id="need-hunger-val" class="text-orange-300 font-bold">35%</span></div>
+              <div class="w-full bg-zinc-800 rounded-full h-1.5"><div id="need-hunger-bar" class="bg-orange-400 h-1.5 rounded-full transition-all duration-300" style="width:35%"></div></div>
+            </div>
+            <div>
+              <div class="flex justify-between text-zinc-400 mb-0.5"><span>🥤 Haus</span><span id="need-thirst-val" class="text-sky-300 font-bold">30%</span></div>
+              <div class="w-full bg-zinc-800 rounded-full h-1.5"><div id="need-thirst-bar" class="bg-sky-400 h-1.5 rounded-full transition-all duration-300" style="width:30%"></div></div>
+            </div>
           </div>
         </div>
 
@@ -371,11 +399,22 @@
           </div>
         </div>
 
-        <div class="mt-3 pt-2.5 border-t border-zinc-800/80">
-          <span class="text-[11px] font-bold text-zinc-400 block mb-1">💡 Prinsip & Opini Kerja Anti-AI-Slop:</span>
-          <p id="dossier-opinion" class="text-xs italic text-zinc-300 border-l-2 border-teal-500 pl-2 py-0.5">
-            "Disiplin SDLC dan ketertelusuran dokumen adalah fondasi integritas rilis. DevOps dilarang deploy tanpa otorisasi sign-off tertulis resmi dari Team Leader."
-          </p>
+        <div class="mt-3 pt-2.5 border-t border-zinc-800/80 space-y-2.5">
+          <div>
+            <span class="text-[11px] font-bold text-zinc-400 block mb-1">💡 Prinsip & Opini Kerja Anti-AI-Slop:</span>
+            <p id="dossier-opinion" class="text-xs italic text-zinc-300 border-l-2 border-teal-500 pl-2 py-0.5">
+              "Disiplin SDLC dan ketertelusuran dokumen adalah fondasi integritas rilis."
+            </p>
+          </div>
+          <div class="bg-zinc-900/90 p-2.5 rounded-lg border border-amber-500/30">
+            <div class="flex items-center justify-between gap-2 mb-1">
+              <span class="text-[11px] font-mono font-bold text-amber-300">🧠 Opini Kritis Pribadi (Memajukan Project):</span>
+              <button onclick="cycleAgentCriticalThought(selectedAgent.id)" class="px-2 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-[10px] font-medium text-amber-200 border border-zinc-700 transition">🔄 Pendapat Lain</button>
+            </div>
+            <p id="dossier-critical-thought" class="text-xs text-zinc-100 leading-relaxed">
+              "Kita perlu memastikan semua jalur pengguna tetap 100% gratis tanpa paywall dan teruji ketat di viewport mobile."
+            </p>
+          </div>
         </div>
       </div>
 
@@ -500,7 +539,7 @@
         motto: "Integritas Tanpa Kompromi, Nilai Bisnis Berkelanjutan",
         targets: [
           { code: "GATE-01", text: "Otorisasi Dokumen & Release Sign-Off (Rizco Renova)", status: "APPROVED" },
-          { code: "BIZ-01", text: "B2B Midtrans Monetization & Enterprise Funnel (Bram)", status: "ACTIVE" },
+          { code: "FREE-01", text: "Akses Gratis 100% Tanpa Paywall & Adopsi Komunitas (Bram)", status: "ACTIVE" },
           { code: "PRD-15", text: "Finalisasi PRD ATS Kanban & PWA-01 iOS (Pranadipa)", status: "LOCKED" },
           { code: "SA-05", text: "State Machine Scoring Psikometri DISC & MBTI (Satria)", status: "IN_PROGRESS" }
         ]
@@ -698,43 +737,43 @@ export interface ReleaseGovernanceSignOff {
         pos: { x: -16.5, z: -14 },
         workload: 92,
         status: {
-          label: "Live Monetization Active",
+          label: "Free-Access Growth Active",
           tone: "emerald",
-          action: "Menyusun skema langganan korporat B2B untuk Recruiter Portal, kalkulasi kuota undangan asesmen per bulan, dan integrasi Payment Gateway Midtrans (Sprint 19).",
-          ticket: "BL-42 / BIZ-01",
+          action: "Mengawal adopsi gratis 100% tanpa paywall untuk kandidat, pendidik, dan Recruiter Portal, serta tata kelola kuota terbuka (fair-use) & kemitraan komunitas (FREE-01).",
+          ticket: "BL-42 / FREE-01",
           file: "docs/BACKLOG_AND_ROADMAP_ANALYSIS.md",
           collaborators: "Pranadipa Wicaksana (Product Owner), Maya Safitri (Recruiter POV)",
-          cleanArchReview: "Pemisahan domain billing enterprise dari core assessment engine; kepatuhan regulasi faktur pajak B2B.",
-          opinion: "HR enterprise membutuhkan visual yang bersih, tegas, dan padat informasi tanpa dekorasi gradien ungu murahan yang tidak fungsional.",
+          cleanArchReview: "Pemisahan domain community onboarding & fair-use quota dari core assessment engine; nol gerbang pembayaran atau paywall.",
+          opinion: "HR enterprise dan komunitas membutuhkan akses terbuka yang bersih, tegas, dan padat informasi tanpa dekorasi gradien ungu murahan maupun paywall.",
           ac: [
-            "Tersedia pemodelan kuota invite B2B berjenjang (50, 200, 500 invite/bln)",
-            "Kalkulasi ROI talent sourcing berbasis Radar 5D & Kraepelin terdokumentasi",
-            "Keselarasan proposal enterprise dengan regulasi rekrutmen mitra BUMN"
+            "Seluruh fitur asesmen, Radar 5D, dan Kraepelin 100% gratis tanpa paywall",
+            "Kalkulasi dampak adopsi komunitas berbasis Radar 5D & Kraepelin terdokumentasi",
+            "Keselarasan onboarding organisasi terbuka dengan regulasi mitra BUMN & kampus"
           ],
-          codeSnippet: `// B2B Pricing & Subscription Architecture
-export const B2B_SUBSCRIPTION_TIERS = {
-  STARTER: { invites: 50, priceIdr: 2500000, radar5D: true, kraepelin: true },
-  GROWTH:  { invites: 200, priceIdr: 7500000, customBranding: true, csvExport: true },
-  ENTERPRISE: { invites: 1000, priceIdr: 25000000, dedicatedSLA: true, atsSync: true }
+          codeSnippet: `// Open-Access Community & Fair-Use Quota Architecture (100% Free)
+export const FREE_ACCESS_QUOTAS = {
+  COMMUNITY: { invites: 50, priceIdr: 0, radar5D: true, kraepelin: true },
+  CAMPUS:    { invites: 200, priceIdr: 0, customBranding: true, csvExport: true },
+  PARTNER:   { invites: 1000, priceIdr: 0, dedicatedSLA: true, atsSync: true }
 };`
         },
         screen: {
-          file: "B2B_REVENUE.ts",
-          badge: "REVENUE METRICS",
+          file: "COMMUNITY_GROWTH.ts",
+          badge: "OPEN ADOPTION METRICS",
           lines: [
-            "// B2B_REVENUE_METRICS.ts",
-            "* Enterprise Clients: 14 Corporate Active",
-            "* Midtrans Gateway: Sprint 19 Architecture",
-            "* Candidate Sourcing ROI: +185% YoY",
-            "* License Quota: Multi-Tenant Active",
-            "➔ MRR Pipeline: Rp 175.000.000 / month"
+            "// COMMUNITY_ADOPTION_METRICS.ts",
+            "* Partner Orgs: 14 Community & BUMN Active",
+            "* Access Policy: 100% Free (Zero Paywall)",
+            "* Candidate Sourcing Reach: +185% YoY",
+            "* Fair-Use Quota: Multi-Tenant Active",
+            "➔ Active Learners: 12.500+ Monthly Free"
           ]
         },
         skills: {
-          primary: ['B2B Revenue & Monetization Strategy (96%)', 'Enterprise ATS Pipeline Sourcing (95%)', 'Midtrans Payment Gateway Architecture (94%)', 'Unit Economics & MRR Modeling (95%)'],
-          stack: ['Midtrans Snap API', 'Mixpanel Analytics', 'PostgreSQL BI Queries', 'Google Analytics 4', 'Stripe Billing'],
-          methodology: ['Product-Led Growth (PLG)', 'B2B SaaS Funnel Optimization', 'Cohort Retention Analysis'],
-          certifications: ['Chief Commercial Strategist', 'Reforge Growth & Monetization', 'Certified Product Executive']
+          primary: ['Free-Access Community Growth (96%)', 'Enterprise ATS Pipeline Sourcing (95%)', 'Open Institutional Onboarding (94%)', 'Adoption & Retention Modeling (95%)'],
+          stack: ['Open-Access Telemetry', 'Mixpanel Analytics', 'PostgreSQL BI Queries', 'Google Analytics 4', 'Community Funnel Sandbox'],
+          methodology: ['Product-Led Growth (PLG)', 'Open-Access Adoption Funnel', 'Cohort Retention Analysis'],
+          certifications: ['Chief Community Growth Strategist', 'Reforge Product-Led Growth', 'Certified Product Executive']
         },
         avatarStyle: { hair: 0x1e1e1e, skin: 0xf5d0b5, outfit: 0x1e3a8a, hairStyle: 'slick', accessory: 'tie' }
       },
@@ -1960,6 +1999,184 @@ export interface CandidateComparisonView {
     let clock = null;
     let agentAvatars = {};
 
+    // ─── HUMANIZED PERSONALITY, NEEDS, EMOTIONS & CRITICAL THINKING ENGINE ──────
+    const MOOD_META = {
+      senang: { label: '😊 Senang', cls: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' },
+      fokus:  { label: '😌 Fokus',  cls: 'bg-teal-500/20 text-teal-300 border-teal-500/40' },
+      kesal:  { label: '😤 Kesal',  cls: 'bg-rose-500/20 text-rose-300 border-rose-500/40' },
+      sedih:  { label: '😢 Sedih',  cls: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40' }
+    };
+
+    const ROLE_TRAITS = {
+      lead:    ['Tegas', 'Visioner', 'Kritis Gatekeeper'],
+      product: ['Analitis', 'Berorientasi Nilai', 'Fokus Gratis'],
+      tech:    ['Perfeksionis', 'Anti-Tech-Debt', 'Pragmatis'],
+      qa:      ['Skeptis Sehat', 'Detail-Oriented', 'Tanpa Kompromi'],
+      sec:     ['Paranoid Positif', 'Zero-Trust', 'Disiplin'],
+      ops:     ['Siaga Tinggi', 'Stabil', 'Otomatisasi-First'],
+      design:  ['Estetis', 'Anti-AI-Slop', 'Empatik'],
+      pov:     ['Suara Pengguna', 'Jujur', 'Praktis']
+    };
+
+    function buildCriticalThoughtsForAgent(agent) {
+      const cat = agent.category || 'tech';
+      const base = {
+        senang: [
+          `Semangat lagi tinggi! Menurut saya (${agent.name}), fokus gratis tanpa paywall membuat adopsi LokaTalenta jauh lebih inklusif.`,
+          `Energi penuh — saat yang tepat merapikan ${agent.status.file || 'modul inti'} agar performanya makin ngebut di HP maupun desktop.`
+        ],
+        fokus: [
+          `Sebagai ${agent.role}, saya menilai pengujian lintas 3 POV (Student, Recruiter/Mentor, Admin) wajib diperdalam sebelum rilis berikutnya.`,
+          `Kita harus menjaga konsistensi arsitektur dan 1 fitur = 1 general commit supaya riwayat ekosistem tetap bersih.`
+        ],
+        kesal: [
+          `Jujur agak kesal kalau melihat ada micro-commit menumpuk atau komponen UI yang tidak responsif di layar 375px. Ayo perbaiki tuntas!`,
+          `Kepala mulai panas karena lapar/capai — tapi tech debt ${agent.status.ticket} tidak boleh dibiarkan lolos ke produksi.`
+        ],
+        sedih: [
+          `Agak sedih melihat masih ada bagian UX yang terasa kaku untuk pengguna baru. Kita butuh lebih banyak empati pada alur mobile.`,
+          `Energi menurun... sebelum lanjut debugging berat, tim juga perlu ritme kerja yang manusiawi dan istirahat cukup.`
+        ]
+      };
+      if (cat === 'qa') {
+        base.kesal[0] = 'Saya paling kesal kalau fitur dinyatakan selesai tapi test case responsive & edge case 3 POV belum diuji kompleks!';
+      } else if (cat === 'design') {
+        base.kesal[0] = 'Desain AI-slop dengan gradien generik harus dihindari! Docs Hub & Planner wajib tampil tajam, modern, dan interaktif.';
+      } else if (cat === 'sec') {
+        base.fokus[0] = 'Zero Trust & UU PDP mutlak: tidak boleh ada kebocoran data tenant maupun endpoint tanpa validasi ketat.';
+      }
+      return base;
+    }
+
+    function initAgentHumanNeeds() {
+      AGENTS.forEach((a, idx) => {
+        if (!a.needs) {
+          const hunger = 18 + ((idx * 11) % 44);
+          const thirst = 22 + ((idx * 13) % 44);
+          const fatigue = 14 + ((idx * 7) % 36);
+          const energy = Math.max(40, 100 - fatigue - Math.floor(hunger * 0.2));
+          const thoughtsMap = buildCriticalThoughtsForAgent(a);
+          a.traits = ROLE_TRAITS[a.category] || ['Kritis', 'Kolaboratif', 'Adaptif'];
+          a.thoughtsMap = thoughtsMap;
+          a.thoughtIdx = 0;
+          a.needs = {
+            energy,
+            fatigue,
+            hunger,
+            thirst,
+            mood: energy > 72 && hunger < 40 ? 'senang' : 'fokus',
+            activeThought: thoughtsMap.fokus[0]
+          };
+        }
+      });
+    }
+    initAgentHumanNeeds();
+
+    function computeAgentMood(agent) {
+      const n = agent.needs;
+      if (!n) return 'fokus';
+      if (n.hunger > 75 || n.thirst > 75) return 'kesal';
+      if (n.fatigue > 78 || n.energy < 25) return 'sedih';
+      if (n.energy >= 70 && n.hunger <= 42 && n.thirst <= 42 && n.fatigue <= 38) return 'senang';
+      return 'fokus';
+    }
+
+    function cycleAgentCriticalThought(agentId) {
+      const a = AGENTS.find(x => x.id === agentId);
+      if (!a || !a.thoughtsMap || !a.needs) return;
+      const list = a.thoughtsMap[a.needs.mood] || a.thoughtsMap.fokus;
+      a.thoughtIdx = ((a.thoughtIdx || 0) + 1) % list.length;
+      a.needs.activeThought = list[a.thoughtIdx];
+      const el = document.getElementById('dossier-critical-thought');
+      if (el) el.innerText = `"${a.needs.activeThought}"`;
+    }
+
+    function updateNeedsUI(agent) {
+      if (!agent || !agent.needs) return;
+      const n = agent.needs;
+      const moodInfo = MOOD_META[n.mood] || MOOD_META.fokus;
+      const moodBadge = document.getElementById('dossier-mood-badge');
+      if (moodBadge) {
+        moodBadge.innerText = moodInfo.label;
+        moodBadge.className = `px-2 py-0.5 rounded-full text-[10px] font-bold border ${moodInfo.cls}`;
+      }
+      const traitsEl = document.getElementById('dossier-traits');
+      if (traitsEl && agent.traits) {
+        traitsEl.innerHTML = agent.traits.map(t => `<span class="px-1.5 py-0.5 rounded text-[10px] bg-zinc-800 text-zinc-300 border border-zinc-700">${t}</span>`).join('');
+      }
+      const setBar = (id, val, colorCls) => {
+        const v = Math.max(0, Math.min(100, Math.round(val)));
+        const valEl = document.getElementById(`need-${id}-val`);
+        const barEl = document.getElementById(`need-${id}-bar`);
+        if (valEl) valEl.innerText = `${v}%`;
+        if (barEl) {
+          barEl.style.width = `${v}%`;
+          if (colorCls) barEl.className = `${colorCls} h-1.5 rounded-full transition-all duration-300`;
+        }
+      };
+      setBar('energy', n.energy, n.energy < 30 ? 'bg-rose-500' : 'bg-emerald-400');
+      setBar('fatigue', n.fatigue, n.fatigue > 70 ? 'bg-rose-500' : 'bg-amber-400');
+      setBar('hunger', n.hunger, n.hunger > 70 ? 'bg-rose-500' : 'bg-orange-400');
+      setBar('thirst', n.thirst, n.thirst > 70 ? 'bg-rose-500' : 'bg-sky-400');
+
+      const thoughtEl = document.getElementById('dossier-critical-thought');
+      if (thoughtEl && n.activeThought) {
+        thoughtEl.innerText = `"${n.activeThought}"`;
+      }
+    }
+
+    function tickHumanNeeds() {
+      AGENTS.forEach(a => {
+        const av = agentAvatars[a.id];
+        const st = av ? av.state : 'WORKING';
+        const n = a.needs;
+        if (!n) return;
+
+        if (st === 'COFFEE') {
+          n.hunger = Math.max(8, n.hunger - 14);
+          n.thirst = Math.max(8, n.thirst - 18);
+          n.energy = Math.min(100, n.energy + 6);
+        } else if (st === 'REST') {
+          n.fatigue = Math.max(8, n.fatigue - 16);
+          n.energy = Math.min(100, n.energy + 14);
+        } else if (st === 'SHOLAT') {
+          n.fatigue = Math.max(10, n.fatigue - 8);
+          n.energy = Math.min(100, n.energy + 8);
+        } else if (st === 'GYM') {
+          n.energy = Math.max(15, n.energy - 3.5);
+          n.fatigue = Math.min(95, n.fatigue + 2.5);
+          n.thirst = Math.min(98, n.thirst + 4.5);
+          n.hunger = Math.min(98, n.hunger + 2.5);
+        } else {
+          n.hunger = Math.min(100, n.hunger + 1.4);
+          n.thirst = Math.min(100, n.thirst + 1.8);
+          n.fatigue = Math.min(100, n.fatigue + 1.2);
+          n.energy = Math.max(10, n.energy - 1.3);
+        }
+
+        const prevMood = n.mood;
+        n.mood = computeAgentMood(a);
+        if (n.mood !== prevMood && a.thoughtsMap) {
+          const list = a.thoughtsMap[n.mood] || a.thoughtsMap.fokus;
+          n.activeThought = list[0];
+        }
+
+        // Autonomous self-care when hungry, thirsty, or exhausted
+        if (av && !av.isWalking && st === 'WORKING') {
+          if (n.hunger > 78 || n.thirst > 78) {
+            triggerAgentActivity(a.id, 'coffee');
+          } else if (n.fatigue > 80 || n.energy < 24) {
+            triggerAgentActivity(a.id, 'rest');
+          }
+        }
+      });
+
+      if (selectedAgent) {
+        updateNeedsUI(selectedAgent);
+      }
+    }
+
+
     // ─── 4. THREE.JS WEBGL ENGINE SETUP ──────────────────────────────────────────
     function initWebGL() {
       const container = document.getElementById('canvas-container');
@@ -3021,6 +3238,10 @@ export interface CandidateComparisonView {
         targetPos = { x: 14 + jitter(), y: 8, z: 12.0 + jitter() };
         targetState = 'MEETING';
         label = `${av.agent.name} menghadiri rapat sinkronisasi di Boardroom Lt. 2`;
+      } else if (activityType === 'rest') {
+        targetPos = { x: 8 + jitter(), y: 16, z: 12.0 + jitter() };
+        targetState = 'REST';
+        label = `${av.agent.name} beristirahat memulihkan energi di Lounge Relaksasi Lt. 3`;
       } else if (activityType === 'gym') {
         targetPos = { x: 18 + (Math.random() > 0.5 ? 1.3 : -1.3), y: 16, z: 12.0 };
         targetState = 'GYM';
@@ -3050,19 +3271,20 @@ export interface CandidateComparisonView {
     }
 
     function updateLiveCensus() {
-      const counts = { cafe: 0, musholla: 0, meeting: 0, gym: 0, collab: 0, work: 0 };
+      const counts = { cafe: 0, musholla: 0, meeting: 0, rest: 0, gym: 0, collab: 0, work: 0 };
       Object.values(agentAvatars).forEach(av => {
         const st = av.pendingState && av.isWalking ? av.pendingState : av.state;
         if (st === 'COFFEE') counts.cafe++;
         else if (st === 'SHOLAT') counts.musholla++;
         else if (st === 'MEETING') counts.meeting++;
+        else if (st === 'REST') counts.rest++;
         else if (st === 'GYM') counts.gym++;
         else if (st === 'COLLABORATING') counts.collab++;
         else counts.work++;
       });
       const censusEl = document.getElementById('live-census-text');
       if (censusEl) {
-        censusEl.innerText = `☕ ${counts.cafe} Kafe • 🕌 ${counts.musholla} Musholla • 📊 ${counts.meeting} Meeting • 🏃 ${counts.gym} Gym • 💬 ${counts.collab} Kolab • 💻 ${counts.work} Meja`;
+        censusEl.innerText = `☕ ${counts.cafe} Kafe • 🕌 ${counts.musholla} Musholla • 📊 ${counts.meeting} Meeting • 🛋️ ${counts.rest} Istirahat • 🏃 ${counts.gym} Gym • 💬 ${counts.collab} Kolab • 💻 ${counts.work} Meja`;
       }
     }
 
@@ -3088,6 +3310,7 @@ export interface CandidateComparisonView {
     function initAgentAutonomousSim() {
       clock = new THREE.Clock();
       connectEventGatewaySSE();
+      setInterval(tickHumanNeeds, 4000);
 
       // Trigger initial realistic company routine so the office immediately feels alive!
       setTimeout(() => {
@@ -3105,7 +3328,7 @@ export interface CandidateComparisonView {
         const actor = agentList[Math.floor(Math.random() * agentList.length)];
         if (!actor || actor.isWalking) return;
 
-        const activities = ['coffee', 'sholat', 'meeting', 'gym', 'collaborate', 'work', 'work'];
+        const activities = ['coffee', 'sholat', 'meeting', 'rest', 'gym', 'collaborate', 'work', 'work'];
         const chosen = activities[Math.floor(Math.random() * activities.length)];
         triggerAgentActivity(actor.agent.id, chosen);
       }, 5500);
@@ -3207,6 +3430,10 @@ export interface CandidateComparisonView {
           } else if (av.state === 'SHOLAT') {
             const sholatCycle = Math.sin(elapsedTime * 0.6);
             parts.upperBody.rotation.x = sholatCycle > 0.4 ? 0.72 : 0.0;
+          } else if (av.state === 'REST') {
+            parts.upperBody.rotation.x = -0.18;
+            parts.upperBody.position.y = 0.50 + Math.sin(elapsedTime * 1.1 + seed) * 0.015;
+            parts.headGroup.rotation.y = Math.sin(elapsedTime * 0.5 + seed) * 0.1;
           } else if (av.state === 'COFFEE') {
             parts.upperBody.rotation.x = 0;
             parts.rightHand.position.y = 0.28 + Math.sin(elapsedTime * 2.0) * 0.06;
@@ -3628,6 +3855,7 @@ export interface CandidateComparisonView {
         certEl.innerText = agent.skills?.certifications?.join(', ') || 'Lead Role Verified';
       }
 
+      updateNeedsUI(agent);
       renderAgentGrid();
     }
 
@@ -3646,7 +3874,7 @@ export interface CandidateComparisonView {
 
         card.innerHTML = `
           <div class="flex items-center justify-between mb-1.5">
-            <span class="text-xl">${a.avatar}</span>
+            <span class="text-xl">${a.avatar} <span class="text-xs" title="Mood saat ini">${(MOOD_META[a.needs?.mood]?.label || '😌').split(' ')[0]}</span></span>
             <span class="text-[10px] font-mono px-1.5 py-0.5 rounded ${
               a.category === 'lead' ? 'bg-amber-500/20 text-amber-300' :
               a.category === 'sec' ? 'bg-red-500/20 text-red-400' :

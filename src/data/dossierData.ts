@@ -18,8 +18,8 @@ export const DIVISION_TARGETS: Record<DivisionId, readonly DivisionTargetItem[]>
       status: 'APPROVED',
     },
     {
-      code: 'BIZ-01',
-      text: 'B2B Midtrans Monetization & Enterprise Funnel (Bram)',
+      code: 'FREE-01',
+      text: 'Akses Gratis 100% Tanpa Paywall & Adopsi Komunitas (Bram)',
       status: 'ACTIVE',
     },
     {
@@ -199,40 +199,40 @@ export interface ReleaseGovernanceSignOff {
   1: {
     workload: 92,
     status: {
-      label: 'Live Monetization Active',
+      label: 'Free-Access Growth Active',
       tone: 'emerald',
       action:
-        'Menyusun skema langganan korporat B2B untuk Recruiter Portal, kalkulasi kuota undangan asesmen per bulan, dan integrasi Payment Gateway Midtrans (Sprint 19).',
-      ticket: 'BL-42 / BIZ-01',
+        'Mengawal adopsi gratis 100% tanpa paywall untuk kandidat, pendidik, dan Recruiter Portal, serta tata kelola kuota terbuka (fair-use) & kemitraan komunitas (FREE-01).',
+      ticket: 'BL-42 / FREE-01',
       file: 'docs/BACKLOG_AND_ROADMAP_ANALYSIS.md',
       collaborators:
         'Pranadipa Wicaksana (Product Owner), Maya Safitri (Recruiter POV)',
       cleanArchReview:
-        'Pemisahan domain billing enterprise dari core assessment engine; kepatuhan regulasi faktur pajak B2B.',
+        'Pemisahan domain community onboarding & fair-use quota dari core assessment engine; nol gerbang pembayaran atau paywall.',
       opinion:
-        'HR enterprise membutuhkan visual yang bersih, tegas, dan padat informasi tanpa dekorasi gradien ungu murahan yang tidak fungsional.',
+        'HR enterprise dan komunitas membutuhkan akses terbuka yang bersih, tegas, dan padat informasi tanpa dekorasi gradien ungu murahan maupun paywall.',
       ac: [
-        'Tersedia pemodelan kuota invite B2B berjenjang (50, 200, 500 invite/bln)',
-        'Kalkulasi ROI talent sourcing berbasis Radar 5D & Kraepelin terdokumentasi',
-        'Keselarasan proposal enterprise dengan regulasi rekrutmen mitra BUMN',
+        'Seluruh fitur asesmen, Radar 5D, dan Kraepelin 100% gratis tanpa paywall',
+        'Kalkulasi dampak adopsi komunitas berbasis Radar 5D & Kraepelin terdokumentasi',
+        'Keselarasan onboarding organisasi terbuka dengan regulasi mitra BUMN & kampus',
       ],
-      codeSnippet: `// B2B Pricing & Subscription Architecture
-export const B2B_SUBSCRIPTION_TIERS = {
-  STARTER: { invites: 50, priceIdr: 2500000, radar5D: true, kraepelin: true },
-  GROWTH:  { invites: 200, priceIdr: 7500000, customBranding: true, csvExport: true },
-  ENTERPRISE: { invites: 1000, priceIdr: 25000000, dedicatedSLA: true, atsSync: true }
+      codeSnippet: `// Open-Access Community & Fair-Use Quota Architecture (100% Free)
+export const FREE_ACCESS_QUOTAS = {
+  COMMUNITY: { invites: 50, priceIdr: 0, radar5D: true, kraepelin: true },
+  CAMPUS:    { invites: 200, priceIdr: 0, customBranding: true, csvExport: true },
+  PARTNER:   { invites: 1000, priceIdr: 0, dedicatedSLA: true, atsSync: true }
 };`,
     },
     screen: {
-      file: 'B2B_REVENUE.ts',
-      badge: 'REVENUE METRICS',
+      file: 'COMMUNITY_GROWTH.ts',
+      badge: 'OPEN ADOPTION METRICS',
       lines: [
-        '// B2B_REVENUE_METRICS.ts',
-        '* Enterprise Clients: 14 Corporate Active',
-        '* Midtrans Gateway: Sprint 19 Architecture',
-        '* Candidate Sourcing ROI: +185% YoY',
-        '* License Quota: Multi-Tenant Active',
-        '➔ MRR Pipeline: Rp 175.000.000 / month',
+        '// COMMUNITY_ADOPTION_METRICS.ts',
+        '* Partner Orgs: 14 Community & BUMN Active',
+        '* Access Policy: 100% Free (Zero Paywall)',
+        '* Candidate Sourcing Reach: +185% YoY',
+        '* Fair-Use Quota: Multi-Tenant Active',
+        '➔ Active Learners: 12.500+ Monthly Free',
       ],
     },
   },
