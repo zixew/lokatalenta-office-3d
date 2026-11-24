@@ -162,8 +162,8 @@
         <!-- Camera POV Mode Controls -->
         <div class="flex items-center bg-zinc-900 border border-zinc-800 rounded-lg p-0.5 text-xs shadow-inner">
           <button onclick="setCameraPOV('orbit')" id="btn-pov-orbit" class="pov-btn px-2 py-1 rounded font-semibold bg-teal-600 text-white transition" title="Orbit Bebas 3D">🌐 Orbit</button>
-          <button onclick="setCameraPOV('walkthrough')" id="btn-pov-walkthrough" class="pov-btn px-2 py-1 rounded font-medium text-zinc-400 hover:text-white transition" title="Walkthrough POV Orang Pertama (WASD / Panah)">🚶 Walkthrough</button>
-          <button onclick="setCameraPOV('follow')" id="btn-pov-follow" class="pov-btn px-2 py-1 rounded font-medium text-zinc-400 hover:text-white transition" title="Ikuti Agen Aktif (Follow Cam)">👤 Ikuti Agen</button>
+          <button onclick="setCameraPOV('walkthrough')" id="btn-pov-walkthrough" class="pov-btn px-2 py-1 rounded font-medium text-zinc-400 hover:text-white transition" title="1st-Person View — Jalan Orang Pertama (WASD / Panah)">🚶 1st-Person</button>
+          <button onclick="setCameraPOV('follow')" id="btn-pov-follow" class="pov-btn px-2 py-1 rounded font-medium text-zinc-400 hover:text-white transition" title="3rd-Person View — Ikuti Agen Aktif">👤 3rd-Person</button>
           <button onclick="setCameraPOV('topdown')" id="btn-pov-topdown" class="pov-btn px-2 py-1 rounded font-medium text-zinc-400 hover:text-white transition" title="Denah Atas 2D">🗺️ Denah</button>
         </div>
 
@@ -227,7 +227,7 @@
   <main class="relative w-full">
     <div id="canvas-container">
       <!-- Floating First-Person Walkthrough HUD Overlay -->
-      <div id="walkthrough-hud" class="hidden absolute top-14 left-4 z-30 glass-card border border-teal-500/60 px-4 py-2 rounded-xl text-xs flex items-center gap-3 backdrop-blur-md shadow-2xl animate-fade-in">
+      <div id="walkthrough-hud" class="hidden absolute bottom-14 left-4 z-40 glass-card border border-teal-500/60 px-4 py-2 rounded-xl text-xs flex items-center gap-3 backdrop-blur-md shadow-2xl animate-fade-in">
         <div class="flex items-center gap-2">
           <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
           <span class="font-bold text-emerald-400 uppercase tracking-wider">Mode Walkthrough POV</span>
@@ -672,7 +672,7 @@
         division: "executive",
         avatar: "👑",
         color: 0xf59e0b,
-        pos: { x: -14, z: -8.5 },
+        pos: { x: -14.0, z: -12.5 },
         workload: 98,
         status: {
           label: "Release Checker & Final Gatekeeper",
@@ -734,7 +734,7 @@ export interface ReleaseGovernanceSignOff {
         division: "executive",
         avatar: "💼",
         color: 0x3b82f6,
-        pos: { x: -16.5, z: -14 },
+        pos: { x: -17.5, z: -7.5 },
         workload: 92,
         status: {
           label: "Free-Access Growth Active",
@@ -786,7 +786,7 @@ export const FREE_ACCESS_QUOTAS = {
         division: "executive",
         avatar: "📋",
         color: 0x2563eb,
-        pos: { x: -11.5, z: -14 },
+        pos: { x: -10.5, z: -7.5 },
         workload: 94,
         status: {
           label: "Sprint 15 Backlog Locked (57 SP)",
@@ -839,7 +839,7 @@ export const SPRINT_15_BACKLOG = {
         division: "architecture",
         avatar: "📐",
         color: 0x8b5cf6,
-        pos: { x: 11.5, z: -14 },
+        pos: { x: 10.5, z: -12.5 },
         workload: 91,
         status: {
           label: "DISC/MBTI State Machine Modeling",
@@ -891,7 +891,7 @@ export interface PsychometricEngine {
         division: "architecture",
         avatar: "🏛️",
         color: 0x7c3aed,
-        pos: { x: 16.5, z: -14 },
+        pos: { x: 17.5, z: -12.5 },
         workload: 95,
         status: {
           label: "Hexagonal Ports & Adapters Isolation",
@@ -942,7 +942,7 @@ export interface QuizRepositoryPort {
         division: "engineering",
         avatar: "💻",
         color: 0x10b981,
-        pos: { x: -16.5, z: 6.5 },
+        pos: { x: -17.5, z: -9.5 },
         workload: 97,
         status: {
           label: "iOS Standalone PWA & ATS Kanban",
@@ -1003,7 +1003,7 @@ export const IosPwaInstallPrompt: React.FC = () => {
         division: "engineering",
         avatar: "⚡",
         color: 0x059669,
-        pos: { x: -11.5, z: 6.5 },
+        pos: { x: -10.5, z: -9.5 },
         workload: 93,
         status: {
           label: "RPC Patch FIX-01 & FIX-02 Deployed",
@@ -1064,7 +1064,7 @@ $$;`
         division: "qa",
         avatar: "🔍",
         color: 0xf59e0b,
-        pos: { x: 11.5, z: 2.5 },
+        pos: { x: 10.5, z: -12.5 },
         workload: 90,
         status: {
           label: "125 QA Cases Matrix Verified",
@@ -1115,7 +1115,7 @@ $$;`
         division: "qa",
         avatar: "🤖",
         color: 0xd97706,
-        pos: { x: 16.5, z: 2.5 },
+        pos: { x: 17.5, z: -12.5 },
         workload: 96,
         status: {
           label: "Vitest 163/163 PASS & Playwright E2E",
@@ -1167,7 +1167,7 @@ $ vitest run
         division: "qa",
         avatar: "⚡",
         color: 0xb45309,
-        pos: { x: 11.5, z: 7.5 },
+        pos: { x: 10.5, z: -7.5 },
         workload: 92,
         status: {
           label: "Bundle < 250kB & Latency < 250ms Verified",
@@ -1220,7 +1220,7 @@ describe('Performance Budget Verification', () => {
         division: "qa",
         avatar: "🛡️",
         color: 0x92400e,
-        pos: { x: 16.5, z: 7.5 },
+        pos: { x: 17.5, z: -7.5 },
         workload: 89,
         status: {
           label: "112/112 Regression Matrix Zero Flaw",
@@ -1274,7 +1274,7 @@ export const REGRESSION_AUDIT_REPORT = {
         division: "devops",
         avatar: "🚀",
         color: 0x06b6d4,
-        pos: { x: -17, z: 20 },
+        pos: { x: -17.5, z: 9.0 },
         workload: 95,
         status: {
           label: "Automated CI/CD & Vercel Deploy Monitored",
@@ -1332,7 +1332,7 @@ export const REGRESSION_AUDIT_REPORT = {
         division: "devops",
         avatar: "📝",
         color: 0x0891b2,
-        pos: { x: -14, z: 22.5 },
+        pos: { x: -14.0, z: 12.2 },
         workload: 88,
         status: {
           label: "Single Source of Truth Docs Synchronized",
@@ -1385,7 +1385,7 @@ export const DOCS_REGISTRY = {
         division: "lounge",
         avatar: "🎓",
         color: 0xec4899,
-        pos: { x: 11.5, z: 21 },
+        pos: { x: -17.5, z: 9.5 },
         workload: 86,
         status: {
           label: "Mobile Ergonomics & PWA Review",
@@ -1437,7 +1437,7 @@ export const DOCS_REGISTRY = {
         division: "lounge",
         avatar: "👩‍🏫",
         color: 0xdb2777,
-        pos: { x: 11.5, z: 26 },
+        pos: { x: -17.5, z: 14.5 },
         workload: 87,
         status: {
           label: "Curriculum & Rubric Aligned",
@@ -1489,7 +1489,7 @@ export const RUBRIC_CRITERIA = {
         division: "lounge",
         avatar: "🛡️",
         color: 0xbe185d,
-        pos: { x: 16.5, z: 26 },
+        pos: { x: -10.5, z: 14.5 },
         workload: 90,
         status: {
           label: "Multi-Tenant Governance Monitored",
@@ -1544,7 +1544,7 @@ export function sanitizeCsvCell(value: string | number | null | undefined): stri
         division: "devops",
         avatar: "🎯",
         color: 0xef4444,
-        pos: { x: -17, z: 25 },
+        pos: { x: -17.5, z: 15.2 },
         workload: 94,
         status: {
           label: "DAST & Sandbox Injection Pass",
@@ -1597,7 +1597,7 @@ describe('Security Vulnerability & DAST Penetration', () => {
         division: "devops",
         avatar: "🔒",
         color: 0xdc2626,
-        pos: { x: -11, z: 25 },
+        pos: { x: -10.5, z: 15.2 },
         workload: 96,
         status: {
           label: "UU PDP 27/2022 & RLS Strict Compliant",
@@ -1649,7 +1649,7 @@ USING (recruiter_id = auth.uid());`
         division: "engineering",
         avatar: "🏛️",
         color: 0x047857,
-        pos: { x: -16.5, z: 2.5 },
+        pos: { x: -17.5, z: -13.0 },
         workload: 95,
         status: {
           label: "Clean Architecture FE Code Review Approved",
@@ -1703,7 +1703,7 @@ export interface CleanArchitectureFeAudit {
         division: "engineering",
         avatar: "⚡",
         color: 0x065f46,
-        pos: { x: -11.5, z: 2.5 },
+        pos: { x: -10.5, z: -13.0 },
         workload: 96,
         status: {
           label: "Hexagonal Backend Domain Review Approved",
@@ -1756,7 +1756,7 @@ export interface HexagonalBackendAudit {
         division: "engineering",
         avatar: "🎨",
         color: 0xf43f5e,
-        pos: { x: -14, z: 10.5 },
+        pos: { x: -14.0, z: -6.2 },
         workload: 93,
         status: {
           label: "iOS Standalone PWA & Design System V2",
@@ -1810,7 +1810,7 @@ export const IOS_PWA_DESIGN = {
         division: "architecture",
         avatar: "🧠",
         color: 0x8b5cf6,
-        pos: { x: 14, z: -8.5 },
+        pos: { x: 14.0, z: -7.5 },
         workload: 95,
         status: {
           label: "Speech-To-Text & STAR Model Pipeline",
@@ -1864,7 +1864,7 @@ export interface StarInterviewEvaluation {
         division: "devops",
         avatar: "📊",
         color: 0x0284c7,
-        pos: { x: -11, z: 20 },
+        pos: { x: -10.5, z: 9.0 },
         workload: 94,
         status: {
           label: "Real-Time Telemetry & SLA 99.98% Monitored",
@@ -1918,7 +1918,7 @@ export interface SystemHealthMetrics {
         division: "lounge",
         avatar: "💼",
         color: 0xbe185d,
-        pos: { x: 16.5, z: 21 },
+        pos: { x: -10.5, z: 9.5 },
         workload: 92,
         status: {
           label: "Candidate ATS Pipeline & 5D Radar Active",
@@ -1983,6 +1983,8 @@ export interface CandidateComparisonView {
     let currentPOV = 'orbit'; // 'orbit' | 'walkthrough' | 'follow' | 'topdown'
     const FLOOR_HEIGHTS = { 0: 0, 1: 0, 2: 8, 3: 16 };
     let floorGroups = { 1: null, 2: null, 3: null };
+    let roofGroup = null;
+    let STATIC_COLLIDERS = []; // { minX, maxX, minZ, maxZ, floor, label }
     let elevatorCabin = null;
     let elevatorTargetY = 0;
     let walkKeys = {};
@@ -2277,16 +2279,141 @@ export interface CandidateComparisonView {
       });
     }
 
+    function createProceduralTexture(kind) {
+      const c = document.createElement('canvas');
+      c.width = 256; c.height = 256;
+      const ctx = c.getContext('2d');
+
+      if (kind === 'marble') {
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(0, 0, 256, 256);
+        ctx.strokeStyle = '#1e293b';
+        ctx.lineWidth = 2;
+        for (let i = 0; i <= 256; i += 64) {
+          ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 256); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(256, i); ctx.stroke();
+        }
+        ctx.strokeStyle = 'rgba(148,163,184,0.12)';
+        ctx.beginPath(); ctx.moveTo(12, 24); ctx.bezierCurveTo(90, 80, 150, 40, 240, 120); ctx.stroke();
+      } else if (kind === 'oak') {
+        ctx.fillStyle = '#3b2416';
+        ctx.fillRect(0, 0, 256, 256);
+        for (let y = 0; y < 256; y += 32) {
+          ctx.fillStyle = (y / 32) % 2 === 0 ? '#452b1a' : '#352013';
+          ctx.fillRect(0, y, 256, 30);
+          ctx.fillStyle = 'rgba(0,0,0,0.25)';
+          ctx.fillRect(0, y + 30, 256, 2);
+        }
+      } else if (kind === 'carpet') {
+        ctx.fillStyle = '#111827';
+        ctx.fillRect(0, 0, 256, 256);
+        ctx.strokeStyle = 'rgba(56,189,248,0.08)';
+        ctx.lineWidth = 1;
+        for (let i = 0; i <= 256; i += 32) {
+          ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 256); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(256, i); ctx.stroke();
+        }
+      } else if (kind === 'sajadah') {
+        ctx.fillStyle = '#064e3b';
+        ctx.fillRect(0, 0, 256, 256);
+        ctx.strokeStyle = '#fbbf24';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(8, 8, 240, 240);
+        ctx.strokeStyle = 'rgba(52,211,153,0.35)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(32, 220); ctx.lineTo(32, 96); ctx.quadraticCurveTo(128, 24, 224, 96); ctx.lineTo(224, 220);
+        ctx.stroke();
+      } else if (kind === 'gym') {
+        ctx.fillStyle = '#090d16';
+        ctx.fillRect(0, 0, 256, 256);
+        ctx.fillStyle = 'rgba(148,163,184,0.14)';
+        for (let i = 0; i < 180; i++) {
+          ctx.fillRect((i * 53) % 256, (i * 97) % 256, 2, 2);
+        }
+      }
+
+      const tex = new THREE.CanvasTexture(c);
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.wrapT = THREE.RepeatWrapping;
+      tex.repeat.set(6, 6);
+      return tex;
+    }
+
+    function registerCollider(minX, maxX, minZ, maxZ, floor, label) {
+      STATIC_COLLIDERS.push({ minX, maxX, minZ, maxZ, floor, label });
+    }
+
+    function buildCorridorOfficeEquipment(parent, floorNum, yOffset) {
+      const steelMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.3, metalness: 0.8 });
+      const darkMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.4 });
+      const paperMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.8 });
+      const waterMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.7, roughness: 0.1 });
+
+      // 1. Standing Water Cooler Dispenser at (x: 4.5, z: 2.5)
+      const cooler = new THREE.Group();
+      cooler.position.set(4.5, yOffset, 2.5);
+      const cBody = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.95, 0.45), new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.3 }));
+      cBody.position.y = 0.475;
+      cooler.add(cBody);
+      const jug = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.44, 16), waterMat);
+      jug.position.y = 1.18;
+      cooler.add(jug);
+      parent.add(cooler);
+      registerCollider(4.1, 4.9, 2.1, 2.9, floorNum, 'Water Cooler');
+
+      // 2. Enterprise Multi-Function Printer/Copier on Floors 2 & 3 at (x: -4.5, z: 2.5)
+      if (floorNum >= 2) {
+        const printer = new THREE.Group();
+        printer.position.set(-4.5, yOffset, 2.5);
+        const pBase = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.85, 0.65), steelMat);
+        pBase.position.y = 0.425;
+        printer.add(pBase);
+        const pTop = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.16, 0.58), darkMat);
+        pTop.position.y = 0.92;
+        printer.add(pTop);
+        const pTray = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.03, 0.24), paperMat);
+        pTray.position.set(0.5, 0.68, 0);
+        printer.add(pTray);
+        const pLed = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.02, 0.06), new THREE.MeshBasicMaterial({ color: 0x10b981 }));
+        pLed.position.set(0.25, 0.86, 0.31);
+        printer.add(pLed);
+        parent.add(printer);
+        registerCollider(-5.0, -4.0, 2.0, 3.0, floorNum, 'Enterprise Printer');
+      }
+
+      // 3. Wall-Mounted Office Clock near Elevator Shaft (x: 0, z: -1.85)
+      const clockGroup = new THREE.Group();
+      clockGroup.position.set(0, yOffset + 2.45, -1.85);
+      const clockRim = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 0.05, 24), steelMat);
+      clockRim.rotation.x = Math.PI / 2;
+      clockGroup.add(clockRim);
+      const clockFace = new THREE.Mesh(new THREE.CircleGeometry(0.28, 24), paperMat);
+      clockFace.position.z = 0.03;
+      clockGroup.add(clockFace);
+      const hand = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.2, 0.02), darkMat);
+      hand.position.set(0, 0.06, 0.04);
+      clockGroup.add(hand);
+      animatedMeshes.push({ type: 'clock-hand', mesh: hand });
+      parent.add(clockGroup);
+    }
+
     function build3DEnvironment() {
-      // Initialize Floor Hierarchy Groups
+      STATIC_COLLIDERS = [];
       floorGroups = {
         1: new THREE.Group(),
         2: new THREE.Group(),
         3: new THREE.Group()
       };
+      roofGroup = new THREE.Group();
       scene.add(floorGroups[1]);
       scene.add(floorGroups[2]);
       scene.add(floorGroups[3]);
+      scene.add(roofGroup);
+
+      const marbleTex = createProceduralTexture('marble');
+      const carpetTex = createProceduralTexture('carpet');
+      const oakTex = createProceduralTexture('oak');
 
       // Foundation Ground Slab (y = -0.6)
       const slabGeo = new THREE.BoxGeometry(58, 1.2, 68);
@@ -2297,82 +2424,82 @@ export interface CandidateComparisonView {
       scene.add(groundSlab);
 
       // ── FLOOR 1 SLAB (y = 0): LOBI, KAFETARIA & MUSHOLLA ──
-      const f1FloorGeo = new THREE.PlaneGeometry(54, 64);
-      const f1FloorMat = new THREE.MeshStandardMaterial({ color: 0x090d16, roughness: 0.45, metalness: 0.25 });
-      const f1Floor = new THREE.Mesh(f1FloorGeo, f1FloorMat);
+      const f1Floor = new THREE.Mesh(
+        new THREE.PlaneGeometry(54, 64),
+        new THREE.MeshStandardMaterial({ map: marbleTex, roughness: 0.35, metalness: 0.25 })
+      );
       f1Floor.rotation.x = -Math.PI / 2;
       f1Floor.position.y = 0.01;
       f1Floor.receiveShadow = true;
       floorGroups[1].add(f1Floor);
 
-      // Floor 1 Central Corridor Runner (Marble Concourse)
       const f1Corridor = new THREE.Mesh(
         new THREE.PlaneGeometry(6.6, 64),
-        new THREE.MeshStandardMaterial({ color: 0x131d2e, roughness: 0.2, metalness: 0.5 })
+        new THREE.MeshStandardMaterial({ color: 0x162236, roughness: 0.2, metalness: 0.45 })
       );
       f1Corridor.rotation.x = -Math.PI / 2;
       f1Corridor.position.set(0, 0.02, 0);
       floorGroups[1].add(f1Corridor);
 
       // ── FLOOR 2 SLAB (y = 8): CORE ENGINEERING, QA & RUANG MEETING ──
-      const f2SlabGeo = new THREE.BoxGeometry(54, 0.4, 64);
-      const f2SlabMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.4, metalness: 0.35 });
-      const f2Slab = new THREE.Mesh(f2SlabGeo, f2SlabMat);
+      const f2Slab = new THREE.Mesh(
+        new THREE.BoxGeometry(54, 0.4, 64),
+        new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.4, metalness: 0.35 })
+      );
       f2Slab.position.set(0, 7.8, 0);
       f2Slab.receiveShadow = true;
       floorGroups[2].add(f2Slab);
 
-      // Floor 2 Surface Pad (Industrial Gray & Acoustic Texture)
       const f2FloorPad = new THREE.Mesh(
         new THREE.PlaneGeometry(53.6, 63.6),
-        new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.35, metalness: 0.4 })
+        new THREE.MeshStandardMaterial({ map: carpetTex, roughness: 0.55, metalness: 0.2 })
       );
       f2FloorPad.rotation.x = -Math.PI / 2;
       f2FloorPad.position.set(0, 8.01, 0);
       floorGroups[2].add(f2FloorPad);
 
-      // Floor 2 Glass Balustrade Perimeter
       create3DGlassWall(0, -31.8, 53.6, 1.1, true, null, null, floorGroups[2], 8.0);
       create3DGlassWall(0, 31.8, 53.6, 1.1, true, null, null, floorGroups[2], 8.0);
       create3DGlassWall(-26.8, 0, 63.6, 1.1, false, null, null, floorGroups[2], 8.0);
       create3DGlassWall(26.8, 0, 63.6, 1.1, false, null, null, floorGroups[2], 8.0);
 
       // ── FLOOR 3 SLAB (y = 16): EKSEKUTIF, RISET AI, DEVOPS & GYM ──
-      const f3SlabGeo = new THREE.BoxGeometry(54, 0.4, 64);
-      const f3SlabMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.4, metalness: 0.35 });
-      const f3Slab = new THREE.Mesh(f3SlabGeo, f3SlabMat);
+      const f3Slab = new THREE.Mesh(
+        new THREE.BoxGeometry(54, 0.4, 64),
+        new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.4, metalness: 0.35 })
+      );
       f3Slab.position.set(0, 15.8, 0);
       f3Slab.receiveShadow = true;
       floorGroups[3].add(f3Slab);
 
-      // Floor 3 Surface Pad (Walnut Parquet & Tech Flooring)
       const f3FloorPad = new THREE.Mesh(
         new THREE.PlaneGeometry(53.6, 63.6),
-        new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.3, metalness: 0.45 })
+        new THREE.MeshStandardMaterial({ map: oakTex, roughness: 0.5, metalness: 0.2 })
       );
       f3FloorPad.rotation.x = -Math.PI / 2;
       f3FloorPad.position.set(0, 16.01, 0);
       floorGroups[3].add(f3FloorPad);
 
-      // Floor 3 Glass Balustrade Perimeter
       create3DGlassWall(0, -31.8, 53.6, 1.1, true, null, null, floorGroups[3], 16.0);
       create3DGlassWall(0, 31.8, 53.6, 1.1, true, null, null, floorGroups[3], 16.0);
       create3DGlassWall(-26.8, 0, 63.6, 1.1, false, null, null, floorGroups[3], 16.0);
       create3DGlassWall(26.8, 0, 63.6, 1.1, false, null, null, floorGroups[3], 16.0);
 
       // ── ROOFTOP & SKYLIGHT ATRIUM (y = 24) ──
-      const roofFrameGeo = new THREE.BoxGeometry(54.4, 0.35, 64.4);
-      const roofFrameMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.3, metalness: 0.7 });
-      const roofFrame = new THREE.Mesh(roofFrameGeo, roofFrameMat);
+      const roofFrame = new THREE.Mesh(
+        new THREE.BoxGeometry(54.4, 0.35, 64.4),
+        new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.3, metalness: 0.7 })
+      );
       roofFrame.position.set(0, 23.85, 0);
-      scene.add(roofFrame);
+      roofGroup.add(roofFrame);
 
-      // Glass Skylight Panels
-      const skylightMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.3, roughness: 0.1 });
-      const skylight = new THREE.Mesh(new THREE.PlaneGeometry(48, 58), skylightMat);
+      const skylight = new THREE.Mesh(
+        new THREE.PlaneGeometry(48, 58),
+        new THREE.MeshStandardMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.25, roughness: 0.1 })
+      );
       skylight.rotation.x = -Math.PI / 2;
       skylight.position.set(0, 24.05, 0);
-      scene.add(skylight);
+      roofGroup.add(skylight);
 
       // ── 4 HEAVY STEEL CORNER PILLARS (y = 0 to 24) ──
       const pillarGeo = new THREE.BoxGeometry(1.2, 24, 1.2);
@@ -2389,18 +2516,23 @@ export interface CandidateComparisonView {
         scene.add(pillar);
       });
 
-      // ── CENTRAL GLASS ELEVATOR SHAFT (x: 0, z: -4, y: 0 to 24) ──
-      buildCentralElevatorShaft();
+      // Corridor equipment on each floor
+      buildCorridorOfficeEquipment(floorGroups[1], 1, 0);
+      buildCorridorOfficeEquipment(floorGroups[2], 2, 8);
+      buildCorridorOfficeEquipment(floorGroups[3], 3, 16);
 
-      // Exterior Floor Level Badges
+      // Central Elevator Shaft + Floor Badges
+      buildCentralElevatorShaft();
       buildFloorLevelBadges();
+
+      // Register Elevator Shaft Collider on all 3 floors (x: -2.2..2.2, z: -6.2..-1.8)
+      [1, 2, 3].forEach(fl => registerCollider(-2.3, 2.3, -6.3, -1.7, fl, 'Elevator Shaft'));
     }
 
     function buildCentralElevatorShaft() {
       const shaftGroup = new THREE.Group();
       shaftGroup.position.set(0, 0, -4);
 
-      // 4 Vertical Steel Shaft Posts
       const postMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.15, metalness: 0.9 });
       [-2.1, 2.1].forEach(px => {
         [-2.1, 2.1].forEach(pz => {
@@ -2410,14 +2542,11 @@ export interface CandidateComparisonView {
         });
       });
 
-      // Glass Enclosure for Shaft
       const glassMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.18, roughness: 0.05 });
-      const shaftGlassGeo = new THREE.BoxGeometry(4.2, 24, 4.2);
-      const shaftGlass = new THREE.Mesh(shaftGlassGeo, glassMat);
+      const shaftGlass = new THREE.Mesh(new THREE.BoxGeometry(4.2, 24, 4.2), glassMat);
       shaftGlass.position.y = 12;
       shaftGroup.add(shaftGlass);
 
-      // Moving Elevator Cabin
       const cabinGroup = new THREE.Group();
       cabinGroup.position.set(0, 0, 0);
 
@@ -2436,7 +2565,6 @@ export interface CandidateComparisonView {
       cabinGlass.position.y = 1.6;
       cabinGroup.add(cabinGlass);
 
-      // Interior Amber Ambient Light
       const cabinLight = new THREE.PointLight(0xf59e0b, 1.2, 8, 2);
       cabinLight.position.set(0, 2.4, 0);
       cabinGroup.add(cabinLight);
@@ -2447,7 +2575,6 @@ export interface CandidateComparisonView {
     }
 
     function buildFloorLevelBadges() {
-      const badgeMat = new THREE.MeshBasicMaterial({ color: 0x14b8a6 });
       const makeFloorBadge = (floorNum, label, yPos) => {
         const canvas = document.createElement('canvas');
         canvas.width = 512; canvas.height = 128;
@@ -2466,7 +2593,6 @@ export interface CandidateComparisonView {
       makeFloorBadge(3, 'Executive • AI • DevOps • Gym', 16);
     }
 
-    // ─── 5. BUILD DIVISION SUITES & PROMINENT WALL TARGET SCREENS ────────────────
     function build3DDivisionSuites() {
       const glassMat = new THREE.MeshStandardMaterial({
         color: 0xe0f2fe,
@@ -2638,16 +2764,37 @@ export interface CandidateComparisonView {
 
       const potMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.5 });
       const foliageMat = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.7 });
+      const cabinetMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.4, metalness: 0.5 });
 
-      [-div.bounds.width / 2 + 1.2, div.bounds.width / 2 - 1.2].forEach(px => {
-        const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.25, 0.8, 16), potMat);
-        pot.position.set(cx + px, cy + 0.4, cz + div.bounds.depth / 2 - 1.2);
+      // Corner Potted Plants (cleanly at corners away from desks)
+      [-div.bounds.width / 2 + 1.0, div.bounds.width / 2 - 1.0].forEach(px => {
+        const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.25, 0.75, 16), potMat);
+        pot.position.set(cx + px, cy + 0.375, cz + div.bounds.depth / 2 - 1.0);
         parent.add(pot);
 
-        const plant = new THREE.Mesh(new THREE.DodecahedronGeometry(0.65, 1), foliageMat);
-        plant.position.set(cx + px, cy + 1.1, cz + div.bounds.depth / 2 - 1.2);
+        const plant = new THREE.Mesh(new THREE.DodecahedronGeometry(0.6, 1), foliageMat);
+        plant.position.set(cx + px, cy + 1.05, cz + div.bounds.depth / 2 - 1.0);
         parent.add(plant);
       });
+
+      // Filing Cabinet / Server Rack along outer edge of room
+      const outerX = cx < 0 ? cx - div.bounds.width / 2 + 0.55 : cx + div.bounds.width / 2 - 0.55;
+      if (div.id === 'architecture' || div.id === 'devops') {
+        const rack = new THREE.Mesh(new THREE.BoxGeometry(0.8, 2.1, 1.4), new THREE.MeshStandardMaterial({ color: 0x090d16, metalness: 0.85 }));
+        rack.position.set(outerX, cy + 1.05, cz);
+        parent.add(rack);
+        for (let b = 0; b < 4; b++) {
+          const led = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.05, 0.45), new THREE.MeshBasicMaterial({ color: b % 2 === 0 ? 0x06b6d4 : 0x10b981 }));
+          led.position.set(outerX + (cx < 0 ? 0.41 : -0.41), cy + 0.5 + b * 0.4, cz);
+          parent.add(led);
+        }
+        registerCollider(outerX - 0.55, outerX + 0.55, cz - 0.85, cz + 0.85, div.floor, 'Server Rack');
+      } else {
+        const cab = new THREE.Mesh(new THREE.BoxGeometry(0.65, 1.35, 1.6), cabinetMat);
+        cab.position.set(outerX, cy + 0.675, cz);
+        parent.add(cab);
+        registerCollider(outerX - 0.45, outerX + 0.45, cz - 0.9, cz + 0.9, div.floor, 'Filing Cabinet');
+      }
     }
 
     // ─── SPECIAL FACILITIES: MEETING ROOM, RELAXATION, GYM ──────────────────────
@@ -2656,43 +2803,47 @@ export interface CandidateComparisonView {
       const meetingGroup = new THREE.Group();
       meetingGroup.position.set(cx, cy, cz);
 
-      // Glass perimeter walls
       const glassMat = new THREE.MeshStandardMaterial({ color: 0x93c5fd, transparent: true, opacity: 0.25, roughness: 0.05 });
       const frameMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.2, metalness: 0.85 });
       create3DGlassWall(0, -6, 14, 2.4, true, glassMat, frameMat, meetingGroup, 0);
       create3DGlassWall(0, 6, 14, 2.4, true, glassMat, frameMat, meetingGroup, 0);
-      create3DGlassWall(-7, 0, 12, 2.4, false, glassMat, frameMat, meetingGroup, 0);
+      create3DGlassDoorway(-7, 0, 12, 2.4, glassMat, frameMat, meetingGroup, 0);
 
       // Large Oval Boardroom Table
-      const tableGeo = new THREE.CylinderGeometry(3.6, 3.6, 0.1, 32);
-      tableGeo.scale(1.4, 1.0, 0.8);
+      const tableGeo = new THREE.CylinderGeometry(3.2, 3.2, 0.1, 32);
+      tableGeo.scale(1.3, 1.0, 0.75);
       const tableMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.3, metalness: 0.6 });
       const table = new THREE.Mesh(tableGeo, tableMat);
-      table.position.set(0, 0.8, 0);
+      table.position.set(0, 0.78, 0);
       meetingGroup.add(table);
+      registerCollider(cx - 4.2, cx + 4.2, cz - 2.4, cz + 2.4, 2, 'Boardroom Table');
 
-      // 8 Rolling Ergonomic Conference Chairs
+      // 8 Ergonomic Conference Chairs
       const chairMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.6 });
       for (let i = 0; i < 8; i++) {
         const angle = (i / 8) * Math.PI * 2;
-        const chair = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.7, 0.6), chairMat);
-        chair.position.set(Math.cos(angle) * 4.2, 0.45, Math.sin(angle) * 2.6);
+        const chair = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.75, 0.55), chairMat);
+        chair.position.set(Math.cos(angle) * 4.5, 0.45, Math.sin(angle) * 2.8);
         meetingGroup.add(chair);
       }
 
-      // 85-Inch 4K Presentation Screen (Sprint Slides)
+      // 85-Inch 4K Presentation Screen
       const canvas = document.createElement('canvas');
       canvas.width = 512; canvas.height = 256;
       const ctx = canvas.getContext('2d');
       ctx.fillStyle = '#090d16'; ctx.fillRect(0, 0, 512, 256);
-      ctx.fillStyle = '#38bdf8'; ctx.font = 'bold 28px sans-serif'; ctx.fillText('BOARDROOM 2F: SPRINT 15', 30, 48);
-      ctx.fillStyle = '#10b981'; ctx.font = 'bold 20px monospace'; ctx.fillText('● 24 AGENTS AUTONOMOUS SDLC', 30, 95);
-      ctx.fillStyle = '#cbd5e1'; ctx.font = '16px monospace'; ctx.fillText('Burnup: 94% Capacity • 163 Tests Pass', 30, 135);
-      ctx.fillStyle = '#f59e0b'; ctx.fillText('Next Milestone: Multi-Floor Vercel Live', 30, 175);
-      const tex = new THREE.CanvasTexture(canvas);
-      const screen = new THREE.Mesh(new THREE.PlaneGeometry(5.2, 2.6), new THREE.MeshBasicMaterial({ map: tex }));
+      ctx.fillStyle = '#38bdf8'; ctx.font = 'bold 28px sans-serif'; ctx.fillText('BOARDROOM 2F: SPRINT 16 QA', 30, 48);
+      ctx.fillStyle = '#10b981'; ctx.font = 'bold 20px monospace'; ctx.fillText('● 100% FREE ACCESS • 3-POV QA', 30, 95);
+      ctx.fillStyle = '#cbd5e1'; ctx.font = '16px monospace'; ctx.fillText('Responsive: 375px / 768px / 1280px+', 30, 135);
+      ctx.fillStyle = '#f59e0b'; ctx.fillText('24 Autonomous Humanized Agents', 30, 175);
+      const screen = new THREE.Mesh(new THREE.PlaneGeometry(5.2, 2.6), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(canvas) }));
       screen.position.set(0, 2.1, -5.9);
       meetingGroup.add(screen);
+
+      // Warm Hanging Pendant Lamp over Boardroom Table
+      const lampBar = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.08, 0.25), new THREE.MeshBasicMaterial({ color: 0xfef3c7 }));
+      lampBar.position.set(0, 3.2, 0);
+      meetingGroup.add(lampBar);
 
       parent.add(meetingGroup);
     }
@@ -2702,7 +2853,6 @@ export interface CandidateComparisonView {
       const relaxGroup = new THREE.Group();
       relaxGroup.position.set(cx, cy, cz);
 
-      // Acoustic Plush Lounge Rug
       const rug = new THREE.Mesh(
         new THREE.CircleGeometry(3.6, 32),
         new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.95 })
@@ -2711,13 +2861,15 @@ export interface CandidateComparisonView {
       rug.position.y = 0.02;
       relaxGroup.add(rug);
 
-      // Center Sofa 3-Seater
       const sofaMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.8 });
       const sofa = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.45, 1.1), sofaMat);
-      sofa.position.set(0, 0.22, 1.2);
+      sofa.position.set(0, 0.22, 1.5);
       relaxGroup.add(sofa);
+      const sofaBack = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.5, 0.25), sofaMat);
+      sofaBack.position.set(0, 0.55, 1.95);
+      relaxGroup.add(sofaBack);
+      registerCollider(cx - 1.7, cx + 1.7, cz + 0.9, cz + 2.2, 3, 'Lounge Sofa');
 
-      // 2 Teal Ergonomic Beanbags
       const beanMat = new THREE.MeshStandardMaterial({ color: 0x0d9488, roughness: 0.9 });
       [-1.8, 1.8].forEach(bx => {
         const bean = new THREE.Mesh(new THREE.SphereGeometry(0.65, 16, 12), beanMat);
@@ -2734,16 +2886,15 @@ export interface CandidateComparisonView {
       const gymGroup = new THREE.Group();
       gymGroup.position.set(cx, cy, cz);
 
-      // Dark Rubber Gym Floor
+      const gymTex = createProceduralTexture('gym');
       const gymFloor = new THREE.Mesh(
         new THREE.PlaneGeometry(6.4, 5.4),
-        new THREE.MeshStandardMaterial({ color: 0x0a0f1d, roughness: 0.95, metalness: 0.1 })
+        new THREE.MeshStandardMaterial({ map: gymTex, roughness: 0.9, metalness: 0.1 })
       );
       gymFloor.rotation.x = -Math.PI / 2;
       gymFloor.position.y = 0.024;
       gymGroup.add(gymFloor);
 
-      // 2 Motorized Treadmills with Animated Belts
       [-1.3, 1.3].forEach((tmX, tmIdx) => {
         const tm = new THREE.Group();
         tm.position.set(tmX, 0, 0);
@@ -2756,14 +2907,18 @@ export interface CandidateComparisonView {
         belt.position.set(0, 0.28, 0);
         tm.add(belt);
 
+        const consolePost = new THREE.Mesh(new THREE.BoxGeometry(0.8, 1.0, 0.12), new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.8 }));
+        consolePost.position.set(0, 0.65, -0.92);
+        tm.add(consolePost);
+
         gymGroup.add(tm);
         animatedMeshes.push({ type: 'treadmill-belt', mesh: belt, speed: 1.5 + tmIdx * 0.4 });
       });
 
-      // Dumbbell Weight Rack
       const rack = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.75, 0.5), new THREE.MeshStandardMaterial({ color: 0x27272a, metalness: 0.9 }));
       rack.position.set(0, 0.38, 1.8);
       gymGroup.add(rack);
+      registerCollider(cx - 1.3, cx + 1.3, cz + 1.5, cz + 2.1, 3, 'Dumbbell Rack');
 
       parent.add(gymGroup);
     }
@@ -2772,20 +2927,17 @@ export interface CandidateComparisonView {
     function build3DCentralAmenities() {
       const f1 = floorGroups[1] || scene;
 
-      // Materials
       const quartzMat = new THREE.MeshStandardMaterial({ color: 0xf1f5f9, roughness: 0.15, metalness: 0.2 });
       const woodMat = new THREE.MeshStandardMaterial({ color: 0x3f2e20, roughness: 0.65 });
       const chromeMat = new THREE.MeshStandardMaterial({ color: 0xd1d5db, roughness: 0.1, metalness: 0.95 });
-      const darkSteelMat = new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.35, metalness: 0.8 });
       const emeraldGlowMat = new THREE.MeshBasicMaterial({ color: 0x10b981 });
-      const cyanGlowMat = new THREE.MeshBasicMaterial({ color: 0x06b6d4 });
-      const amberGlowMat = new THREE.MeshBasicMaterial({ color: 0xf59e0b });
+      const oakTex = createProceduralTexture('oak');
+      const sajadahTex = createProceduralTexture('sajadah');
 
       // ── A. GRAND ENTRANCE LOBBY (x: 0, z: 18) ──
       const lobbyGroup = new THREE.Group();
       lobbyGroup.position.set(0, 0, 18);
 
-      // Curved Reception Desk
       const deskBase = new THREE.Mesh(new THREE.CylinderGeometry(2.6, 2.6, 1.1, 32, 1, false, 0, Math.PI), woodMat);
       deskBase.position.set(0, 0.55, 0);
       deskBase.rotation.y = Math.PI / 2;
@@ -2795,8 +2947,8 @@ export interface CandidateComparisonView {
       deskTop.position.set(0, 1.1, 0);
       deskTop.rotation.y = Math.PI / 2;
       lobbyGroup.add(deskTop);
+      registerCollider(-2.8, 2.8, 17.5, 20.8, 1, 'Lobby Reception Desk');
 
-      // Welcome Plaque Sign
       const signCanvas = document.createElement('canvas');
       signCanvas.width = 512; signCanvas.height = 128;
       const sCtx = signCanvas.getContext('2d');
@@ -2805,12 +2957,11 @@ export interface CandidateComparisonView {
       sCtx.fillStyle = '#14b8a6'; sCtx.font = 'bold 34px sans-serif'; sCtx.textAlign = 'center';
       sCtx.fillText('LOKATALENTA HQ — 3 FLOORS', 256, 52);
       sCtx.fillStyle = '#94a3b8'; sCtx.font = 'bold 18px monospace';
-      sCtx.fillText('24 AUTONOMOUS AGENTS • LIVING OFFICE', 256, 92);
+      sCtx.fillText('24 HUMANIZED AGENTS • 100% FREE ACCESS', 256, 92);
       const signMesh = new THREE.Mesh(new THREE.PlaneGeometry(2.8, 0.7), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(signCanvas) }));
       signMesh.position.set(0, 0.65, 0.02);
       lobbyGroup.add(signMesh);
 
-      // Optical Security Turnstiles
       [-3.0, 3.0].forEach(tx => {
         const turnstile = new THREE.Mesh(new THREE.BoxGeometry(0.35, 1.0, 1.2), chromeMat);
         turnstile.position.set(tx, 0.5, 0.2);
@@ -2828,16 +2979,14 @@ export interface CandidateComparisonView {
       const cafeGroup = new THREE.Group();
       cafeGroup.position.set(-14, 0, -4);
 
-      // Wooden Cafe Floor Pad
       const cafeFloor = new THREE.Mesh(
         new THREE.PlaneGeometry(14, 12),
-        new THREE.MeshStandardMaterial({ color: 0x271910, roughness: 0.6 })
+        new THREE.MeshStandardMaterial({ map: oakTex, roughness: 0.55 })
       );
       cafeFloor.rotation.x = -Math.PI / 2;
       cafeFloor.position.y = 0.025;
       cafeGroup.add(cafeFloor);
 
-      // Kitchen Island Base & Quartz Waterfall Countertop
       const islandBase = new THREE.Mesh(new THREE.BoxGeometry(4.8, 0.95, 1.4), woodMat);
       islandBase.position.set(0, 0.475, 0);
       cafeGroup.add(islandBase);
@@ -2845,13 +2994,20 @@ export interface CandidateComparisonView {
       const islandTop = new THREE.Mesh(new THREE.BoxGeometry(5.0, 0.08, 1.55), quartzMat);
       islandTop.position.set(0, 0.99, 0);
       cafeGroup.add(islandTop);
+      registerCollider(-16.6, -11.4, -4.9, -3.1, 1, 'Cafeteria Island');
 
-      // Commercial Espresso Machine (Twin Portafilters + Steam Wand)
       const espressoBody = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.5, 0.6), chromeMat);
       espressoBody.position.set(-1.2, 1.25, 0);
       cafeGroup.add(espressoBody);
 
-      // 4 Scandinavian High Barstools
+      // Pastry Display Case on Counter
+      const pastryCase = new THREE.Mesh(
+        new THREE.BoxGeometry(1.1, 0.42, 0.55),
+        new THREE.MeshStandardMaterial({ color: 0xe0f2fe, transparent: true, opacity: 0.45, roughness: 0.1 })
+      );
+      pastryCase.position.set(1.2, 1.24, 0);
+      cafeGroup.add(pastryCase);
+
       [-1.6, -0.5, 0.5, 1.6].forEach(bx => {
         const stool = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.24, 0.08, 24), new THREE.MeshStandardMaterial({ color: 0x1e293b }));
         stool.position.set(bx, 0.72, 1.25);
@@ -2861,14 +3017,20 @@ export interface CandidateComparisonView {
         cafeGroup.add(stem);
       });
 
-      // 2 Dining Booths with Tables
       [-3.5, 3.5].forEach(dx => {
         const table = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.75, 1.2), woodMat);
-        table.position.set(dx, 0.375, -2.8);
+        table.position.set(dx, 0.375, -3.2);
         cafeGroup.add(table);
+        registerCollider(-14 + dx - 0.9, -14 + dx + 0.9, -7.9, -6.5, 1, 'Cafe Table');
       });
 
-      // Cafe Banner Sign
+      // Warm Pendant Lights above Island
+      [-1.4, 0, 1.4].forEach(lx => {
+        const shade = new THREE.Mesh(new THREE.ConeGeometry(0.26, 0.22, 16), new THREE.MeshBasicMaterial({ color: 0xfde68a }));
+        shade.position.set(lx, 2.8, 0);
+        cafeGroup.add(shade);
+      });
+
       const cafeSignCanvas = document.createElement('canvas');
       cafeSignCanvas.width = 512; cafeSignCanvas.height = 128;
       const cCtx = cafeSignCanvas.getContext('2d');
@@ -2879,21 +3041,20 @@ export interface CandidateComparisonView {
       const cafeSign = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 1.0), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(cafeSignCanvas) }));
       cafeSign.position.set(0, 2.4, -5.8);
       cafeGroup.add(cafeSign);
-
       f1.add(cafeGroup);
 
       // ── C. MUSHOLLA AS-SAKINAH & AREA WUDHU (x: 14, z: -4) ──
       const mushollaGroup = new THREE.Group();
       mushollaGroup.position.set(14, 0, -4);
 
-      // Emerald Green Prayer Rug (Karpet Sajadah Zamrud) with Shaf Striping
-      const rugMat = new THREE.MeshStandardMaterial({ color: 0x064e3b, roughness: 0.9 });
-      const rug = new THREE.Mesh(new THREE.PlaneGeometry(13.6, 11.6), rugMat);
+      const rug = new THREE.Mesh(
+        new THREE.PlaneGeometry(13.6, 11.6),
+        new THREE.MeshStandardMaterial({ map: sajadahTex, roughness: 0.9 })
+      );
       rug.rotation.x = -Math.PI / 2;
       rug.position.y = 0.025;
       mushollaGroup.add(rug);
 
-      // Shaf Lines on Carpet (Gold Accent Tape)
       [-3.5, -1.0, 1.5, 4.0].forEach(sz => {
         const shaf = new THREE.Mesh(new THREE.PlaneGeometry(13.2, 0.08), new THREE.MeshBasicMaterial({ color: 0xfbbf24 }));
         shaf.rotation.x = -Math.PI / 2;
@@ -2901,21 +3062,21 @@ export interface CandidateComparisonView {
         mushollaGroup.add(shaf);
       });
 
-      // Wooden Minimalist Partition Screen (Hijab Pembatas Shaf)
       const dividerMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.5 });
       const divider = new THREE.Mesh(new THREE.BoxGeometry(0.1, 1.4, 8.0), dividerMat);
       divider.position.set(0, 0.7, 0);
       mushollaGroup.add(divider);
+      registerCollider(13.85, 14.15, -8.1, 0.1, 1, 'Musholla Partition');
 
-      // Mimbar & Rak Kitab Al-Quran
       const mimbar = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.9, 0.8), woodMat);
       mimbar.position.set(0, 0.45, -5.0);
       mushollaGroup.add(mimbar);
+      registerCollider(13.2, 14.8, -9.5, -8.5, 1, 'Musholla Mimbar');
 
-      // Dedicated Wudhu Station with 3 Chrome Faucets & Drainage Grate
       const wudhuBasin = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.35, 1.2), new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.2 }));
       wudhuBasin.position.set(4.4, 0.175, 4.4);
       mushollaGroup.add(wudhuBasin);
+      registerCollider(16.2, 20.6, -0.2, 1.1, 1, 'Wudhu Station');
 
       [-1.2, 0, 1.2].forEach(fx => {
         const faucet = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.4, 12), chromeMat);
@@ -2923,7 +3084,6 @@ export interface CandidateComparisonView {
         mushollaGroup.add(faucet);
       });
 
-      // Musholla Sign Plaque
       const mushCanvas = document.createElement('canvas');
       mushCanvas.width = 512; mushCanvas.height = 128;
       const mCtx = mushCanvas.getContext('2d');
@@ -2955,9 +3115,13 @@ export interface CandidateComparisonView {
         targetGroup.add(deskGroup);
         avatarGroups.push(deskGroup);
 
-        // 2. Mobile Living Humanoid Avatar Group
+        // Register Desk Collider
+        registerCollider(agent.pos.x - 1.0, agent.pos.x + 1.0, agent.pos.z - 0.55, agent.pos.z + 0.65, floor, `Desk #${agent.id}`);
+
+        // 2. Mobile Living Humanoid Avatar Group (seated cleanly on ergonomic chair at z + 0.42!)
         const avatarGroup = new THREE.Group();
-        avatarGroup.position.set(agent.pos.x, floorY, agent.pos.z);
+        avatarGroup.position.set(agent.pos.x, floorY, agent.pos.z + 0.42);
+        avatarGroup.rotation.y = Math.PI; // Facing monitors (-Z)
         avatarGroup.userData = { agentId: agent.id, agent: agent, isAvatar: true };
 
         const avatarParts = build3DProportionalHumanoid(avatarGroup, agent);
@@ -2973,10 +3137,10 @@ export interface CandidateComparisonView {
           parts: avatarParts,
           statusSprite: statusSprite,
           speechSprite: speechSprite,
-          state: 'WORKING', // WORKING | WALKING | COLLABORATING | COFFEE | GYM | LOUNGE | SHOLAT
+          state: 'WORKING',
           progress: Math.floor(Math.random() * 45) + 40,
           currentTask: agent.status.action,
-          homePos: { x: agent.pos.x, y: floorY, z: agent.pos.z },
+          homePos: { x: agent.pos.x, y: floorY, z: agent.pos.z + 0.42 },
           targetPos: null,
           partnerId: null,
           speechTimer: null,
@@ -3038,7 +3202,7 @@ export interface CandidateComparisonView {
         group.add(mon);
       });
 
-      // Keyboard, Mousepad & Mouse
+      // Keyboard, Mousepad, Coffee Mug, Desk Lamp & Succulents
       const kb = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.02, 0.15), new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.4 }));
       kb.position.set(-0.08, 0.77, 0.12);
       group.add(kb);
@@ -3046,7 +3210,6 @@ export interface CandidateComparisonView {
       mousePad.position.set(0.32, 0.765, 0.12);
       group.add(mousePad);
 
-      // Ceramic Coffee Mug & Desk Lamp
       const mug = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.04, 0.09, 12), new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.2 }));
       mug.position.set(0.68, 0.805, 0.18);
       group.add(mug);
@@ -3062,77 +3225,211 @@ export interface CandidateComparisonView {
       lampHead.rotation.z = -0.6;
       group.add(lampHead);
 
-      // Full Ergonomic Task Chair (Seat, Backrest, Armrests, Stem & Base)
+      // Full Ergonomic Task Chair placed cleanly at z = +0.42
       const chairMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.75 });
       const chairSeat = new THREE.Mesh(new THREE.BoxGeometry(0.54, 0.07, 0.52), chairMat);
-      chairSeat.position.set(0, 0.46, 0.36);
+      chairSeat.position.set(0, 0.46, 0.42);
       group.add(chairSeat);
 
       const chairBack = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.56, 0.07), chairMat);
-      chairBack.position.set(0, 0.76, 0.60);
+      chairBack.position.set(0, 0.76, 0.66);
       chairBack.rotation.x = -0.08;
       group.add(chairBack);
 
       [-0.28, 0.28].forEach(ax => {
         const arm = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.04, 0.32), frameMat);
-        arm.position.set(ax, 0.62, 0.38);
+        arm.position.set(ax, 0.62, 0.44);
         group.add(arm);
       });
 
       const chairStem = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.40, 10), frameMat);
-      chairStem.position.set(0, 0.24, 0.36);
+      chairStem.position.set(0, 0.24, 0.42);
       group.add(chairStem);
       const chairBase = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, 0.04, 16), frameMat);
-      chairBase.position.set(0, 0.04, 0.36);
+      chairBase.position.set(0, 0.04, 0.42);
       group.add(chairBase);
     }
 
     function build3DProportionalHumanoid(group, agent) {
-      const skinMat = new THREE.MeshStandardMaterial({ color: 0xffdbac, roughness: 0.6 });
-      const suitMat = new THREE.MeshStandardMaterial({ color: agent.color || 0x2563eb, roughness: 0.6 });
+      const skinTones = [0xf5cfa0, 0xe8b98a, 0xf3d6b8, 0xd8a175];
+      const skinMat = new THREE.MeshStandardMaterial({ color: skinTones[agent.id % skinTones.length], roughness: 0.55 });
+      const suitMat = new THREE.MeshStandardMaterial({ color: agent.color || 0x2563eb, roughness: 0.55 });
+      const shirtMat = new THREE.MeshStandardMaterial({ color: 0xf1f5f9, roughness: 0.65 });
       const darkPantsMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.7 });
+      const hairColors = [0x1c1917, 0x292524, 0x451a03, 0x0f172a];
+      const hairMat = new THREE.MeshStandardMaterial({ color: hairColors[agent.id % hairColors.length], roughness: 0.65 });
+      const shoeMat = new THREE.MeshStandardMaterial({ color: 0x090d16, roughness: 0.4 });
+      const soleMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.6 });
+      const eyeWhiteMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+      const eyePupilMat = new THREE.MeshBasicMaterial({ color: 0x0f172a });
+
+      const isFemale = [7, 12, 14, 17, 20, 23].includes(agent.id);
+      const hasGlasses = [3, 4, 18, 19, 21, 14].includes(agent.id);
 
       const humanoid = new THREE.Group();
       humanoid.position.y = 0;
 
-      // Pelvis & Torso
+      // Pelvis / Hips
+      const pelvis = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.17, 0.16, 12), darkPantsMat);
+      pelvis.position.y = 0.52;
+      humanoid.add(pelvis);
+
+      // Torso & Collar & ID Lanyard
       const upperBody = new THREE.Group();
-      upperBody.position.y = 0.54;
-      const torso = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.48, 0.24), suitMat);
+      upperBody.position.y = 0.58;
+
+      const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.18, 0.48, 14), suitMat);
+      torso.scale.set(1.05, 1.0, 0.68);
       torso.position.y = 0.24;
+      torso.castShadow = true;
       upperBody.add(torso);
 
-      // Head Group
+      const collar = new THREE.Mesh(new THREE.CylinderGeometry(0.10, 0.12, 0.08, 12), shirtMat);
+      collar.position.set(0, 0.47, 0.02);
+      upperBody.add(collar);
+
+      // Lanyard Badge
+      const badge = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.11, 0.02), new THREE.MeshStandardMaterial({ color: 0x14b8a6, metalness: 0.3 }));
+      badge.position.set(0.08, 0.30, 0.14);
+      upperBody.add(badge);
+
+      // Neck & Sculpted Head + Facial Features + Hairstyle
+      const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.065, 0.10, 10), skinMat);
+      neck.position.y = 0.52;
+      upperBody.add(neck);
+
       const headGroup = new THREE.Group();
-      headGroup.position.y = 0.52;
-      const head = new THREE.Mesh(new THREE.SphereGeometry(0.16, 16, 16), skinMat);
+      headGroup.position.y = 0.66;
+
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.155, 20, 18), skinMat);
+      head.scale.set(0.95, 1.05, 0.98);
+      head.castShadow = true;
       headGroup.add(head);
+
+      // Eyes & Pupils (facing +Z in local space)
+      [-0.052, 0.052].forEach(ex => {
+        const sclera = new THREE.Mesh(new THREE.SphereGeometry(0.022, 10, 10), eyeWhiteMat);
+        sclera.position.set(ex, 0.02, 0.135);
+        const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.012, 8, 8), eyePupilMat);
+        pupil.position.set(ex, 0.02, 0.152);
+        const brow = new THREE.Mesh(new THREE.BoxGeometry(0.042, 0.012, 0.015), hairMat);
+        brow.position.set(ex, 0.055, 0.14);
+        headGroup.add(sclera);
+        headGroup.add(pupil);
+        headGroup.add(brow);
+      });
+
+      // Nose & Ears
+      const nose = new THREE.Mesh(new THREE.ConeGeometry(0.018, 0.045, 8), skinMat);
+      nose.rotation.x = Math.PI / 2;
+      nose.position.set(0, -0.005, 0.155);
+      headGroup.add(nose);
+
+      [-0.15, 0.15].forEach(earX => {
+        const ear = new THREE.Mesh(new THREE.SphereGeometry(0.028, 8, 8), skinMat);
+        ear.position.set(earX, 0.0, 0.0);
+        headGroup.add(ear);
+      });
+
+      // Glasses for Architect / Principal / Mentor roles
+      if (hasGlasses) {
+        const frameMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.9 });
+        [-0.052, 0.052].forEach(gx => {
+          const rim = new THREE.Mesh(new THREE.TorusGeometry(0.032, 0.005, 8, 16), frameMat);
+          rim.position.set(gx, 0.02, 0.155);
+          headGroup.add(rim);
+        });
+        const bridge = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.006, 0.008), frameMat);
+        bridge.position.set(0, 0.022, 0.155);
+        headGroup.add(bridge);
+      }
+
+      // Varied Hairstyles / Hijab
+      if (isFemale && [7, 12, 17].includes(agent.id)) {
+        const hijabMat = new THREE.MeshStandardMaterial({ color: agent.color || 0x0d9488, roughness: 0.7 });
+        const hijabCap = new THREE.Mesh(new THREE.SphereGeometry(0.168, 18, 16, 0, Math.PI * 2, 0, Math.PI * 0.68), hijabMat);
+        hijabCap.rotation.x = -0.18;
+        hijabCap.position.y = 0.01;
+        headGroup.add(hijabCap);
+        const hijabDrape = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.18, 0.18, 14), hijabMat);
+        hijabDrape.position.set(0, -0.10, -0.02);
+        headGroup.add(hijabDrape);
+      } else if (isFemale) {
+        const hairTop = new THREE.Mesh(new THREE.SphereGeometry(0.164, 16, 14, 0, Math.PI * 2, 0, Math.PI * 0.62), hairMat);
+        hairTop.rotation.x = -0.2;
+        headGroup.add(hairTop);
+        const bun = new THREE.Mesh(new THREE.SphereGeometry(0.068, 12, 12), hairMat);
+        bun.position.set(0, 0.06, -0.16);
+        headGroup.add(bun);
+      } else {
+        const hairCap = new THREE.Mesh(new THREE.SphereGeometry(0.162, 16, 14, 0, Math.PI * 2, 0, Math.PI * 0.54), hairMat);
+        hairCap.rotation.x = -0.22;
+        hairCap.position.y = 0.015;
+        headGroup.add(hairCap);
+      }
+
       upperBody.add(headGroup);
 
-      // Limbs
-      const leftShoulder = new THREE.Group(); leftShoulder.position.set(-0.25, 0.42, 0);
-      const rightShoulder = new THREE.Group(); rightShoulder.position.set(0.25, 0.42, 0);
-      const armGeo = new THREE.BoxGeometry(0.1, 0.38, 0.1);
-      leftShoulder.add(new THREE.Mesh(armGeo, suitMat));
-      rightShoulder.add(new THREE.Mesh(armGeo, suitMat));
+      // Articulated Shoulders -> Arms -> Hands
+      const leftShoulder = new THREE.Group(); leftShoulder.position.set(-0.26, 0.43, 0);
+      const rightShoulder = new THREE.Group(); rightShoulder.position.set(0.26, 0.43, 0);
+
+      [leftShoulder, rightShoulder].forEach((sh, idx) => {
+        const upperArm = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.048, 0.24, 10), suitMat);
+        upperArm.position.y = -0.12;
+        const forearm = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.038, 0.22, 10), skinMat);
+        forearm.position.set(0, -0.30, 0.08);
+        forearm.rotation.x = -0.65;
+        sh.add(upperArm);
+        sh.add(forearm);
+        if (idx === 0) {
+          const watch = new THREE.Mesh(new THREE.CylinderGeometry(0.043, 0.043, 0.025, 10), new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.9 }));
+          watch.position.set(0, -0.36, 0.14);
+          watch.rotation.x = -0.65;
+          sh.add(watch);
+        }
+      });
+
       upperBody.add(leftShoulder);
       upperBody.add(rightShoulder);
 
-      const leftHand = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 8), skinMat);
-      const rightHand = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 8), skinMat);
-      leftHand.position.set(-0.25, 0.16, 0.2);
-      rightHand.position.set(0.25, 0.16, 0.2);
+      const leftHand = new THREE.Mesh(new THREE.SphereGeometry(0.045, 10, 10), skinMat);
+      const rightHand = new THREE.Mesh(new THREE.SphereGeometry(0.045, 10, 10), skinMat);
+      leftHand.position.set(-0.26, 0.06, 0.20);
+      rightHand.position.set(0.26, 0.06, 0.20);
       upperBody.add(leftHand);
       upperBody.add(rightHand);
 
       humanoid.add(upperBody);
 
-      // Legs
-      const leftThigh = new THREE.Group(); leftThigh.position.set(-0.14, 0.48, 0);
-      const rightThigh = new THREE.Group(); rightThigh.position.set(0.14, 0.48, 0);
-      const legGeo = new THREE.BoxGeometry(0.12, 0.48, 0.12);
-      leftThigh.add(new THREE.Mesh(legGeo, darkPantsMat));
-      rightThigh.add(new THREE.Mesh(legGeo, darkPantsMat));
+      // Articulated Thighs -> Calves -> Sculpted Shoes
+      const leftThigh = new THREE.Group(); leftThigh.position.set(-0.10, 0.50, 0);
+      const rightThigh = new THREE.Group(); rightThigh.position.set(0.10, 0.50, 0);
+
+      const buildLeg = (thighGroup) => {
+        const thighMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.068, 0.056, 0.26, 10), darkPantsMat);
+        thighMesh.position.y = -0.13;
+        thighGroup.add(thighMesh);
+
+        const calfGroup = new THREE.Group();
+        calfGroup.position.y = -0.25;
+        const calfMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.054, 0.044, 0.24, 10), darkPantsMat);
+        calfMesh.position.y = -0.12;
+        calfGroup.add(calfMesh);
+
+        const shoe = new THREE.Mesh(new THREE.BoxGeometry(0.095, 0.06, 0.18), shoeMat);
+        shoe.position.set(0, -0.23, 0.04);
+        const sole = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.018, 0.19), soleMat);
+        sole.position.set(0, -0.255, 0.04);
+        calfGroup.add(shoe);
+        calfGroup.add(sole);
+
+        thighGroup.add(calfGroup);
+        return calfGroup;
+      };
+
+      const leftCalf = buildLeg(leftThigh);
+      const rightCalf = buildLeg(rightThigh);
       humanoid.add(leftThigh);
       humanoid.add(rightThigh);
 
@@ -3148,7 +3445,9 @@ export interface CandidateComparisonView {
         leftHand,
         rightHand,
         leftThigh,
-        rightThigh
+        rightThigh,
+        leftCalf,
+        rightCalf
       };
     }
 
@@ -3334,7 +3633,30 @@ export interface CandidateComparisonView {
       }, 5500);
     }
 
-    // ─── 9. ANIMATION LOOP & FIRST-PERSON WALKTHROUGH ENGINE ─────────────────────
+    // ─── 9. ANIMATION LOOP, COLLISION AVOIDANCE, 1ST & 3RD PERSON POV ───────────
+    function resolveXZCollisions(pos, floorNum, ignoreLabelPrefix = null) {
+      const margin = 0.42;
+      STATIC_COLLIDERS.forEach(box => {
+        if (box.floor !== floorNum) return;
+        if (ignoreLabelPrefix && box.label.startsWith(ignoreLabelPrefix)) return;
+        const minX = box.minX - margin;
+        const maxX = box.maxX + margin;
+        const minZ = box.minZ - margin;
+        const maxZ = box.maxZ + margin;
+        if (pos.x > minX && pos.x < maxX && pos.z > minZ && pos.z < maxZ) {
+          const dLeft = pos.x - minX;
+          const dRight = maxX - pos.x;
+          const dTop = pos.z - minZ;
+          const dBot = maxZ - pos.z;
+          const m = Math.min(dLeft, dRight, dTop, dBot);
+          if (m === dLeft) pos.x = minX;
+          else if (m === dRight) pos.x = maxX;
+          else if (m === dTop) pos.z = minZ;
+          else pos.z = maxZ;
+        }
+      });
+    }
+
     function animateWebGL() {
       if (currentEngine !== 'webgl') return;
       requestAnimationFrame(animateWebGL);
@@ -3352,15 +3674,18 @@ export interface CandidateComparisonView {
           }
         }
 
-        // 2. Treadmill and Animated Meshes
+        // 2. Treadmill & Office Clocks
         animatedMeshes.forEach(item => {
           if (item.type === 'treadmill-belt' && item.mesh) {
             item.mesh.position.z = Math.sin(elapsedTime * item.speed) * 0.05;
+          } else if (item.type === 'clock-hand' && item.mesh) {
+            item.mesh.rotation.z = -elapsedTime * 0.25;
           }
         });
 
-        // 3. Avatar Physical Movement, Elevator Transit & Articulations
-        Object.values(agentAvatars).forEach(av => {
+        // 3. Avatar Physical Movement, Collision Separation & Seated/Standing Articulation
+        const avatarList = Object.values(agentAvatars);
+        avatarList.forEach(av => {
           const parts = av.parts;
           if (!parts) return;
           const seed = parts.seed;
@@ -3377,7 +3702,7 @@ export interface CandidateComparisonView {
               elevatorTargetY = wp.y;
             }
 
-            if (dist < 0.15) {
+            if (dist < 0.16) {
               pos.set(wp.x, wp.y, wp.z);
               av.moveQueue.shift();
               if (av.moveQueue.length === 0) {
@@ -3388,7 +3713,7 @@ export interface CandidateComparisonView {
                 parts.leftShoulder.rotation.x = 0;
                 parts.rightShoulder.rotation.x = 0;
                 if (av.state === 'WORKING') {
-                  av.group.rotation.y = 0;
+                  av.group.rotation.y = Math.PI; // Face desk monitors (-Z)
                 }
                 updateLiveCensus();
               }
@@ -3399,64 +3724,111 @@ export interface CandidateComparisonView {
               pos.y += (dy / dist) * step;
               pos.z += (dz / dist) * step;
 
-              if (!wp.isElevator && (Math.abs(dx) > 0.02 || Math.abs(dz) > 0.02)) {
-                const targetYaw = Math.atan2(dx, dz);
-                av.group.rotation.y = targetYaw;
+              if (!wp.isElevator) {
+                const curFloorNum = Math.round(pos.y / 8) + 1;
+                resolveXZCollisions(pos, curFloorNum, `Desk #${av.agent.id}`);
+                if (Math.abs(dx) > 0.02 || Math.abs(dz) > 0.02) {
+                  av.group.rotation.y = Math.atan2(dx, dz);
+                }
               }
             }
           }
 
+          // Agent-to-agent collision separation while walking
           if (av.isWalking) {
-            const walkSpeed = 9.0;
-            const legSwing = Math.sin(elapsedTime * walkSpeed + seed) * 0.48;
+            avatarList.forEach(other => {
+              if (other === av) return;
+              if (Math.abs(other.group.position.y - av.group.position.y) > 1.5) return;
+              const ox = av.group.position.x - other.group.position.x;
+              const oz = av.group.position.z - other.group.position.z;
+              const d = Math.sqrt(ox * ox + oz * oz);
+              if (d > 0.01 && d < 0.85) {
+                const push = (0.85 - d) * 0.15;
+                av.group.position.x += (ox / d) * push;
+                av.group.position.z += (oz / d) * push;
+              }
+            });
+
+            // Natural walking gait
+            parts.humanoid.position.y = 0;
+            const walkSpeed = 8.5;
+            const legSwing = Math.sin(elapsedTime * walkSpeed + seed) * 0.45;
             parts.leftThigh.rotation.x = legSwing;
             parts.rightThigh.rotation.x = -legSwing;
-            parts.leftShoulder.rotation.x = -legSwing * 0.6;
-            parts.rightShoulder.rotation.x = legSwing * 0.6;
-            parts.upperBody.position.y = 0.54 + Math.abs(Math.sin(elapsedTime * walkSpeed + seed)) * 0.035;
-            parts.upperBody.rotation.x = 0;
+            parts.leftCalf.rotation.x = Math.max(0, -legSwing * 0.55);
+            parts.rightCalf.rotation.x = Math.max(0, legSwing * 0.55);
+            parts.leftShoulder.rotation.x = -legSwing * 0.5;
+            parts.rightShoulder.rotation.x = legSwing * 0.5;
+            parts.upperBody.position.y = 0.58 + Math.abs(Math.sin(elapsedTime * walkSpeed + seed)) * 0.025;
+            parts.upperBody.rotation.x = 0.04;
           } else if (av.state === 'WORKING') {
-            parts.upperBody.rotation.x = 0;
-            parts.upperBody.position.y = 0.54 + Math.sin(elapsedTime * 1.5 + seed) * 0.008;
-            parts.headGroup.rotation.y = Math.sin(elapsedTime * 0.8 + seed) * 0.06;
+            // Seated cleanly on ergonomic chair at z + 0.42
+            parts.humanoid.position.y = -0.18;
+            parts.leftThigh.rotation.x = -Math.PI / 2;
+            parts.rightThigh.rotation.x = -Math.PI / 2;
+            parts.leftCalf.rotation.x = Math.PI / 2;
+            parts.rightCalf.rotation.x = Math.PI / 2;
+            parts.upperBody.rotation.x = 0.05;
+            parts.upperBody.position.y = 0.58 + Math.sin(elapsedTime * 1.5 + seed) * 0.006;
+            parts.headGroup.rotation.y = Math.sin(elapsedTime * 0.8 + seed) * 0.07;
+            parts.leftShoulder.rotation.x = -0.35;
+            parts.rightShoulder.rotation.x = -0.35;
             const typeKey = Math.sin(elapsedTime * 11.0 + seed) * 0.008;
-            parts.leftHand.position.y = -0.02 + typeKey;
-            parts.rightHand.position.y = -0.02 - typeKey;
-          } else if (av.state === 'GYM') {
-            parts.upperBody.rotation.x = 0.08;
-            const runSpeed = 12.0;
-            parts.leftThigh.rotation.x = Math.sin(elapsedTime * runSpeed) * 0.55;
-            parts.rightThigh.rotation.x = -Math.sin(elapsedTime * runSpeed) * 0.55;
-          } else if (av.state === 'SHOLAT') {
-            const sholatCycle = Math.sin(elapsedTime * 0.6);
-            parts.upperBody.rotation.x = sholatCycle > 0.4 ? 0.72 : 0.0;
-          } else if (av.state === 'REST') {
-            parts.upperBody.rotation.x = -0.18;
-            parts.upperBody.position.y = 0.50 + Math.sin(elapsedTime * 1.1 + seed) * 0.015;
-            parts.headGroup.rotation.y = Math.sin(elapsedTime * 0.5 + seed) * 0.1;
-          } else if (av.state === 'COFFEE') {
-            parts.upperBody.rotation.x = 0;
-            parts.rightHand.position.y = 0.28 + Math.sin(elapsedTime * 2.0) * 0.06;
-          } else if (av.state === 'MEETING' || av.state === 'COLLABORATING') {
-            parts.upperBody.rotation.x = 0;
-            parts.headGroup.rotation.y = Math.sin(elapsedTime * 1.4 + seed) * 0.18;
-            parts.rightShoulder.rotation.x = -0.35 + Math.sin(elapsedTime * 2.5 + seed) * 0.12;
+            parts.leftHand.position.y = 0.08 + typeKey;
+            parts.rightHand.position.y = 0.08 - typeKey;
+          } else {
+            // Standing pose for GYM / SHOLAT / COFFEE / REST / MEETING
+            parts.humanoid.position.y = 0;
+            parts.leftCalf.rotation.x = 0;
+            parts.rightCalf.rotation.x = 0;
+            if (av.state === 'GYM') {
+              parts.upperBody.rotation.x = 0.08;
+              const runSpeed = 12.0;
+              parts.leftThigh.rotation.x = Math.sin(elapsedTime * runSpeed) * 0.55;
+              parts.rightThigh.rotation.x = -Math.sin(elapsedTime * runSpeed) * 0.55;
+            } else if (av.state === 'SHOLAT') {
+              parts.leftThigh.rotation.x = 0;
+              parts.rightThigh.rotation.x = 0;
+              const sholatCycle = Math.sin(elapsedTime * 0.6);
+              parts.upperBody.rotation.x = sholatCycle > 0.4 ? 0.72 : 0.0;
+            } else if (av.state === 'REST') {
+              parts.leftThigh.rotation.x = -0.45;
+              parts.rightThigh.rotation.x = -0.45;
+              parts.upperBody.rotation.x = -0.15;
+              parts.upperBody.position.y = 0.54 + Math.sin(elapsedTime * 1.1 + seed) * 0.012;
+            } else if (av.state === 'COFFEE') {
+              parts.leftThigh.rotation.x = 0;
+              parts.rightThigh.rotation.x = 0;
+              parts.upperBody.rotation.x = 0;
+              parts.rightHand.position.y = 0.26 + Math.sin(elapsedTime * 2.0) * 0.05;
+            } else {
+              parts.leftThigh.rotation.x = 0;
+              parts.rightThigh.rotation.x = 0;
+              parts.upperBody.rotation.x = 0;
+              parts.headGroup.rotation.y = Math.sin(elapsedTime * 1.4 + seed) * 0.16;
+            }
           }
         });
 
-        // 4. Camera POV Handling
+        // 4. Camera POV Handling (1st-Person, 3rd-Person, Orbit)
         if (currentPOV === 'walkthrough') {
           handleWalkthroughControls();
         } else if (currentPOV === 'follow' && selectedAgent) {
           const av = agentAvatars[selectedAgent.id];
           if (av && av.group) {
-            const desiredCam = new THREE.Vector3(
-              av.group.position.x,
-              av.group.position.y + 2.2,
-              av.group.position.z + 4.2
+            const yaw = av.group.rotation.y || 0;
+            const behindDist = 3.4;
+            const desiredX = Math.max(-24.5, Math.min(24.5, av.group.position.x - Math.sin(yaw) * behindDist));
+            const desiredZ = Math.max(-29.5, Math.min(29.5, av.group.position.z - Math.cos(yaw) * behindDist));
+            const desiredCam = new THREE.Vector3(desiredX, av.group.position.y + 2.15, desiredZ);
+            camera.position.lerp(desiredCam, 0.09);
+            const lookTarget = new THREE.Vector3(
+              av.group.position.x + Math.sin(yaw) * 1.2,
+              av.group.position.y + 1.35,
+              av.group.position.z + Math.cos(yaw) * 1.2
             );
-            camera.position.lerp(desiredCam, 0.08);
-            controls.target.lerp(new THREE.Vector3(av.group.position.x, av.group.position.y + 1.2, av.group.position.z), 0.1);
+            controls.target.lerp(lookTarget, 0.12);
+            camera.lookAt(controls.target);
           }
         } else if (controls) {
           controls.update();
@@ -3483,10 +3855,12 @@ export interface CandidateComparisonView {
       if (walkKeys['KeyA'] || walkKeys['ArrowLeft']) camera.position.addScaledVector(right, moveSpeed);
       if (walkKeys['KeyD'] || walkKeys['ArrowRight']) camera.position.addScaledVector(right, -moveSpeed);
 
-      const baseFloorY = currentFloor > 0 ? (currentFloor - 1) * 8 : 0;
-      camera.position.y = baseFloorY + 1.6;
-      camera.position.x = Math.max(-25, Math.min(25, camera.position.x));
-      camera.position.z = Math.max(-30, Math.min(30, camera.position.z));
+      const floorNum = currentFloor > 0 ? currentFloor : 1;
+      const baseFloorY = (floorNum - 1) * 8;
+      camera.position.y = baseFloorY + 1.62;
+      camera.position.x = Math.max(-25.0, Math.min(25.0, camera.position.x));
+      camera.position.z = Math.max(-30.0, Math.min(30.0, camera.position.z));
+      resolveXZCollisions(camera.position, floorNum, null);
     }
 
     // ─── 10. FLOOR SWITCHER & POV CONTROLLER FUNCTIONS ──────────────────────────
@@ -3501,19 +3875,29 @@ export interface CandidateComparisonView {
         activeBtn.className = 'floor-btn px-2.5 py-1 rounded font-semibold bg-teal-600 text-white transition shadow';
       }
 
+      // Auto-hide upper floor slabs so camera has unobstructed sightline into selected floor
+      if (floorGroups[1]) floorGroups[1].visible = true;
+      if (floorGroups[2]) floorGroups[2].visible = (floorNum === 0 || floorNum >= 2);
+      if (floorGroups[3]) floorGroups[3].visible = (floorNum === 0 || floorNum === 3);
+      if (roofGroup) roofGroup.visible = (floorNum === 0);
+
       const indicator = document.getElementById('active-room-indicator');
 
-      if (floorNum === 0) {
-        smoothCameraTo({ x: 32, y: 36, z: 48 }, { x: 0, y: 8, z: 4 });
+      if (currentPOV === 'walkthrough') {
+        const baseFloorY = floorNum > 0 ? (floorNum - 1) * 8 : 0;
+        camera.position.set(0, baseFloorY + 1.62, 10);
+        camera.lookAt(0, baseFloorY + 1.62, -4);
+      } else if (floorNum === 0) {
+        smoothCameraTo({ x: 34, y: 38, z: 50 }, { x: 0, y: 9, z: 2 });
         if (indicator) indicator.innerText = '🏢 Seluruh Gedung 3 Lantai • 24 Agen Aktif';
       } else if (floorNum === 1) {
-        smoothCameraTo({ x: 22, y: 15, z: 30 }, { x: 0, y: 1.5, z: 4 });
+        smoothCameraTo({ x: 24, y: 16, z: 32 }, { x: 0, y: 1.5, z: 4 });
         if (indicator) indicator.innerText = '1️⃣ Lantai 1: Lobi Utama, Kafetaria & Musholla As-Sakinah';
       } else if (floorNum === 2) {
-        smoothCameraTo({ x: 22, y: 23, z: 30 }, { x: 0, y: 9.5, z: 4 });
+        smoothCameraTo({ x: 24, y: 24, z: 32 }, { x: 0, y: 9.5, z: 2 });
         if (indicator) indicator.innerText = '2️⃣ Lantai 2: Core Engineering, QA Lab & Ruang Meeting Boardroom';
       } else if (floorNum === 3) {
-        smoothCameraTo({ x: 22, y: 31, z: 30 }, { x: 0, y: 17.5, z: 4 });
+        smoothCameraTo({ x: 24, y: 32, z: 32 }, { x: 0, y: 17.5, z: 2 });
         if (indicator) indicator.innerText = '3️⃣ Lantai 3: Suite Eksekutif, Pusat Riset AI, DevOps & Gym';
       }
     }
@@ -3537,18 +3921,24 @@ export interface CandidateComparisonView {
       } else if (povMode === 'walkthrough') {
         if (controls) controls.enabled = false;
         if (walkthroughHud) walkthroughHud.classList.remove('hidden');
-        const baseFloorY = currentFloor > 0 ? (currentFloor - 1) * 8 : 0;
-        camera.position.set(0, baseFloorY + 1.6, 12);
-        camera.lookAt(0, baseFloorY + 1.6, -4);
+        const floorNum = currentFloor > 0 ? currentFloor : 1;
+        switchFloor(floorNum);
+        const baseFloorY = (floorNum - 1) * 8;
+        camera.position.set(0, baseFloorY + 1.62, 10);
+        camera.lookAt(0, baseFloorY + 1.62, -4);
       } else if (povMode === 'follow') {
         if (controls) controls.enabled = false;
         if (walkthroughHud) walkthroughHud.classList.add('hidden');
-        if (selectedAgent) focusAgentCamera(selectedAgent);
+        if (selectedAgent) {
+          switchFloor(selectedAgent.floor || 2);
+          focusAgentCamera(selectedAgent);
+        }
       } else if (povMode === 'topdown') {
         if (controls) controls.enabled = true;
         if (walkthroughHud) walkthroughHud.classList.add('hidden');
-        const baseFloorY = currentFloor > 0 ? (currentFloor - 1) * 8 : 0;
-        smoothCameraTo({ x: 0, y: baseFloorY + 45, z: 0.1 }, { x: 0, y: baseFloorY, z: 0 });
+        const floorNum = currentFloor > 0 ? currentFloor : 1;
+        const baseFloorY = (floorNum - 1) * 8;
+        smoothCameraTo({ x: 0, y: baseFloorY + 42, z: 0.1 }, { x: 0, y: baseFloorY, z: 0 });
       }
     }
 
