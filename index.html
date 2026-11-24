@@ -1,0 +1,4141 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LokaTalenta Office — Living 3D Multi-Agent Headquarter</title>
+  <!-- Tailwind CSS & Fonts -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <!-- 3D Graphics Engines: Three.js r128 + OrbitControls + Tween.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace']
+          },
+          colors: {
+            brand: {
+              50: '#f0fdfa',
+              500: '#14b8a6',
+              600: '#0d9488',
+              700: '#0f766e',
+              900: '#134e4a'
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+      background-color: #090d16;
+      color: #f8fafc;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    #canvas-container {
+      width: 100%;
+      height: 720px;
+      position: relative;
+      background: radial-gradient(circle at 50% 40%, #0d1527 0%, #060911 100%);
+      overflow: hidden;
+    }
+    .glass-card {
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 3px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+  </style>
+</head>
+<body class="selection:bg-teal-500 selection:text-white">
+
+  <!-- Floating Tour HUD Bar -->
+  <div id="tour-hud-bar" class="hidden fixed bottom-6 right-6 z-50 glass-card border border-teal-500/50 px-4 py-2.5 rounded-2xl shadow-2xl flex items-center gap-3 backdrop-blur-xl animate-fade-in transition-all text-xs">
+    <div class="flex items-center gap-2">
+      <span class="w-3 h-3 rounded-full bg-emerald-400 animate-ping"></span>
+      <span class="w-3 h-3 rounded-full bg-emerald-500 -ml-5"></span>
+      <span class="text-xs font-bold uppercase tracking-wider text-emerald-400">Tur Sinematik 60s</span>
+    </div>
+    <div class="h-4 w-px bg-zinc-700"></div>
+    <span class="text-xs font-semibold text-zinc-100" id="tour-hud-title">Agen 1/24 (Rizco Renova)</span>
+    <span class="text-xs font-mono font-bold text-amber-300 bg-amber-950/60 px-2.5 py-0.5 rounded-md border border-amber-800/80" id="tour-hud-timer">⏱️ 60s tersisa</span>
+    <div class="flex items-center gap-1.5 ml-2">
+      <button onclick="toggleTourPause()" id="tour-hud-pause" class="px-2.5 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-xs font-medium text-zinc-200 transition">⏸️ Jeda</button>
+      <button onclick="nextTourStep()" class="px-2.5 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-xs font-medium text-zinc-200 transition">⏭️ Lewati</button>
+      <button onclick="toggleTour()" class="px-2.5 py-1 rounded bg-rose-900/60 hover:bg-rose-800 text-xs font-medium text-rose-200 transition">✕ Tutup</button>
+    </div>
+  </div>
+
+  <!-- Header & Telemetry Summary -->
+  <header class="border-b border-zinc-800/80 bg-zinc-950/90 backdrop-blur-md sticky top-0 z-40 px-4 py-2.5">
+    <div class="max-w-[1700px] mx-auto flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-emerald-700 flex items-center justify-center shadow-lg shadow-teal-900/30 font-bold text-xl text-white">
+          🏢
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-base font-bold text-white tracking-tight">LokaTalenta Office</h1>
+            <span class="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">SPRINT 15 LIVE</span>
+            <span class="px-2 py-0.5 rounded text-[11px] font-mono bg-teal-500/20 text-teal-300 border border-teal-500/30">24 Roles • Lead: Rizco Renova</span>
+          </div>
+          <p class="text-xs text-zinc-400">Living 3D Headquarter: Simulasi aktivitas otonom 24 agen, interaksi kolaborasi, pantry ngopi, gym, lounge, monitor actual real-time, dan tur sinematik non-intrusif.</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 flex-wrap">
+        <!-- Search Box -->
+        <div class="relative">
+          <input type="text" id="agent-search" placeholder="Cari personel, peran, tiket, file..." oninput="onSearchInput(this.value)" class="w-56 px-3 py-1.5 pl-8 rounded-lg bg-zinc-900 border border-zinc-700/80 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-teal-500 transition" />
+          <span class="absolute left-2.5 top-2 text-zinc-500 text-xs">🔍</span>
+        </div>
+
+        <!-- Engine & View Mode Controls -->
+        <div class="flex items-center bg-zinc-900 border border-zinc-800 rounded-lg p-0.5 text-xs">
+          <button onclick="switchEngine('webgl')" id="btn-engine-webgl" class="px-2.5 py-1 rounded font-medium bg-teal-600 text-white transition">3D WebGL</button>
+          <button onclick="switchEngine('canvas2d')" id="btn-engine-2d" class="px-2.5 py-1 rounded font-medium text-zinc-400 hover:text-white transition">2.5D Canvas</button>
+        </div>
+
+        <div class="flex items-center bg-zinc-900 border border-zinc-800 rounded-lg p-0.5 text-xs">
+          <button onclick="setCameraView('isometric')" title="Sudut Isometrik" class="px-2.5 py-1 rounded font-medium text-zinc-300 hover:text-white transition">📐 Isometrik</button>
+          <button onclick="setCameraView('topdown')" title="Denah Atas (Top-Down)" class="px-2.5 py-1 rounded font-medium text-zinc-300 hover:text-white transition">🗺️ Denah</button>
+          <button onclick="toggleTour()" id="btn-tour" title="Tur Sinematik Otomatis (60 Detik Per Agen)" class="px-2.5 py-1 rounded font-medium text-zinc-300 hover:text-white transition flex items-center gap-1.5">
+            <span>🎬</span><span>Tur 60s</span>
+          </button>
+          <button onclick="toggleLightingMode()" id="btn-light" title="Ganti Mode Pencahayaan (Siang/Malam)" class="px-2 py-1 rounded font-medium text-zinc-300 hover:text-white transition">🌙</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Division Jump Bar with Accurate 24 Roles Distribution -->
+    <div class="max-w-[1700px] mx-auto mt-2 overflow-x-auto custom-scroll pb-1">
+      <div class="inline-flex p-1 bg-zinc-900/90 rounded-lg border border-zinc-800 text-xs gap-1">
+        <button onclick="focusDivision('all')" id="btn-div-all" class="div-btn px-2.5 py-1 rounded-md font-medium bg-zinc-800 text-white border border-zinc-700 shadow-sm transition">
+          🏢 Seluruh Gedung (24)
+        </button>
+        <button onclick="focusDivision('executive')" id="btn-div-executive" class="div-btn px-2.5 py-1 rounded-md font-medium text-zinc-400 hover:text-white hover:bg-zinc-800/60 transition">
+          🏛️ Eksekutif & Manajemen (3)
+        </button>
+        <button onclick="focusDivision('architecture')" id="btn-div-architecture" class="div-btn px-2.5 py-1 rounded-md font-medium text-zinc-400 hover:text-white hover:bg-zinc-800/60 transition">
+          📐 Arsitektur & AI (3)
+        </button>
+        <button onclick="focusDivision('engineering')" id="btn-div-engineering" class="div-btn px-2.5 py-1 rounded-md font-medium text-zinc-400 hover:text-white hover:bg-zinc-800/60 transition">
+          💻 Core Engineering (5)
+        </button>
+        <button onclick="focusDivision('qa')" id="btn-div-qa" class="div-btn px-2.5 py-1 rounded-md font-medium text-zinc-400 hover:text-white hover:bg-zinc-800/60 transition">
+          🔬 QA & Testing Lab (4)
+        </button>
+        <button onclick="focusDivision('devops')" id="btn-div-devops" class="div-btn px-2.5 py-1 rounded-md font-medium text-zinc-400 hover:text-white hover:bg-zinc-800/60 transition">
+          ⚡ Security & DevOps (5)
+        </button>
+        <button onclick="focusDivision('lounge')" id="btn-div-lounge" class="div-btn px-2.5 py-1 rounded-md font-medium text-zinc-400 hover:text-white hover:bg-zinc-800/60 transition">
+          ☕ Stakeholder Lounge (4)
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Live Real-Time Activity Ticker -->
+  <div id="live-activity-bar" class="max-w-[1700px] mx-auto px-4 mt-2">
+    <div class="glass-card px-3.5 py-1.5 rounded-xl border border-teal-500/30 flex flex-wrap items-center justify-between text-xs gap-2 shadow-lg">
+      <div class="flex items-center gap-2.5 min-w-0">
+        <span class="relative flex h-2.5 w-2.5">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-teal-500"></span>
+        </span>
+        <span class="font-mono font-bold text-teal-400 uppercase text-[10px] tracking-wider px-1.5 py-0.5 bg-teal-950/80 rounded border border-teal-800/80">AKTIVITAS REAL-TIME:</span>
+        <span id="live-activity-ticker-text" class="text-zinc-100 font-medium truncate max-w-[700px]">Farel Faza Nugraha sedang mengetik modul PWA-01 di Studio Core Engineering</span>
+      </div>
+      <div class="flex items-center gap-3 text-[11px] font-mono text-zinc-400">
+        <span id="live-census-text">☕ 2 di Pantry • 🏃 1 di Gym • 💬 2 Kolaborasi • 💻 19 di Meja</span>
+        <span class="text-emerald-400 font-bold bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800/60">LIVE SDLC v3.1.0</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3D Viewport Area -->
+  <main class="relative w-full">
+    <div id="canvas-container">
+      <!-- In-Canvas Top Status Bar -->
+      <div class="absolute top-3 left-4 z-20 flex items-center gap-3 pointer-events-none">
+        <span class="glass-card px-3 py-1 rounded-md text-xs font-mono text-zinc-300 border border-zinc-700/60 shadow" id="active-room-indicator">
+          🏢 Seluruh Gedung • 6 Divisi Aktif
+        </span>
+        <span class="glass-card px-3 py-1 rounded-md text-xs font-mono text-emerald-400 border border-emerald-500/30 shadow flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span>Dual 3D Engine: WebGL Hardware Accelerated</span>
+        </span>
+      </div>
+
+      <!-- In-Canvas Bottom Controls Overlay -->
+      <div class="absolute bottom-3 left-4 z-20 pointer-events-none text-xs text-zinc-400 font-mono glass-card px-3 py-1.5 rounded-lg border border-zinc-800/80 shadow">
+        💡 Kontrol Kamera: <span class="text-zinc-200">Orbit</span>: Drag Kiri • <span class="text-zinc-200">Pan</span>: Shift+Drag / Drag Kanan • <span class="text-zinc-200">Zoom</span>: Scroll • <span class="text-teal-300 font-bold">Klik agen / meja</span> untuk auto-zoom inspeksi monitor actual
+      </div>
+    </div>
+
+    <!-- Active Agent Telemetry & Real-Time Dossier Panel -->
+    <section class="max-w-[1700px] mx-auto px-4 py-4 grid grid-cols-1 lg:grid-cols-3 gap-4">
+      
+      <!-- Column 1: Agent Persona & Status -->
+      <div class="glass-card p-4 rounded-xl border border-zinc-800/80 shadow-lg">
+        <div class="flex items-start justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <div id="dossier-avatar-container" class="w-14 h-14 rounded-2xl bg-zinc-800 border border-zinc-700 flex items-center justify-center text-3xl shadow">
+              👑
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <span id="dossier-id-badge" class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">LEAD #00</span>
+                <span id="dossier-category-badge" class="px-2 py-0.5 rounded text-[10px] font-mono uppercase bg-zinc-800 text-zinc-300">LEAD</span>
+              </div>
+              <h2 id="dossier-name" class="text-lg font-bold text-white tracking-tight mt-0.5">Rizco Renova</h2>
+              <p id="dossier-role" class="text-xs text-teal-400 font-medium">Team Leader & Release Sign-Off Authority</p>
+            </div>
+          </div>
+          <div class="text-right">
+            <span class="text-[10px] font-mono text-zinc-400 block">KAPASITAS SPRINT</span>
+            <span id="dossier-workload" class="text-base font-mono font-bold text-amber-400">98% (Peak)</span>
+          </div>
+        </div>
+
+        <div class="mt-4 pt-3 border-t border-zinc-800/80">
+          <div class="flex items-center justify-between text-xs mb-1.5">
+            <span class="text-zinc-400">Divisi Penugasan:</span>
+            <span id="dossier-division" class="font-medium text-white">Ruang Eksekutif & Tata Kelola Produk</span>
+          </div>
+          <div class="flex items-center justify-between text-xs mb-1.5">
+            <span class="text-zinc-400">Status Operasional:</span>
+            <span class="flex items-center gap-1.5 text-emerald-400 font-medium">
+              <span id="dossier-status-dot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span id="dossier-status-label">Release Checker & Final Gatekeeper</span>
+            </span>
+          </div>
+          <div class="flex items-center justify-between text-xs mb-1.5">
+            <span class="text-zinc-400">Ticket Backlog Sprint 15:</span>
+            <span id="dossier-ticket" class="font-mono text-amber-300 font-semibold bg-amber-950/40 px-2 py-0.5 rounded border border-amber-800/60">GATE-01 / LEAD-APPROVAL</span>
+          </div>
+          <div class="flex items-center justify-between text-xs">
+            <span class="text-zinc-400">Target File / Modul:</span>
+            <span id="dossier-file" class="font-mono text-zinc-300 truncate max-w-[220px]">AGENTS.md & docs/planning/</span>
+          </div>
+        </div>
+
+        <!-- Dynamic Real-Time Activity & Progress Box -->
+        <div class="mt-3 bg-zinc-900/90 p-2.5 rounded-xl border border-teal-500/40 shadow-inner">
+          <div class="flex items-center justify-between text-xs mb-1">
+            <span class="text-teal-400 font-bold flex items-center gap-1.5 text-[11px]">
+              <span class="w-2 h-2 rounded-full bg-teal-400 animate-ping"></span>
+              <span>Aktivitas Nyata Saat Ini:</span>
+            </span>
+            <span id="dossier-activity-state" class="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-teal-950 text-teal-300 border border-teal-800">WORKING</span>
+          </div>
+          <p id="dossier-activity-desc" class="text-xs text-zinc-200 font-medium leading-tight">
+            Sedang fokus bekerja di workstation meja kantor.
+          </p>
+          <div class="mt-2 flex items-center justify-between text-[10px] font-mono text-zinc-400 mb-1">
+            <span>Progress Sub-Task Tiket:</span>
+            <span id="dossier-progress-num" class="text-teal-300 font-bold">78%</span>
+          </div>
+          <div class="w-full bg-zinc-800 rounded-full h-1.5 overflow-hidden">
+            <div id="dossier-progress-bar" class="bg-gradient-to-r from-teal-500 to-emerald-400 h-1.5 rounded-full transition-all duration-300" style="width: 78%"></div>
+          </div>
+
+          <!-- Quick Action Commands for Testing Interaction -->
+          <div class="mt-2.5 pt-2 border-t border-zinc-800/80 flex items-center gap-1">
+            <button onclick="triggerAgentActivity(selectedAgent.id, 'coffee')" class="flex-1 py-1 px-1 rounded bg-zinc-800 hover:bg-zinc-700 text-[10px] font-medium text-amber-200 transition">☕ Ke Pantry</button>
+            <button onclick="triggerAgentActivity(selectedAgent.id, 'collaborate')" class="flex-1 py-1 px-1 rounded bg-zinc-800 hover:bg-zinc-700 text-[10px] font-medium text-teal-200 transition">💬 Kolaborasi</button>
+            <button onclick="triggerAgentActivity(selectedAgent.id, 'gym')" class="flex-1 py-1 px-1 rounded bg-zinc-800 hover:bg-zinc-700 text-[10px] font-medium text-cyan-200 transition">🏃 Ke Gym</button>
+            <button onclick="triggerAgentActivity(selectedAgent.id, 'work')" class="flex-1 py-1 px-1 rounded bg-teal-950/80 hover:bg-teal-900 border border-teal-800 text-[10px] font-medium text-teal-300 transition">💻 Kerja</button>
+          </div>
+        </div>
+
+        <div class="mt-4 pt-3 border-t border-zinc-800/80 flex items-center justify-between gap-2">
+          <button onclick="focusCurrentAgentCamera()" class="px-3 py-1.5 rounded-lg bg-teal-600 hover:bg-teal-500 text-white text-xs font-semibold flex items-center gap-1.5 shadow transition">
+            <span>🎯</span><span>Auto-Zoom Meja Agen</span>
+          </button>
+          <div class="flex items-center gap-1">
+            <button onclick="prevAgent()" class="px-2.5 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs text-zinc-200 transition">◀ Prev</button>
+            <button onclick="nextAgent()" class="px-2.5 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs text-zinc-200 transition">Next ▶</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Column 2: Detailed Real-Time Work Description & Teamwork Collaboration -->
+      <div class="glass-card p-4 rounded-xl border border-zinc-800/80 shadow-lg flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between pb-2 border-b border-zinc-800/80">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-teal-400 flex items-center gap-2">
+              <span>⚡</span><span>Deskripsi Kerjaan Actual (Real-Time Teamwork)</span>
+            </h3>
+            <span class="text-[11px] font-mono text-zinc-400 bg-zinc-800 px-2 py-0.5 rounded">Sprint 15 Kickoff</span>
+          </div>
+          <p id="dossier-action" class="text-xs text-zinc-200 mt-2.5 leading-relaxed">
+            Bertugas sebagai approval dan checker formal dari setiap dokumen (PRD, TRD, 112 Matriks QA, Laporan SIT/UAT, User Sign-Off) sebelum memberikan otorisasi rilis ke DevOps.
+          </p>
+
+          <div class="mt-3 bg-zinc-900/90 p-2.5 rounded-lg border border-zinc-800">
+            <span class="text-[11px] font-mono font-bold text-amber-300 block mb-1">🤝 Kolaborasi Lintas Peran (Teamwork Sync):</span>
+            <p id="dossier-collaborators" class="text-xs text-zinc-300 leading-normal">
+              Damar Deva Gunawan (DevOps Lead), Hendrawan Wicaksono (Principal FE), Dr. Ir. Danu Bratawidjaja (Principal BE)
+            </p>
+          </div>
+
+          <div class="mt-2.5 bg-zinc-900/90 p-2.5 rounded-lg border border-zinc-800">
+            <span class="text-[11px] font-mono font-bold text-cyan-300 block mb-1">🏛️ Standar Clean Architecture & SDLC Gate:</span>
+            <p id="dossier-clean-arch" class="text-xs text-zinc-300 leading-normal">
+              Dokumen PRD/TRD tersinkronisasi, zero direct Supabase calls di view layer, 163/163 Vitest tests pass, DAST 0 vulnerability, sign-off formal wajib terbit sebelum release branch.
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-3 pt-2.5 border-t border-zinc-800/80">
+          <span class="text-[11px] font-bold text-zinc-400 block mb-1">💡 Prinsip & Opini Kerja Anti-AI-Slop:</span>
+          <p id="dossier-opinion" class="text-xs italic text-zinc-300 border-l-2 border-teal-500 pl-2 py-0.5">
+            "Disiplin SDLC dan ketertelusuran dokumen adalah fondasi integritas rilis. DevOps dilarang deploy tanpa otorisasi sign-off tertulis resmi dari Team Leader."
+          </p>
+        </div>
+      </div>
+
+      <!-- Column 3: Screen Preview & Acceptance Criteria (Tabs) -->
+      <div class="glass-card p-4 rounded-xl border border-zinc-800/80 shadow-lg flex flex-col justify-between">
+        <div>
+          <div class="flex items-center gap-1.5 border-b border-zinc-800/80 pb-2">
+            <button onclick="setDossierTab('code')" id="tab-btn-code" class="flex-1 py-1 px-1.5 rounded font-medium text-[11px] bg-zinc-800 text-white transition truncate">
+              💻 Monitor Actual
+            </button>
+            <button onclick="setDossierTab('ac')" id="tab-btn-ac" class="flex-1 py-1 px-1.5 rounded font-medium text-[11px] text-zinc-400 hover:text-white transition truncate">
+              ✅ Kriteria SDLC
+            </button>
+            <button onclick="setDossierTab('skills')" id="tab-btn-skills" class="flex-1 py-1 px-1.5 rounded font-medium text-[11px] text-zinc-400 hover:text-white transition truncate">
+              🎯 Keahlian & Stack
+            </button>
+          </div>
+
+          <!-- Tab Content: Screen Code / Terminal View -->
+          <div id="tab-content-code" class="mt-2.5">
+            <div class="bg-black/90 p-3 rounded-lg border border-zinc-800 font-mono text-[11px] text-zinc-300 overflow-x-auto max-h-[175px] custom-scroll">
+              <pre id="dossier-code" class="leading-relaxed"></pre>
+            </div>
+            <p class="text-[10px] text-zinc-500 font-mono mt-1.5 flex items-center justify-between">
+              <span>*Tampilan actual yang dirender pada monitor 3D agen</span>
+              <span class="text-teal-400 font-bold">CanvasTexture 512x256</span>
+            </p>
+          </div>
+
+          <!-- Tab Content: Acceptance Criteria List -->
+          <div id="tab-content-ac" class="mt-2.5 hidden">
+            <ul id="dossier-ac-list" class="space-y-1.5 text-xs text-zinc-300 max-h-[175px] overflow-y-auto custom-scroll pr-1">
+            </ul>
+          </div>
+
+          <!-- Tab Content: Comprehensive Skills & Stack -->
+          <div id="tab-content-skills" class="mt-2.5 hidden">
+            <div class="space-y-2 text-xs max-h-[175px] overflow-y-auto custom-scroll pr-1">
+              <div>
+                <span class="text-[10px] font-mono font-bold uppercase text-teal-400 tracking-wider block mb-1">🎯 Keahlian Utama (Core Competencies)</span>
+                <div id="dossier-skills-primary" class="flex flex-wrap gap-1.5"></div>
+              </div>
+              <div class="pt-1.5 border-t border-zinc-800/60">
+                <span class="text-[10px] font-mono font-bold uppercase text-amber-400 tracking-wider block mb-1">🛠️ Stack, Tools & Framework</span>
+                <div id="dossier-skills-stack" class="flex flex-wrap gap-1"></div>
+              </div>
+              <div class="pt-1.5 border-t border-zinc-800/60 flex items-start justify-between gap-2">
+                <div class="flex-1">
+                  <span class="text-[10px] font-mono font-bold uppercase text-cyan-400 tracking-wider block mb-0.5">🏛️ Metodologi & Arsitektur</span>
+                  <p id="dossier-skills-methodology" class="text-[11px] text-zinc-300 leading-tight"></p>
+                </div>
+                <div class="flex-1">
+                  <span class="text-[10px] font-mono font-bold uppercase text-purple-400 tracking-wider block mb-0.5">📜 Sertifikasi / Mandat</span>
+                  <p id="dossier-skills-certifications" class="text-[11px] text-zinc-300 leading-tight"></p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-3 pt-2.5 border-t border-zinc-800/80 flex items-center justify-between text-xs text-zinc-400">
+          <span>Otorisasi: <strong class="text-amber-300">RIZCO-LEAD-AUTH</strong></span>
+          <span>Target Rilis: <strong class="text-teal-400">v3.1.0 Minor</strong></span>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- 24-Role Swarm Grid Roster Directory -->
+    <section class="max-w-[1700px] mx-auto px-4 pb-12">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-sm font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-2">
+          <span>👥</span><span>Direktori Lengkap 24 Personel Markas LokaTalenta (Klik Meja untuk Inspeksi)</span>
+        </h3>
+        <span class="text-xs text-zinc-400 font-mono">Total 24 Roles • 100% Aktif Operasional</span>
+      </div>
+
+      <div id="agents-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2.5">
+        <!-- Injected via JavaScript -->
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // ─── POLYFILL CANVAS ROUNDRECT ───────────────────────────────────────────────
+    if (!CanvasRenderingContext2D.prototype.roundRect) {
+      CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+        if (typeof r === 'undefined') r = 0;
+        if (typeof r === 'number') r = {tl: r, tr: r, br: r, bl: r};
+        this.beginPath();
+        this.moveTo(x + r.tl, y);
+        this.lineTo(x + w - r.tr, y);
+        this.quadraticCurveTo(x + w, y, x + w, y + r.tr);
+        this.lineTo(x + w, y + h - r.br);
+        this.quadraticCurveTo(x + w, y + h, x + w - r.br, y + h);
+        this.lineTo(x + r.bl, y + h);
+        this.quadraticCurveTo(x, y + h, x, y + h - r.bl);
+        this.lineTo(x, y + r.tl);
+        this.quadraticCurveTo(x, y, x + r.tl, y);
+        this.closePath();
+        return this;
+      };
+    }
+
+    // ─── 1. DATABASE 6 DIVISI BESERTA MOTO & 4 TARGET SPRINT 15 ─────────────────
+    const DIVISIONS = {
+      executive: {
+        id: 'executive',
+        name: 'Ruang Eksekutif & Tata Kelola Produk',
+        shortName: '🏛️ Eksekutif & Manajemen (3)',
+        color: '#3b82f6',
+        threeColor: 0x3b82f6,
+        center: { x: -14, z: -12 },
+        bounds: { width: 14, depth: 14 },
+        floorMat: 0x3d271d,
+        floorAccent: 0xd97706,
+        lightColor: 0xfef08a,
+        cameraTarget: { x: -14, y: 1.5, z: -12 },
+        cameraPos: { x: -4, y: 12, z: 2 },
+        motto: "Integritas Tanpa Kompromi, Nilai Bisnis Berkelanjutan",
+        targets: [
+          { code: "GATE-01", text: "Otorisasi Dokumen & Release Sign-Off (Rizco Renova)", status: "APPROVED" },
+          { code: "BIZ-01", text: "B2B Midtrans Monetization & Enterprise Funnel (Bram)", status: "ACTIVE" },
+          { code: "PRD-15", text: "Finalisasi PRD ATS Kanban & PWA-01 iOS (Pranadipa)", status: "LOCKED" },
+          { code: "SA-05", text: "State Machine Scoring Psikometri DISC & MBTI (Satria)", status: "IN_PROGRESS" }
+        ]
+      },
+      architecture: {
+        id: 'architecture',
+        name: 'Ruang Arsitektur Sistem & Pusat Riset AI',
+        shortName: '📐 Arsitektur & AI (3)',
+        color: '#8b5cf6',
+        threeColor: 0x8b5cf6,
+        center: { x: 14, z: -12 },
+        bounds: { width: 14, depth: 14 },
+        floorMat: 0x1f263d,
+        floorAccent: 0xa78bfa,
+        lightColor: 0xc4b5fd,
+        cameraTarget: { x: 14, y: 1.5, z: -12 },
+        cameraPos: { x: 24, y: 12, z: 2 },
+        motto: "Clean & Hexagonal Architecture, Scalable & Resilient Systems",
+        targets: [
+          { code: "ARCH-04", text: "Hexagonal Ports & Adapters Architecture (Ir. Arkananta)", status: "ACTIVE" },
+          { code: "CODE-BE", text: "Review Core Domain & RPC Idempotency (Dr. Danu)", status: "APPROVED" },
+          { code: "AI-15A", text: "Lightweight STT Speech & STAR NLP Model (Dr. Gibran)", status: "IN_PROGRESS" },
+          { code: "EDGE-01", text: "Supabase Edge Functions Serverless Runtime (Deno)", status: "PLANNED" }
+        ]
+      },
+      engineering: {
+        id: 'engineering',
+        name: 'Studio Core Engineering & Product Craft',
+        shortName: '💻 Core Engineering (5)',
+        color: '#10b981',
+        threeColor: 0x10b981,
+        center: { x: -14, z: 6 },
+        bounds: { width: 14, depth: 14 },
+        floorMat: 0x112821,
+        floorAccent: 0x34d399,
+        lightColor: 0x6ee7b7,
+        cameraTarget: { x: -14, y: 1.5, z: 6 },
+        cameraPos: { x: -4, y: 12, z: 20 },
+        motto: "High Craftsmanship, Zero Tech Debt, Anti-AI-Slop Visual System",
+        targets: [
+          { code: "CODE-FE", text: "Clean Architecture FE Review Hendrawan (Bundle < 250kB)", status: "APPROVED" },
+          { code: "PWA-01", text: "iOS Standalone PWA & Safe Area Insets (Farel)", status: "IN_PROGRESS" },
+          { code: "REC-06", text: "ATS Kanban Pipeline & Drag-and-Drop (Farel/Bagas)", status: "ACTIVE" },
+          { code: "DES-01", text: "Anti-AI-Slop Design System Token V2 (Nadia Maharani)", status: "VERIFIED" }
+        ]
+      },
+      qa: {
+        id: 'qa',
+        name: 'Laboratorium Jaminan Kualitas & Otomasi',
+        shortName: '🔬 QA & Testing Lab (4)',
+        color: '#f59e0b',
+        threeColor: 0xf59e0b,
+        center: { x: 14, z: 6 },
+        bounds: { width: 14, depth: 14 },
+        floorMat: 0x332514,
+        floorAccent: 0xfbbf24,
+        lightColor: 0xfde68a,
+        cameraTarget: { x: 14, y: 1.5, z: 6 },
+        cameraPos: { x: 24, y: 12, z: 20 },
+        motto: "Nol Cacat Produksi, Cakupan Uji 100% Terotomasi",
+        targets: [
+          { code: "AUTO-15", text: "163/163 Vitest Pass 100% & Playwright E2E (Qaisar)", status: "VERIFIED" },
+          { code: "QA-125", text: "Matriks Uji 125 Kasus Uji ATS Kanban & PWA (Qonita)", status: "ACTIVE" },
+          { code: "PERF-03", text: "Stress 5.000 Ops < 250ms & Memory Budget (Pandu)", status: "VERIFIED" },
+          { code: "REG-112", text: "112/112 Matriks Regresi Lintas Browser (Raditya)", status: "VERIFIED" }
+        ]
+      },
+      devops: {
+        id: 'devops',
+        name: 'Pusat Operasional Cloud, DevOps & Keamanan Siber',
+        shortName: '⚡ Security & DevOps (5)',
+        color: '#06b6d4',
+        threeColor: 0x06b6d4,
+        center: { x: -14, z: 24 },
+        bounds: { width: 14, depth: 14 },
+        floorMat: 0x0e2238,
+        floorAccent: 0x38bdf8,
+        lightColor: 0x7dd3fc,
+        cameraTarget: { x: -14, y: 1.5, z: 24 },
+        cameraPos: { x: -4, y: 12, z: 38 },
+        motto: "Pertahanan Berlapis Kedap Celah, Zero Trust & Kepatuhan UU PDP",
+        targets: [
+          { code: "SEC-DAST", text: "DAST BurpSuite Zero High Vulnerability (Rendra)", status: "VERIFIED" },
+          { code: "PDP-27", text: "Audit UU PDP No. 27/2022 Data Privacy (Saskia)", status: "COMPLIANT" },
+          { code: "CI-CD", text: "Automated Deploy Vercel dev/main & Healthcheck (Deva)", status: "ACTIVE" },
+          { code: "SRE-SLA", text: "High Availability Pool & SLA 99.98% (Reza Pratama)", status: "ACTIVE" }
+        ]
+      },
+      lounge: {
+        id: 'lounge',
+        name: 'Lounge Pengalaman Pengguna (Multi-POV) & Rekruter',
+        shortName: '☕ Stakeholder Lounge (4)',
+        color: '#ec4899',
+        threeColor: 0xec4899,
+        center: { x: 14, z: 24 },
+        bounds: { width: 14, depth: 14 },
+        floorMat: 0x3b1c2b,
+        floorAccent: 0xf472b6,
+        lightColor: 0xfbcfe8,
+        cameraTarget: { x: 14, y: 1.5, z: 24 },
+        cameraPos: { x: 24, y: 12, z: 38 },
+        motto: "Empati Pengguna Nyata, Pengalaman Kandidat Tanpa Hambatan Kognitif",
+        targets: [
+          { code: "UX-KRP", text: "UI-15A Mobile Kraepelin Ergonomics (Surya Dimas)", status: "ACTIVE" },
+          { code: "REC-ATS", text: "Candidate 5D Radar Matrix Comparison (Maya Safitri)", status: "ACTIVE" },
+          { code: "TCH-RUB", text: "Rubrik Penilaian Tugas Cohort (Ibu Triastuti)", status: "VERIFIED" },
+          { code: "ADM-GOV", text: "Multi-Tenant Governance Console (Agung Santoso)", status: "ACTIVE" }
+        ]
+      }
+    };
+
+    // ─── 2. DATABASE 24 PERSONEL LENGKAP DENGAN WORK CONTEXT & SCREEN DATA ────────
+    const AGENTS = [
+      {
+        id: 0,
+        name: "Rizco Renova",
+        persona: "Rizco Renova",
+        role: "Team Leader & Release Sign-Off Authority",
+        category: "lead",
+        division: "executive",
+        avatar: "👑",
+        color: 0xf59e0b,
+        pos: { x: -14, z: -8.5 },
+        workload: 98,
+        status: {
+          label: "Release Checker & Final Gatekeeper",
+          tone: "emerald",
+          action: "Bertugas sebagai approval dan checker formal dari setiap dokumen (PRD, TRD, 112 Matriks QA, Laporan SIT/UAT, User Sign-Off) sebelum memberikan otorisasi rilis ke DevOps.",
+          ticket: "GATE-01 / LEAD-APPROVAL",
+          file: "AGENTS.md & docs/planning/04_BRANCHING_AND_RELEASE_STRATEGY.md",
+          collaborators: "Damar Deva Gunawan (DevOps Lead), Hendrawan Wicaksono (Principal FE), Dr. Ir. Danu Bratawidjaja (Principal BE)",
+          cleanArchReview: "Verifikasi kepatuhan SDLC komprehensif, kepatuhan bundle < 250 kB, dan otorisasi formal rilis tertulis.",
+          opinion: "Disiplin SDLC dan ketertelusuran dokumen adalah fondasi integritas rilis. DevOps dilarang deploy tanpa otorisasi sign-off tertulis resmi dari Team Leader.",
+          ac: [
+            "Seluruh dokumen PRD, TRD, dan Release Notes telah diaudit dan konsisten 100%",
+            "Matriks QA 112 skenario berstatus PASS tanpa kendala regresi atau celah keamanan",
+            "Sesi demo interaktif pasca-UAT kepada user telah selesai dan User Sign-Off telah terbit",
+            "Otorisasi formal Team Leader (LEAD-RELEASE-APPROVAL) diterbitkan ke DevOps sebelum rilis"
+          ],
+          codeSnippet: `// Team Leader Release Sign-Off Gatekeeper (Rizco Renova)
+export interface ReleaseGovernanceSignOff {
+  teamLeader: 'Rizco Renova';
+  role: 'Engineering Team Lead & Release Checker';
+  auditedArtifacts: {
+    prdAndTrdSigned: boolean;
+    qaMatrix112PassRate: 100;
+    antiAiSlopCraftVerified: boolean;
+    bundleBudgetUnder250kB: boolean;
+    userAcceptanceDemoSigned: boolean;
+  };
+  devOpsDeployAuthorization: 'APPROVED_FOR_RELEASE_BRANCH';
+  authorizedDevOpsLead: 'Damar Deva Gunawan';
+  timestamp: string;
+}`
+        },
+        screen: {
+          file: "GATE_CHECK.ts",
+          badge: "LEAD SIGN-OFF",
+          lines: [
+            "// GATE_CHECK: RELEASE v3.1.0-rc1",
+            "✔ PRD / TRD / 112 QA TESTS: PASS 100%",
+            "✔ CLEAN ARCHITECTURE REVIEW: APPROVED",
+            "✔ PWA-01 iOS STANDALONE: REGISTERED",
+            "★ LEAD SIGN-OFF: RIZCO-AUTH-20261124",
+            "➔ STATUS: AUTHORIZED FOR DEVOPS DEPLOY"
+          ]
+        },
+        skills: {
+          primary: ['Release Sign-Off Governance (99%)', 'SDLC Gatekeeping & Traceability (98%)', 'Risk Mitigation & Quality Gates (97%)', 'Agile Multi-Division Orchestration (98%)'],
+          stack: ['GitFlow v2', 'Vercel Enterprise CLI', 'GitHub Actions CI', 'Jira / Linear', 'Markdown Spec & Audit Trail'],
+          methodology: ['Clean Architecture SDLC Enforcement', 'Four Quality Gates Protocol', 'Anti-AI-Slop Craftsmanship Standard'],
+          certifications: ['Chief Engineering Lead', 'Certified Scrum Master (CSM)', 'ISO/IEC 25010 Evaluator']
+        },
+        avatarStyle: { hair: 0x18181b, skin: 0xfcd5b5, outfit: 0x0f172a, hairStyle: 'slick', accessory: 'gold_pin' }
+      },
+      {
+        id: 1,
+        name: "Bram Daniswara",
+        persona: "Bramantyo Daniswara",
+        role: "Chief Commercial & Business Strategist",
+        category: "product",
+        division: "executive",
+        avatar: "💼",
+        color: 0x3b82f6,
+        pos: { x: -16.5, z: -14 },
+        workload: 92,
+        status: {
+          label: "Live Monetization Active",
+          tone: "emerald",
+          action: "Menyusun skema langganan korporat B2B untuk Recruiter Portal, kalkulasi kuota undangan asesmen per bulan, dan integrasi Payment Gateway Midtrans (Sprint 19).",
+          ticket: "BL-42 / BIZ-01",
+          file: "docs/BACKLOG_AND_ROADMAP_ANALYSIS.md",
+          collaborators: "Pranadipa Wicaksana (Product Owner), Maya Safitri (Recruiter POV)",
+          cleanArchReview: "Pemisahan domain billing enterprise dari core assessment engine; kepatuhan regulasi faktur pajak B2B.",
+          opinion: "HR enterprise membutuhkan visual yang bersih, tegas, dan padat informasi tanpa dekorasi gradien ungu murahan yang tidak fungsional.",
+          ac: [
+            "Tersedia pemodelan kuota invite B2B berjenjang (50, 200, 500 invite/bln)",
+            "Kalkulasi ROI talent sourcing berbasis Radar 5D & Kraepelin terdokumentasi",
+            "Keselarasan proposal enterprise dengan regulasi rekrutmen mitra BUMN"
+          ],
+          codeSnippet: `// B2B Pricing & Subscription Architecture
+export const B2B_SUBSCRIPTION_TIERS = {
+  STARTER: { invites: 50, priceIdr: 2500000, radar5D: true, kraepelin: true },
+  GROWTH:  { invites: 200, priceIdr: 7500000, customBranding: true, csvExport: true },
+  ENTERPRISE: { invites: 1000, priceIdr: 25000000, dedicatedSLA: true, atsSync: true }
+};`
+        },
+        screen: {
+          file: "B2B_REVENUE.ts",
+          badge: "REVENUE METRICS",
+          lines: [
+            "// B2B_REVENUE_METRICS.ts",
+            "* Enterprise Clients: 14 Corporate Active",
+            "* Midtrans Gateway: Sprint 19 Architecture",
+            "* Candidate Sourcing ROI: +185% YoY",
+            "* License Quota: Multi-Tenant Active",
+            "➔ MRR Pipeline: Rp 175.000.000 / month"
+          ]
+        },
+        skills: {
+          primary: ['B2B Revenue & Monetization Strategy (96%)', 'Enterprise ATS Pipeline Sourcing (95%)', 'Midtrans Payment Gateway Architecture (94%)', 'Unit Economics & MRR Modeling (95%)'],
+          stack: ['Midtrans Snap API', 'Mixpanel Analytics', 'PostgreSQL BI Queries', 'Google Analytics 4', 'Stripe Billing'],
+          methodology: ['Product-Led Growth (PLG)', 'B2B SaaS Funnel Optimization', 'Cohort Retention Analysis'],
+          certifications: ['Chief Commercial Strategist', 'Reforge Growth & Monetization', 'Certified Product Executive']
+        },
+        avatarStyle: { hair: 0x1e1e1e, skin: 0xf5d0b5, outfit: 0x1e3a8a, hairStyle: 'slick', accessory: 'tie' }
+      },
+      {
+        id: 2,
+        name: "Prana Wicaksana",
+        persona: "Pranadipa Wicaksana",
+        role: "Principal Product Owner & Backlog Arbiter",
+        category: "product",
+        division: "executive",
+        avatar: "📋",
+        color: 0x2563eb,
+        pos: { x: -11.5, z: -14 },
+        workload: 94,
+        status: {
+          label: "Sprint 15 Backlog Locked (57 SP)",
+          tone: "blue",
+          action: "Memimpin perumusan Backlog Sprint 15 (Total 57 SP), menyetujui tiket PWA-01 iOS Standalone, pipeline ATS Kanban REC-06, serta mitigasi utang teknis DEBT-01 s/d DEBT-10.",
+          ticket: "PRD-15 / PWA-01",
+          file: "docs/planning/01_USER_STORIES_AND_PRD.md",
+          collaborators: "Satria Adhyasta (Lead SA), Farel Faza (FE Lead), Nadia Maharani (UI/UX)",
+          cleanArchReview: "Memastikan semua User Story memuat kriteria penerimaan terukur dan prasyarat test case QA sebelum sprint start.",
+          opinion: "Kekuatan utama LokaTalenta adalah kepraktisan nyata dan efisiensi pengguna. Setiap klik harus bernilai edukatif dan objektif.",
+          ac: [
+            "Seluruh acceptance criteria BL-42 s.d. BL-46 terverifikasi lengkap",
+            "Tiket PWA-01 iOS Standalone terdaftar resmi di master backlog Sprint 15",
+            "Sprint Backlog v3.1.0 dikunci bersama Team Leader Rizco Renova"
+          ],
+          codeSnippet: `// Sprint 15 Backlog Definition
+export const SPRINT_15_BACKLOG = {
+  version: '3.1.0-minor',
+  totalStoryPoints: 57,
+  epicTheme: 'Enterprise ATS & iOS Standalone PWA',
+  items: ['FIX-01', 'FIX-02', 'REC-06', 'PWA-01', 'ARC-05', 'UI-15A']
+};`
+        },
+        screen: {
+          file: "PRD_SPRINT_15.md",
+          badge: "EPIC 9 LOCKED",
+          lines: [
+            "// PRD_SPRINT_15.md • EPIC 9",
+            "* REC-06: ATS Kanban Pipeline (8 SP)",
+            "* PWA-01: iOS Safari Standalone (5 SP)",
+            "* FIX-01/02: RPC PL/pgSQL Patches (5 SP)",
+            "* ARC-05: Pluggable DISC/MBTI (8 SP)",
+            "➔ Total Sprint Capacity: 57 SP (Locked)"
+          ]
+        },
+        skills: {
+          primary: ['PRD & TRD Specification (96%)', 'User Story & Acceptance Criteria Gatekeeping (97%)', 'Backlog Arbiter & MoSCoW Prioritization (95%)', 'Sprint Scope Negotiation (94%)'],
+          stack: ['Mermaid.js', 'Figma Dev Mode', 'Linear / Jira', 'Notion Product Ops', 'Canny / User Voice'],
+          methodology: ['Scrum & Kanban Hybrid', 'Continuous Discovery Habits', 'Behavior-Driven Acceptance (Gherkin)'],
+          certifications: ['Certified Scrum Product Owner (CSPO)', 'Pragmatic Institute Certified (PMC-III)']
+        },
+        avatarStyle: { hair: 0x4a2e18, skin: 0xfcd5b5, outfit: 0x1d4ed8, hairStyle: 'parted', accessory: 'collar' }
+      },
+      {
+        id: 3,
+        name: "Arya Adhyasta",
+        persona: "Satria Adhyasta",
+        role: "Lead System Analyst & Flow Architect",
+        category: "tech",
+        division: "architecture",
+        avatar: "📐",
+        color: 0x8b5cf6,
+        pos: { x: 11.5, z: -14 },
+        workload: 91,
+        status: {
+          label: "DISC/MBTI State Machine Modeling",
+          tone: "purple",
+          action: "Merancang sequence diagram dan state machine penilaian psikotes ipsatif Most/Least (DISC 24 butir) dan biner dikotomi (MBTI 16 tipe) untuk tiket ARC-05.",
+          ticket: "ARC-05 / SA-05",
+          file: "docs/planning/03_FINAL_SPRINT_BACKLOG_MINOR_TO_MAJOR.md",
+          collaborators: "Ir. Arkananta (Chief Architect), Bagas Bimo (BE), Hendrawan (Principal FE)",
+          cleanArchReview: "Memisahkan mesin kalkulasi norma psikometri ke domain core murni bebas dependensi framework atau database.",
+          opinion: "Pemisahan domain kandidat umum vs kandidat undangan khusus korporat harus rigid dan terenkripsi aman di tingkat protokol.",
+          ac: [
+            "Format token invite: INV-[6 char alphanumeric] terenkripsi aman",
+            "State machine Most/Least DISC memvalidasi 1 pilihan per kutub",
+            "Algoritma transformasi skor mentah ke skor standar T-Score terverifikasi"
+          ],
+          codeSnippet: `// Psychometric Strategy State Machine
+export interface PsychometricEngine {
+  calculateDisc(answers: DiscAnswer[]): { D: number; I: number; S: number; C: number };
+  calculateMbti(answers: MbtiAnswer[]): { type: string; dimensions: Record<string, number> };
+}`
+        },
+        screen: {
+          file: "Psychometrics.ts",
+          badge: "STATE MACHINE",
+          lines: [
+            "// PsychometricStrategy.ts",
+            "export class DiscAssessmentStrategy {",
+            "  computeMostLeast(answers: DiscInput[]) {",
+            "    const raw = { D: 28, I: 24, S: 18, C: 30 };",
+            "    return normalizeToTScore(raw);",
+            "  }",
+            "}"
+          ]
+        },
+        skills: {
+          primary: ['Psychometric State Machine Modeling (97%)', 'Deep-Link Routing Protocols (96%)', 'Multi-Tenant Isolation Analysis (95%)', 'Entity-Relationship Architecture (96%)'],
+          stack: ['TypeScript AST', 'XState', 'Mermaid State & ERD Diagrams', 'PostgreSQL EXPLAIN ANALYZE', 'REST / RPC OpenAPI'],
+          methodology: ['Domain-Driven Design (DDD)', 'Statecharts Specification', 'Event Storming'],
+          certifications: ['Certified System Analyst (CBAP)', 'OMG-Certified UML Professional (OCUP-2)']
+        },
+        avatarStyle: { hair: 0x2b2b2b, skin: 0xf3c8a8, outfit: 0x6d28d9, glasses: true, hairStyle: 'neat' }
+      },
+      {
+        id: 4,
+        name: "Arka Dewantara",
+        persona: "Ir. Arkananta Dewantara",
+        role: "Chief IT Solution Architect",
+        category: "tech",
+        division: "architecture",
+        avatar: "🏛️",
+        color: 0x7c3aed,
+        pos: { x: 16.5, z: -14 },
+        workload: 95,
+        status: {
+          label: "Hexagonal Ports & Adapters Isolation",
+          tone: "purple",
+          action: "Menyusun blueprint arsitektur heksagonal (Hexagonal Architecture) untuk memisahkan domain quiz runner dari SDK cloud Supabase, serta arsitektur Deno Edge Functions.",
+          ticket: "ARC-04 / ARC-07",
+          file: "docs/architecture/HEXAGONAL_ARCHITECTURE_GUIDELINES.md",
+          collaborators: "Dr. Ir. Danu Bratawidjaja (Principal BE), Hendrawan (Principal FE)",
+          cleanArchReview: "Ports & Adapters pattern: Domain logic dilarang mengimpor library eksternal (zero 3rd party deps di domain).",
+          opinion: "Skalabilitas arsitektur bergantung pada query terindeks rapi dan minimnya join kompleks pada operasi kritis seperti kuis real-time.",
+          ac: [
+            "Domain kuis terisolasi di folder client/src/core/domain/",
+            "Inbound port dan outbound adapter terdefinisi menggunakan TypeScript interface murni",
+            "Latensi eksekusi query verifikasi token di bawah 20 milidetik"
+          ],
+          codeSnippet: `// Hexagonal Architecture Ports & Adapters
+export interface QuizRepositoryPort {
+  saveAttempt(attempt: QuizAttemptEntity): Promise<void>;
+  fetchQuestions(quizId: string): Promise<QuestionEntity[]>;
+}`
+        },
+        screen: {
+          file: "Hexagonal.arch",
+          badge: "PORTS & ADAPTERS",
+          lines: [
+            "// HexagonalPortsAdapters.ts",
+            "[Domain Core] ➔ QuizScoringEngine",
+            "[Inbound Port] ➔ AssessmentUseCase",
+            "[Outbound Adapter] ➔ SupabaseRepository",
+            "[Latency Target] 18ms (Target < 20ms)",
+            "➔ DDL Idempotency: Verified across nodes"
+          ]
+        },
+        skills: {
+          primary: ['Cloud-Native Solution Architecture (98%)', 'Supabase Connection Pooling & RLS (97%)', 'Sub-20ms Query Optimization (96%)', 'High-Availability System Design (97%)'],
+          stack: ['Supabase / PostgreSQL 15', 'PgBouncer', 'Redis Cache', 'Docker & Compose', 'GraphQL / PostgREST'],
+          methodology: ['Hexagonal Architecture (Ports & Adapters)', 'CQRS & Read Replicas', 'The Twelve-Factor App'],
+          certifications: ['TOGAF 9.2 Certified Architect', 'AWS Solutions Architect Professional', 'PostgreSQL Certified Specialist']
+        },
+        avatarStyle: { hair: 0x3d3d3d, skin: 0xebd0b0, outfit: 0x4c1d95, glasses: true, hairStyle: 'pompadour' }
+      },
+      {
+        id: 5,
+        name: "Faza Nugraha",
+        persona: "Farel Faza Nugraha",
+        role: "Staff Frontend Engineer & UI Craft Lead",
+        category: "tech",
+        division: "engineering",
+        avatar: "💻",
+        color: 0x10b981,
+        pos: { x: -16.5, z: 6.5 },
+        workload: 97,
+        status: {
+          label: "iOS Standalone PWA & ATS Kanban",
+          tone: "emerald",
+          action: "Mengimplementasikan dukungan Standalone PWA untuk iPhone (PWA-01) dengan Safe Area insets, modal panduan A2HS Safari, serta drag-and-drop HTML5 native pada ATS Kanban.",
+          ticket: "PWA-01 / REC-06",
+          file: "client/src/features/pwa/IosPwaInstallPrompt.tsx & RecruiterPortalPage.tsx",
+          collaborators: "Hendrawan Wicaksono (Principal FE), Nadia Maharani (UI/UX), Bagas Bimo (BE)",
+          cleanArchReview: "Memisahkan view layer dari custom hooks (useIosPwa, useAtsPipeline); memastikan bundle chunk tetap < 250 kB.",
+          opinion: "Pengguna iPhone layak menikmati pengalaman fullscreen tanpa terganggu bilah peramban Safari. Standar 1px border dan mikro-interaksi taktil adalah kunci kenyamanan.",
+          ac: [
+            "Meta tag apple-mobile-web-app-capable & safe area CSS terpasang di index.html",
+            "Modal panduan visual Add to Home Screen muncul bagi pengguna Safari iOS",
+            "Papan ATS Kanban mendukung drag-and-drop kartu pelamar dengan update status seketika",
+            "Seluruh bundle JS chunk tetap berada di bawah batas ketat 250 kB"
+          ],
+          codeSnippet: `// iOS Safari Standalone PWA Guidance Modal
+export const IosPwaInstallPrompt: React.FC = () => {
+  const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  const isStandalone = (navigator as any).standalone === true;
+  if (!isIos || isStandalone) return null;
+  return (
+    <div className="fixed bottom-4 inset-x-4 glass-card p-4 rounded-xl border border-teal-500/40">
+      <p className="text-xs text-white">Pasang LokaTalenta: Ketuk <strong>Bagikan</strong> lalu pilih <strong>Tambahkan ke Layar Utama</strong>.</p>
+    </div>
+  );
+};`
+        },
+        screen: {
+          file: "IosPwaInstall.tsx",
+          badge: "PWA-01 CODE",
+          lines: [
+            "// IosPwaInstallPrompt.tsx (PWA-01)",
+            "export const IosPwaModal = () => {",
+            "  const isStandalone = navigator.standalone;",
+            "  return (",
+            "    <div className='safe-area-pt'>",
+            "      <p>Ketuk Bagikan ➔ Tambah ke Layar Utama</p>",
+            "    </div>",
+            "  );",
+            "};"
+          ]
+        },
+        skills: {
+          primary: ['Staff Frontend Engineering (98%)', 'PWA iOS Standalone & Safe Area Engineering (97%)', 'Anti-AI-Slop Visual System (98%)', 'Radar 5D Interactive Canvas (96%)'],
+          stack: ['React 19', 'TypeScript 5 Strict', 'Vite', 'Tailwind CSS 3', 'Web Audio API', 'HTML5 Canvas / SVG'],
+          methodology: ['Clean Architecture UI (View / Hook Separation)', 'Offline-First Service Workers', 'Micro-Interactions Tactile Physics'],
+          certifications: ['Meta Certified Front-End Developer', 'Google Mobile Web Specialist (MWS)']
+        },
+        avatarStyle: { hair: 0x1c1917, skin: 0xfed7aa, outfit: 0x059669, headphones: true, hairStyle: 'messy' }
+      },
+      {
+        id: 6,
+        name: "Bimo Prasetyo",
+        persona: "Bagas Bimo Prasetyo",
+        role: "Senior Backend & Security Engineer",
+        category: "tech",
+        division: "engineering",
+        avatar: "⚡",
+        color: 0x059669,
+        pos: { x: -11.5, z: 6.5 },
+        workload: 93,
+        status: {
+          label: "RPC Patch FIX-01 & FIX-02 Deployed",
+          tone: "emerald",
+          action: "Menyelesaikan patch PL/pgSQL submit_quiz_attempt untuk penilaian short_answer otomatis (FIX-01) dan penyimpanan telemetri tab_switch_count di Supabase cloud (FIX-02).",
+          ticket: "FIX-01 / FIX-02",
+          file: "supabase/migrations/20261125210000_sprint15_rpc_telemetry_patch.sql",
+          collaborators: "Dr. Ir. Danu Bratawidjaja (Principal BE), Farel Faza (FE), Qonita (QA)",
+          cleanArchReview: "Fungsi database bersifat idempotent, mengeksekusi normalisasi regex spasi aman, dan dilengkapi RLS tenant check.",
+          opinion: "Data integritas ujian tidak boleh hanya mengandalkan client localStorage; cloud database harus menjadi otoritas tunggal kebenaran telemetri.",
+          ac: [
+            "Jawaban isian singkat dinilai 100% pada database cloud Supabase dengan regex normalizer",
+            "Telemetri kecurangan pindah tab tersimpan permanen di tabel quiz_attempts",
+            "Waktu eksekusi RPC submit_quiz_attempt tetap di bawah 45ms pada uji beban"
+          ],
+          codeSnippet: `CREATE OR REPLACE FUNCTION submit_quiz_attempt(
+  p_attempt_id UUID,
+  p_tab_switch_count INT DEFAULT 0,
+  p_focus_loss_events JSONB DEFAULT '[]'::jsonb
+) RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER AS $$
+BEGIN
+  UPDATE public.quiz_attempts
+  SET tab_switch_count = p_tab_switch_count,
+      status = 'submitted',
+      submitted_at = now()
+  WHERE id = p_attempt_id;
+  RETURN jsonb_build_object('success', true);
+END;
+$$;`
+        },
+        screen: {
+          file: "submit_quiz.sql",
+          badge: "SQL PATCH FIX",
+          lines: [
+            "-- submit_quiz_attempt.sql (FIX-01/02)",
+            "CREATE OR REPLACE FUNCTION submit_quiz_attempt(",
+            "  p_attempt_id UUID,",
+            "  p_tab_switch_count INT,",
+            "  p_focus_loss_events JSONB",
+            ") RETURNS JSONB AS $$",
+            "  UPDATE public.quiz_attempts SET ...;"
+          ]
+        },
+        skills: {
+          primary: ['Staff Backend Engineering (97%)', 'Idempotent SQL DDL & Migration Scripts (96%)', 'Row-Level Security (RLS) Policy Crafting (97%)', 'Row-Locking Concurrency Control (96%)'],
+          stack: ['Node.js 22 LTS', 'Express.js', 'PostgreSQL PL/pgSQL', 'Supabase Client & Auth', 'Zod Validation'],
+          methodology: ['Hexagonal Ports & Adapters Implementation', 'Optimistic / Pessimistic Locking', 'Idempotent Migration Engineering'],
+          certifications: ['Oracle Certified Professional: Database', 'Certified Node.js Application Developer (JSNAD)']
+        },
+        avatarStyle: { hair: 0x171717, skin: 0xf5d0b5, outfit: 0x065f46, hairStyle: 'fade', accessory: 'smartwatch' }
+      },
+      {
+        id: 7,
+        name: "Qori Anindya",
+        persona: "Qonita Anindya",
+        role: "Lead Manual & Exploratory QA Specialist",
+        category: "qa",
+        division: "qa",
+        avatar: "🔍",
+        color: 0xf59e0b,
+        pos: { x: 11.5, z: 2.5 },
+        workload: 90,
+        status: {
+          label: "125 QA Cases Matrix Verified",
+          tone: "amber",
+          action: "Menjalankan verifikasi manual ekstensif untuk alur instalasi PWA di iOS Safari, pengerjaan kuis kustom co-branded, dan interaksi drag-and-drop ATS Kanban.",
+          ticket: "QA-125 / PWA-01",
+          file: "docs/qa/QA_TEST_CASES.md",
+          collaborators: "Qaisar Al-Ghaffar (Automation QA), Surya Dimas (Student POV)",
+          cleanArchReview: "Seluruh kasus uji manual memiliki id unik yang tersinkronisasi 1:1 antara dokumen Markdown dan laporan rilis.",
+          opinion: "Automated test sangat bagus, namun exploratory testing manusia adalah mata elang yang menemukan kejanggalan visual micro-interaction dan layout clipping.",
+          ac: [
+            "Kasus uji PWA-01 (iOS Standalone & Safe Area) tervalidasi di Safari iPhone",
+            "Matriks QA melacak 125 skenario uji dengan 0 defect kritis",
+            "Alur pengajuan banding retake exam (REC-07) terverifikasi fungsional"
+          ],
+          codeSnippet: `// Manual QA Checklist Matrix
+| ID | Fitur | Perangkat | Status |
+| PWA-01 | Standalone iOS Safari | iPhone 14 Pro (iOS 17) | PASS |
+| REC-06 | ATS Kanban Drag-Drop | macOS Chrome & Safari | PASS |
+| KRP-04 | Kraepelin Mobile Dialpad | Android Pixel & iPhone | PASS |`
+        },
+        screen: {
+          file: "QA_MATRIX.md",
+          badge: "125 TEST CASES",
+          lines: [
+            "// QA_TEST_CASES.md • SPRINT 15",
+            "[PASS] REC-01: Radar 5D Talent Filter",
+            "[PASS] REC-02: Co-Branding Invite URL",
+            "[PASS] KRP-03: Kraepelin Mobile Dialpad",
+            "[ACTIVE] PWA-01: iOS Safari Standalone",
+            "➔ Total Verified Scenarios: 125 Active"
+          ]
+        },
+        skills: {
+          primary: ['Exploratory & Edge-Case Testing (95%)', 'Cross-Browser & iOS Safari Validation (96%)', 'Usability & Accessibility Heuristics (94%)', 'Defect Isolation & Triage (95%)'],
+          stack: ['BrowserStack', 'Charles Proxy / DevTools', 'Screen Readers (VoiceOver/TalkBack)', 'TestRail', 'Playwright Inspector'],
+          methodology: ['Context-Driven Testing', 'Heuristic Evaluation (Nielsen-Molich)', 'Boundary Value Analysis'],
+          certifications: ['ISTQB Certified Tester Foundation Level (CTFL)', 'CPACC Accessibility Practitioner']
+        },
+        avatarStyle: { hair: 0x7c2d12, skin: 0xfcd5b5, outfit: 0xd97706, hairStyle: 'long', glasses: true }
+      },
+      {
+        id: 8,
+        name: "Qash Al-Ghaffar",
+        persona: "Qaisar Al-Ghaffar",
+        role: "QA Automation & Integration Lead",
+        category: "qa",
+        division: "qa",
+        avatar: "🤖",
+        color: 0xd97706,
+        pos: { x: 16.5, z: 2.5 },
+        workload: 96,
+        status: {
+          label: "Vitest 163/163 PASS & Playwright E2E",
+          tone: "emerald",
+          action: "Menjaga 163 unit/integration test lulus 100% pada 27 test suite, serta memperluas suite Playwright E2E untuk menguji integrasi ATS pipeline dan auth flow.",
+          ticket: "AUTO-15 / E2E-04",
+          file: "client/src/__tests__/ & client/e2e/recruiterFlow.spec.ts",
+          collaborators: "Pandu Respati (Perf), Raditya Rama (Regression), Bagas Bimo (BE)",
+          cleanArchReview: "Uji otomatis mengisolasi mock external network, menjamin kecepatan run suite di bawah 2.5 detik pada CI pipeline.",
+          opinion: "Uji otomatis bukan formalitas, melainkan jaring pengaman utama yang memungkinkan refactoring arsitektur tanpa rasa takut.",
+          ac: [
+            "163/163 unit test di 27 suite lulus 100% tanpa flakiness",
+            "Playwright test menguji alur login rekruter dan navigasi kandidat",
+            "Pipeline Vitest terintegrasi otomatis di GitHub Actions CI"
+          ],
+          codeSnippet: `// Automated Test Suite Execution
+$ vitest run
+ Test Files  27 passed (27)
+      Tests  163 passed (163)
+   Duration  1.09s (transform 1.36s, setup 0ms, tests 1.40s)
+ All test suites passed successfully.`
+        },
+        screen: {
+          file: "VitestRunner.log",
+          badge: "163/163 PASS",
+          lines: [
+            "$ vitest run --reporter=verbose",
+            "✓ sprint14RecruiterFeatures (73 tests)",
+            "✓ sprint13StressAndSecurity (10 tests)",
+            "✓ qaComprehensiveFlows (7 tests)",
+            "Test Files: 27 passed (27) [100%]",
+            "Tests: 163 passed (163) • Time: 1.09s"
+          ]
+        },
+        skills: {
+          primary: ['Vitest Automation Engineering (98%)', 'End-to-End Test Suite Orchestration (96%)', 'CI Test Pipeline Integration (96%)', 'Mocking Strategy & Deterministic Testing (97%)'],
+          stack: ['Vitest v4', 'Playwright Test', 'Testing Library / JSDOM', 'GitHub Actions CI', 'c8 / Istanbul Coverage'],
+          methodology: ['Test-Driven Development (TDD)', 'Testing Trophy Paradigm', 'Flaky Test Elimination Engineering'],
+          certifications: ['ISTQB Advanced Level Test Automation Engineer (CTAL-TAE)', 'Certified Selenium / Playwright Lead']
+        },
+        avatarStyle: { hair: 0x18181b, skin: 0xf5d0b5, outfit: 0xb45309, headphones: true, hairStyle: 'short' }
+      },
+      {
+        id: 9,
+        name: "Pandu Respati",
+        persona: "Pandu Perdana Respati",
+        role: "Performance & Stress Test Specialist",
+        category: "qa",
+        division: "qa",
+        avatar: "⚡",
+        color: 0xb45309,
+        pos: { x: 11.5, z: 7.5 },
+        workload: 92,
+        status: {
+          label: "Bundle < 250kB & Latency < 250ms Verified",
+          tone: "emerald",
+          action: "Mengaudit ukuran chunk bundle JavaScript Vite (< 250 kB limit) dan mengeksekusi benchmark stress testing 5.000 operasi sanitasi dan kalkulasi rumus.",
+          ticket: "PERF-03 / PERF-04",
+          file: "client/src/__tests__/sprint13StressAndSecurity.test.ts",
+          collaborators: "Hendrawan Wicaksono (Principal FE), Farel Faza (FE)",
+          cleanArchReview: "Memastikan dynamic import (React.lazy) diterapkan di seluruh rute halaman berat (/recruiter, /admin, /teacher).",
+          opinion: "Aplikasi lambat adalah bug kritis. Setiap milidetik penundaan rendering mengurangi fokus dan kenyamanan peserta ujian psikotes.",
+          ac: [
+            "Seluruh chunk file build dist/assets/ berada di bawah batas 250 kB",
+            "Latensi kalkulasi 5.000 operasi formula kuis di bawah 250 milidetik",
+            "Core Web Vitals LCP < 1.2 detik dan CLS = 0 pada perangkat mobile"
+          ],
+          codeSnippet: `// Bundle Budget & Stress Performance Check
+describe('Performance Budget Verification', () => {
+  it('guarantees bundle chunks do not exceed 250 kB', () => {
+    const mainChunkKb = 27.19;
+    expect(mainChunkKb).toBeLessThan(250);
+  });
+});`
+        },
+        screen: {
+          file: "BundleAudit.bench",
+          badge: "LATENCY < 250ms",
+          lines: [
+            "// PerformanceAudit.bench",
+            "* Bundle JS: 27.19 kB (Limit: 250 kB)",
+            "* Stress Test: 5,000 Ops < 250ms (PASS)",
+            "* Web Vitals: LCP 1.1s | FID 12ms | CLS 0",
+            "* Memory Leaks: 0 detected (Heap 32MB)",
+            "➔ Status: All Performance Budgets Met"
+          ]
+        },
+        skills: {
+          primary: ['Performance Benchmarking & Load Testing (96%)', 'JavaScript Bundle Budget Auditing (< 250 kB) (98%)', 'Memory Leak & Reflow Profiling (95%)', 'Core Web Vitals Optimization (96%)'],
+          stack: ['Google Lighthouse CI', 'Rollup Visualizer', 'k6 Load Testing', 'Chrome Performance Profiler', 'Autocannon'],
+          methodology: ['Performance Budgets Enforcement', 'RAIL Performance Model', 'Critical Rendering Path Optimization'],
+          certifications: ['Google Web Performance Specialist', 'Certified LoadRunner Professional']
+        },
+        avatarStyle: { hair: 0x3f3f46, skin: 0xfed7aa, outfit: 0x92400e, hairStyle: 'spiky', accessory: 'bandana' }
+      },
+      {
+        id: 10,
+        name: "Rama Kusuma",
+        persona: "Raditya Rama Kusuma",
+        role: "Regression Gatekeeper & Matrix Master",
+        category: "qa",
+        division: "qa",
+        avatar: "🛡️",
+        color: 0x92400e,
+        pos: { x: 16.5, z: 7.5 },
+        workload: 89,
+        status: {
+          label: "112/112 Regression Matrix Zero Flaw",
+          tone: "emerald",
+          action: "Menjaga matriks regresi 112 skenario dari Sprint 1 hingga Sprint 14 tetap 100% hijau, memverifikasi ketiadaan efek samping pada fitur lama saat fitur baru diintegrasikan.",
+          ticket: "REG-112",
+          file: "docs/qa/QA_TEST_CASES.md",
+          collaborators: "Qonita Anindya (Manual QA), Qaisar Al-Ghaffar (Automation QA)",
+          cleanArchReview: "Memastikan kompatibilitas mundur (backward-compatibility) pada API kontrak lama dan skema database.",
+          opinion: "Fitur baru tidak ada artinya jika merusak alur kerja lama yang sudah diandalkan ribuan pengguna aktif.",
+          ac: [
+            "112 skenario regresi berstatus PASS tanpa deviasi",
+            "Pengujian kompatibilitas lintas peramban (Chrome, Safari, Firefox, Edge)",
+            "Verifikasi navigasi responsif pada resolusi 1280x800 dan 390x844"
+          ],
+          codeSnippet: `// Regression Gate Matrix Summary
+export const REGRESSION_AUDIT_REPORT = {
+  sprintsAudited: 'Sprint 1 through Sprint 14',
+  totalMatrixScenarios: 112,
+  passCount: 112,
+  failCount: 0,
+  regressionStatus: 'ZERO_REGRESSION_CONFIRMED'
+};`
+        },
+        screen: {
+          file: "Regression.matrix",
+          badge: "ZERO REGRESSION",
+          lines: [
+            "// RegressionSuite.matrix",
+            "* Sprint 1 - 14 Suites: 112/112 PASS",
+            "* Cross-Browser: Chrome, Safari, Firefox",
+            "* Mobile Viewport: 390x844 (0 overflow)",
+            "* Backward Compatibility: Confirmed",
+            "➔ Regression Gate Status: 100% CLEAR"
+          ]
+        },
+        skills: {
+          primary: ['112 QA Matrix Synchronization (98%)', 'Zero-Regression Verification (97%)', 'Backward Compatibility Auditing (96%)', 'Multi-Tenant Test Data Provisioning (95%)'],
+          stack: ['OpenPyXL Excel Automation', 'Markdown Spec Sync', 'Supabase Seed CLI', 'Jest/Vitest Snapshot Testing'],
+          methodology: ['Risk-Based Regression Testing', 'Traceability Matrix Engineering', 'Defect Prevention SDLC'],
+          certifications: ['ISTQB Advanced Level Test Manager (CTAL-TM)', 'ASQ Certified Software Quality Engineer']
+        },
+        avatarStyle: { hair: 0x27272a, skin: 0xf5d0b5, outfit: 0x78350f, glasses: true, hairStyle: 'bald' }
+      },
+      {
+        id: 11,
+        name: "Deva Gunawan",
+        persona: "Damar Deva Gunawan",
+        role: "DevOps & Cloud Infrastructure Lead",
+        category: "ops",
+        division: "devops",
+        avatar: "🚀",
+        color: 0x06b6d4,
+        pos: { x: -17, z: 20 },
+        workload: 95,
+        status: {
+          label: "Automated CI/CD & Vercel Deploy Monitored",
+          tone: "emerald",
+          action: "Mengelola pipeline CI/CD GitHub Actions, Vercel staging & production deploy, monitoring healthcheck, serta perbaikan konfigurasi Permissions-Policy (DEBT-04).",
+          ticket: "OPS-04 / DEBT-04",
+          file: "client/vercel.json & .github/workflows/deploy.yml",
+          collaborators: "Rizco Renova (Team Lead), Reza Pratama (SRE), Ir. Saskia Wardhani (Security)",
+          cleanArchReview: "Zero-downtime deployment, sanitasi environment variable, dan proteksi branch dev/main dengan mandatory PR check.",
+          opinion: "DevOps bukan hanya menekan tombol deploy; ini tentang otomasi andal yang membuat seluruh tim dapat merilis kode dengan tenang.",
+          ac: [
+            "Pipeline GitHub Actions lint, test, build tereksekusi otomatis pada setiap push",
+            "Header Permissions-Policy mengizinkan kamera dan mikrofon (camera=(self))",
+            "Deploy Vercel branch dev dan main berstatus 200 OK tanpa error"
+          ],
+          codeSnippet: `// Vercel Security & Permissions Configuration
+{
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "Permissions-Policy", "value": "camera=(self), microphone=(self)" },
+        { "key": "X-Frame-Options", "value": "SAMEORIGIN" }
+      ]
+    }
+  ]
+}`
+        },
+        screen: {
+          file: "VercelDeploy.sh",
+          badge: "PROD 200 OK",
+          lines: [
+            "$ vercel deploy --prod --skip-domain",
+            "✔ Building client bundle (< 250 kB)",
+            "✔ Deploying to lokatalenta.vercel.app",
+            "✔ Permissions-Policy: camera=(self)",
+            "✔ Healthcheck: HTTP 200 OK (Latency 48ms)",
+            "➔ CI/CD Status: Production Live & Stable"
+          ]
+        },
+        skills: {
+          primary: ['GitFlow v2 Release Management (98%)', 'Zero-Downtime Vercel Deployment (97%)', 'GitHub Actions CI/CD Pipeline (97%)', 'Environment & Branch Protection (98%)'],
+          stack: ['Vercel CLI', 'GitHub Actions', 'Git CLI & Hooks', 'Bash Automation', 'Terraform (IaC)'],
+          methodology: ['GitFlow v2 Governance', 'Continuous Delivery / Progressive Rollout', 'Infrastructure as Code (IaC)'],
+          certifications: ['Certified Kubernetes Administrator (CKA)', 'HashiCorp Certified: Terraform Associate', 'GitHub Actions Certified']
+        },
+        avatarStyle: { hair: 0x09090b, skin: 0xf3c8a8, outfit: 0x0891b2, headphones: true, hairStyle: 'beanie' }
+      },
+      {
+        id: 12,
+        name: "Tari Wulandari",
+        persona: "Tara Wulandari",
+        role: "Lead Technical Communicator & Documentarian",
+        category: "ops",
+        division: "devops",
+        avatar: "📝",
+        color: 0x0891b2,
+        pos: { x: -14, z: 22.5 },
+        workload: 88,
+        status: {
+          label: "Single Source of Truth Docs Synchronized",
+          tone: "blue",
+          action: "Menyelaraskan seluruh dokumen perencanaan (PRD, TRD, Sprint Backlog Minor to Major, dan QA Test Cases) sebagai Single Source of Truth bagi 24 personel tim.",
+          ticket: "DOCS-15",
+          file: "docs/planning/03_FINAL_SPRINT_BACKLOG_MINOR_TO_MAJOR.md",
+          collaborators: "Rizco Renova (Team Lead), Pranadipa (PO), Satria Adhyasta (SA)",
+          cleanArchReview: "Memastikan sinkronisasi terminologi, id backlog, kriteria penerimaan, dan diagram arsitektur di seluruh artefak Markdown.",
+          opinion: "Dokumentasi yang presisi menghindarkan tim dari salah paham desain dan mempercepat onboarding anggota tim baru secara eksponensial.",
+          ac: [
+            "Dokumen backlog Sprint 15 memuat 57 SP dengan deskripsi tugas lengkap",
+            "Spesifikasi PWA-01 dan Safe Area tercantum rapi di TRD dan PRD",
+            "Laporan retrospektif Sprint 14 dan kickoff Sprint 15 tersimpan permanen"
+          ],
+          codeSnippet: `// Documentation Single Source of Truth Integrity
+export const DOCS_REGISTRY = {
+  prd: 'docs/planning/01_USER_STORIES_AND_PRD.md',
+  trd: 'docs/planning/02_TRD_TECHNICAL_REQUIREMENTS.md',
+  backlog: 'docs/planning/03_FINAL_SPRINT_BACKLOG_MINOR_TO_MAJOR.md',
+  qaMatrix: 'docs/qa/QA_TEST_CASES.md'
+};`
+        },
+        screen: {
+          file: "DOCS_SYNC.md",
+          badge: "SSOT VERIFIED",
+          lines: [
+            "// 03_FINAL_SPRINT_BACKLOG.md",
+            "# SPRINT 15 ACTIVE BACKLOG (57 SP)",
+            "* PWA-01: iOS Standalone Support",
+            "* REC-06: ATS Kanban Pipeline",
+            "* Single Source of Truth: Synchronized",
+            "➔ Lead Sign-Off: RIZCO-LEAD-AUTH-20261124"
+          ]
+        },
+        skills: {
+          primary: ['Technical Writing & Specification (97%)', 'Architecture Decision Records (ADR) (96%)', 'OpenAPI / Swagger Contract Specs (95%)', 'Release Notes & Knowledge Base (97%)'],
+          stack: ['Mermaid.js', 'Docusaurus', 'Swagger / Postman', 'GitBook', 'Markdown / KaTeX'],
+          methodology: ['Docs-as-Code Paradigm', 'Information Architecture', 'Style Guide Compliance (Google Developer Docs)'],
+          certifications: ['Certified Professional Technical Communicator (CPTC)', 'IEEE Professional Member']
+        },
+        avatarStyle: { hair: 0x451a03, skin: 0xfcd5b5, outfit: 0x0e7490, glasses: true, hairStyle: 'ponytail' }
+      },
+      {
+        id: 13,
+        name: "Dimas Pratama",
+        persona: "Surya Dimas Pratama",
+        role: "Student & Candidate Experience Advocate",
+        category: "pov",
+        division: "lounge",
+        avatar: "🎓",
+        color: 0xec4899,
+        pos: { x: 11.5, z: 21 },
+        workload: 86,
+        status: {
+          label: "Mobile Ergonomics & PWA Review",
+          tone: "rose",
+          action: "Menguji kenyamanan pengguna pada pengerjaan tes Kraepelin ponsel (UI-15A) dan memverifikasi pengalaman instalasi standalone PWA di iPhone tanpa membuka browser.",
+          ticket: "UI-15A / PWA-01",
+          file: "client/src/features/kraepelin/KraepelinPage.tsx",
+          collaborators: "Farel Faza (FE), Nadia Maharani (UI/UX)",
+          cleanArchReview: "Memastikan touch target tombol angka dialpad >= 48px dan 0 lag input saat pengetikan berkecepatan tinggi.",
+          opinion: "Sebagai kandidat, saya ingin ujian berjalan lancar di ponsel saya tanpa gangguan address bar Safari yang naik turun atau layout yang terpotong notch.",
+          ac: [
+            "Keypad 3x4 fixed di ponsel tidak memicu zoom atau scroll viewport (h-dvh)",
+            "Aplikasi dapat dibuka langsung dari ikon Home Screen iPhone secara mandiri",
+            "Co-branding badge perusahaan mitra tampil membanggakan di header ujian"
+          ],
+          codeSnippet: `// Candidate Mobile Viewport Locking
+<div className="h-dvh w-screen overflow-hidden flex flex-col justify-between safe-area-pb">
+  <ExamHeader title="Simulasi Kraepelin" />
+  <KraepelinColumn activePair={currentPair} />
+  <FixedTelephoneNumpad onInput={handleInput} />
+</div>`
+        },
+        screen: {
+          file: "CandidateExam.ui",
+          badge: "MOBILE KRAEPELIN",
+          lines: [
+            "// CandidateExamView.mobile",
+            "* Viewport: h-dvh overflow-hidden",
+            "* Dialpad 3x4: Active (0 latency delay)",
+            "* iOS Standalone: Fullscreen without bar",
+            "* Network Retry: Auto-buffered queue",
+            "➔ Touch Targets: >= 48px Ergonomic"
+          ]
+        },
+        skills: {
+          primary: ['Candidate UX Advocacy (96%)', 'Proctoring Usability & Stress Reduction (95%)', 'Mobile-First Assessment Validation (97%)', 'Psychological Safety in Testing (95%)'],
+          stack: ['iOS Safari 17+', 'Android Chrome', 'Webcam Proctoring UI', 'Accessibility TalkBack', 'Screen Recording'],
+          methodology: ['User-Centered Design (UCD)', 'Student Journey Mapping', 'Empathy-Driven UX Evaluation'],
+          certifications: ['Student Body UX Ambassador', 'NN/g Usability Testing Participant Certified']
+        },
+        avatarStyle: { hair: 0x1f2937, skin: 0xf5d0b5, outfit: 0xdb2777, hairStyle: 'messy', accessory: 'hoodie' }
+      },
+      {
+        id: 14,
+        name: "Bu Tias Rahayu",
+        persona: "Ibu Triastuti Rahayu, M.Pd.",
+        role: "Curriculum Mentor & Educator Advocate",
+        category: "pov",
+        division: "lounge",
+        avatar: "👩‍🏫",
+        color: 0xdb2777,
+        pos: { x: 11.5, z: 26 },
+        workload: 87,
+        status: {
+          label: "Curriculum & Rubric Aligned",
+          tone: "rose",
+          action: "Menyelaraskan rubrik penilaian tugas kursus, soal kuis essay berskor otomatis, dan materi bank soal agar relevan dengan standar asesmen kompetensi industri.",
+          ticket: "POV-TCH-02",
+          file: "client/src/features/teacher/TeacherStudioPage.tsx",
+          collaborators: "Satria Adhyasta (SA), Bagas Bimo (BE)",
+          cleanArchReview: "Memastikan isolasi data antar pengajar (mentor hanya dapat mengedit dan melihat progres cohort kelas miliknya).",
+          opinion: "Pendidikan yang berdampak menghubungkan kurikulum akademik dengan keterampilan riil yang dicari oleh industri modern.",
+          ac: [
+            "Bank soal mendukung penilaian isian singkat dengan normalisasi spasi",
+            "Mentor dapat menduplikasi paket kursus ke draft independen",
+            "Rubrik penilaian STAR terpetakan pada kriteria kompetensi kerja"
+          ],
+          codeSnippet: `// Teacher Cohort Rubric & Item Analysis
+export const RUBRIC_CRITERIA = {
+  completeness: { weight: 0.4, title: 'Kelengkapan Jawaban' },
+  accuracy:     { weight: 0.4, title: 'Ketepatan Logika & Konsep' },
+  clarity:      { weight: 0.2, title: 'Kejelasan Penyampaian' }
+};`
+        },
+        screen: {
+          file: "TeacherCohort.ts",
+          badge: "COHORT STUDIO",
+          lines: [
+            "// TeacherCohortStudio.ts",
+            "* Active Cohorts: 8 Professional Classes",
+            "* Essay Grading: Auto-keyword regex (PASS)",
+            "* Assignment Submissions: 94% reviewed",
+            "* Item Analysis: Difficulty index p=0.72",
+            "➔ Mentor Analytics: Real-time Synchronized"
+          ]
+        },
+        skills: {
+          primary: ['Pedagogical Curriculum & Rubric Design (97%)', 'Question Bank Psychometrics (96%)', 'STAR Rubric Behavioral Evaluation (97%)', 'Teacher & Mentor Workflow Optimization (96%)'],
+          stack: ['Taxonomy Bloom Framework', 'STAR Behavioral Matrix', 'Question Bank Management', 'LMS Grading Studio'],
+          methodology: ['Constructive Alignment Pedagogy', 'Item Response Theory (IRT)', 'Classroom Cohort Analytics'],
+          certifications: ['Magister Pendidikan (M.Pd.)', 'Certified Educational Assessment Specialist', 'Master Assessor BNSP']
+        },
+        avatarStyle: { hair: 0x312e81, skin: 0xfcd5b5, outfit: 0xbe185d, glasses: true, hairStyle: 'bun', accessory: 'scarf' }
+      },
+      {
+        id: 15,
+        name: "Agung Santoso",
+        persona: "Agung Abimanyu Santoso",
+        role: "Governance & Platform Admin",
+        category: "pov",
+        division: "lounge",
+        avatar: "🛡️",
+        color: 0xbe185d,
+        pos: { x: 16.5, z: 26 },
+        workload: 90,
+        status: {
+          label: "Multi-Tenant Governance Monitored",
+          tone: "purple",
+          action: "Mengawasi tata kelola platform multi-tenant, audit log aktivitas mutasi admin, ekspor CSV pengguna dengan proteksi formula injection, dan penyiaran broadcast banner.",
+          ticket: "ADM-GOV / BL-44",
+          file: "client/src/features/admin/AdminPanelPage.tsx",
+          collaborators: "Ir. Saskia Wardhani (Security), Damar Deva (DevOps)",
+          cleanArchReview: "Memastikan seluruh ekspor data CSV disanitasi dengan escape character untuk mencegah CSV formula injection.",
+          opinion: "Kepercayaan enterprise dibangun di atas transparansi audit log dan ketegasan kontrol hak akses berbasis role.",
+          ac: [
+            "Audit log merekam mutasi role, pembuatan organisasi, dan pencabutan sertifikat",
+            "Ekspor CSV aman dari injeksi formula (=, +, -, @)",
+            "System broadcast banner dapat diaktifkan dan dinonaktifkan secara instan"
+          ],
+          codeSnippet: `// Admin CSV Formula Injection Sanitizer
+export function sanitizeCsvCell(value: string | number | null | undefined): string {
+  if (value === null || value === undefined) return '""';
+  const str = String(value);
+  if (/^[=+\-@\t\r]/.test(str)) {
+    return \`"'\${str.replace(/"/g, '""')}"\`;
+  }
+  return \`"\${str.replace(/"/g, '""')}"\`;
+}`
+        },
+        screen: {
+          file: "AdminAudit.log",
+          badge: "GOVERNANCE CONSOLE",
+          lines: [
+            "// AdminAuditGovernance.log",
+            "* Multi-Tenant Orgs: Telkom, Astra, BCA",
+            "* User Roles: 1,420 Students, 48 Mentors",
+            "* System Broadcast: Active (v3.0.0 Notice)",
+            "* CSV Data Export: Formula Sanitized (PASS)",
+            "➔ Audit Log Retention: 90 Days Compliant"
+          ]
+        },
+        skills: {
+          primary: ['Platform Multi-Tenant Governance (97%)', 'Audit Trail & Forensic Logging (96%)', 'Role-Based Access Control (RBAC) (98%)', 'Emergency Killswitch & Ops Isolation (97%)'],
+          stack: ['Supabase Auth Logs', 'PostgreSQL System Catalogs', 'Admin Dashboard Portal', 'CSV Export / Excel Audits'],
+          methodology: ['Least Privilege Principle', 'Separation of Duties (SoD)', 'Enterprise Platform Governance'],
+          certifications: ['Certified Information Systems Auditor (CISA)', 'ITIL 4 Foundation Enterprise Lead']
+        },
+        avatarStyle: { hair: 0x18181b, skin: 0xf5d0b5, outfit: 0x9d174d, hairStyle: 'parted', accessory: 'badge' }
+      },
+      {
+        id: 16,
+        name: "Rendra Dananjaya",
+        persona: "Rendra Dananjaya",
+        role: "Lead Penetration Tester & Red Team Specialist",
+        category: "sec",
+        division: "devops",
+        avatar: "🎯",
+        color: 0xef4444,
+        pos: { x: -17, z: 25 },
+        workload: 94,
+        status: {
+          label: "DAST & Sandbox Injection Pass",
+          tone: "emerald",
+          action: "Mengeksekusi simulasi serangan injeksi DDL/DML, eksploitasi parameter RPC kuis publik (DEBT-07), dan uji bypass autentikasi token undangan rekruter.",
+          ticket: "SEC-DAST / DEBT-07",
+          file: "client/src/__tests__/securityAndPerf.test.ts",
+          collaborators: "Ir. Saskia Wardhani (Security Lead), Bagas Bimo (BE)",
+          cleanArchReview: "Memvalidasi sanitasi input berbasis parameterized query dan sandbox SQL yang menolak DROP/ALTER/TRUNCATE.",
+          opinion: "Keamanan bukan fitur pelengkap di akhir sprint; keamanan adalah dinding baja yang menjaga reputasi dan kedaulatan data pengguna.",
+          ac: [
+            "Query destruktif DDL/DML terblokir 100% pada interactive SQL Lab",
+            "XSS payload ternetralisir aman di view layer tanpa eksekusi skrip",
+            "RPC publik Supabase menerapkan isolasi tenant kedap kebocoran data"
+          ],
+          codeSnippet: `// Pentest Automated DAST Verification
+describe('Security Vulnerability & DAST Penetration', () => {
+  it('blocks DDL injection payloads completely', () => {
+    const malicious = "DROP TABLE public.profiles; --";
+    expect(isQuerySafe(malicious)).toBe(false);
+  });
+});`
+        },
+        screen: {
+          file: "DAST_Audit.log",
+          badge: "0 VULNERABILITIES",
+          lines: [
+            "// DAST_Security_Audit.log",
+            "[+] Target: https://lokatalenta.app",
+            "[+] SQLi Sandbox Payload: NEUTRALIZED",
+            "[+] DDL Injection (DROP/ALTER): BLOCKED",
+            "[+] XSS Script Injections: SANITIZED",
+            "[+] High/Critical Vulnerabilities: 0 (PASS)"
+          ]
+        },
+        skills: {
+          primary: ['Lead Penetration Testing & Red Team (98%)', 'Dynamic Application Security Testing (DAST) (97%)', 'OWASP Top 10 Exploitation & Defense (98%)', 'Parameter Tampering & Fuzzing (97%)'],
+          stack: ['Burp Suite Professional', 'OWASP ZAP', 'SQLmap', 'Nmap', 'ffuf / Gobuster', 'Semgrep SAST'],
+          methodology: ['OWASP Testing Guide (OTG v4)', 'PTES Penetration Testing Standard', 'Defensive Coding Guidelines'],
+          certifications: ['Offensive Security Certified Professional (OSCP)', 'Certified Ethical Hacker (CEH Master)', 'CRTP (Red Team)']
+        },
+        avatarStyle: { hair: 0x111827, skin: 0xf5d0b5, outfit: 0x991b1b, hairStyle: 'shaved', accessory: 'tactical_watch' }
+      },
+      {
+        id: 17,
+        name: "Saskia Wardhani",
+        persona: "Ir. Saskia Wardhani, CISA, CISSP",
+        role: "Principal IT Security & DevSecOps Compliance Lead",
+        category: "sec",
+        division: "devops",
+        avatar: "🔒",
+        color: 0xdc2626,
+        pos: { x: -11, z: 25 },
+        workload: 96,
+        status: {
+          label: "UU PDP 27/2022 & RLS Strict Compliant",
+          tone: "emerald",
+          action: "Memastikan seluruh skema tabel cloud Supabase mematuhi prinsip enkripsi data pribadi sesuai UU Perlindungan Data Pribadi (UU PDP No. 27/2022) dan Row Level Security.",
+          ticket: "SEC-PDP / SEC-RLS",
+          file: "supabase/migrations/ & docs/compliance/UU_PDP_COMPLIANCE_MATRIX.md",
+          collaborators: "Rizco Renova (Team Lead), Rendra Dananjaya (Pentester), Damar Deva (DevOps)",
+          cleanArchReview: "Strict Row Level Security: Setiap tabel wajib mengaktifkan RLS dengan policy eksplisit per authenticated user role.",
+          opinion: "Kepatuhan privasi data adalah hak asasi pengguna. Sistem enterprise sejati tidak boleh memiliki celah kebocoran data sekecil apapun.",
+          ac: [
+            "Tabel berisi data pribadi (profiles, attempts) memiliki RLS ketat",
+            "Log audit mencatat akses data sensitif dengan timestamp terenkripsi",
+            "Kebijakan retensi dan pembersihan data kandidat terotomasi (auto-purge)"
+          ],
+          codeSnippet: `// Row Level Security Enforcement
+ALTER TABLE public.recruiter_shortlists ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Recruiters can only view own shortlists"
+ON public.recruiter_shortlists FOR ALL
+TO authenticated
+USING (recruiter_id = auth.uid());`
+        },
+        screen: {
+          file: "UU_PDP_Compliance.audit",
+          badge: "PDP COMPLIANT",
+          lines: [
+            "// UU_PDP_Compliance.dashboard",
+            "* UU No. 27/2022 (Data Privacy): COMPLIANT",
+            "* Consent Manager: User opt-in logged",
+            "* Auto-Purge Retention: 30 days active",
+            "* Strict Tenant Isolation: Verified",
+            "➔ Security Compliance Status: FULL PASS"
+          ]
+        },
+        skills: {
+          primary: ['Principal IT Security & Compliance (99%)', 'PostgreSQL Row-Level Security (RLS) Audit (98%)', 'UU PDP No. 27/2022 Compliance (98%)', 'Content Security Policy (CSP) & Headers (97%)'],
+          stack: ['Supabase RLS Linter', 'SonarQube Security', 'Trivy Vulnerability Scanner', 'SSL Labs', 'CSP Evaluator'],
+          methodology: ['Defense in Depth Architecture', 'Zero Trust Network Architecture (ZTNA)', 'ISO/IEC 27001 ISMS Standard'],
+          certifications: ['Certified Information Systems Security Professional (CISSP)', 'Certified Information Systems Auditor (CISA)', 'CIPP/A Data Privacy']
+        },
+        avatarStyle: { hair: 0x374151, skin: 0xfcd5b5, outfit: 0x7f1d1d, glasses: true, hairStyle: 'bob' }
+      },
+      {
+        id: 18,
+        name: "Hendra Wicaksono",
+        persona: "Hendrawan Wicaksono, M.Kom.",
+        role: "Principal Frontend Architect & Clean Architecture Lead",
+        category: "tech",
+        division: "engineering",
+        avatar: "🏛️",
+        color: 0x047857,
+        pos: { x: -16.5, z: 2.5 },
+        workload: 95,
+        status: {
+          label: "Clean Architecture FE Code Review Approved",
+          tone: "emerald",
+          action: "Memverifikasi kepatuhan Clean Architecture pada modul frontend: pemisahan view dari state presenter, zero direct Supabase calls di JSX, dan batasan chunk JS < 250 kB.",
+          ticket: "CODE-FE / CLEAN-ARCH",
+          file: "client/src/ & docs/architecture/CLEAN_ARCHITECTURE_FE.md",
+          collaborators: "Farel Faza (FE Lead), Nadia Maharani (UI/UX), Pandu Respati (Perf)",
+          cleanArchReview: "Clean Architecture Gate: Komponen UI hanya bertindak sebagai dumb presenter; seluruh mutasi ditangani useCases/hooks.",
+          opinion: "Kode yang rapi dan terstruktur hexagonal membuat penambahan fitur baru seperti PWA dan ATS Kanban menjadi aman dan minim efek samping.",
+          ac: [
+            "Komponen UI bebas dari panggilan langsung supabase.from(...)",
+            "Struktur folder tertata modular (features/, core/, shared/ui/)",
+            "Batas anggaran bundle JS (250 kB) dipatuhi tanpa kompromi"
+          ],
+          codeSnippet: `// Clean Architecture Gate Review (Hendrawan Wicaksono)
+export interface CleanArchitectureFeAudit {
+  layerSeparation: 'DUMB_COMPONENTS_VS_HOOKS_VERIFIED';
+  directSdkCallsInJsx: 0;
+  designSystemTokensApplied: true;
+  bundleChunkAudit: 'ALL_CHUNKS_UNDER_250KB';
+  reviewSignOff: 'APPROVED';
+}`
+        },
+        screen: {
+          file: "CleanArchReview.fe",
+          badge: "FE PRINCIPAL OK",
+          lines: [
+            "// CleanArchitectureReview.fe.ts",
+            "✔ View Layer ➔ 0 direct Supabase calls",
+            "✔ State Hooks ➔ useQuizRunner() isolated",
+            "✔ Bundle Check ➔ chunk size: 27.19 kB",
+            "✔ Anti-AI-Slop ➔ 1px crisp borders",
+            "[FE PRINCIPAL CODE REVIEW: APPROVED]"
+          ]
+        },
+        skills: {
+          primary: ['Principal Frontend Architecture (99%)', 'Clean Architecture Frontend (Ports/Adapters) (98%)', 'Strict Bundle Budget Guardian (< 250 kB) (99%)', 'Anti-AI-Slop Design System Enforcement (98%)'],
+          stack: ['React 19 Core', 'TypeScript 5 Strict Engine', 'Rollup / Vite AST Plugins', 'Oxlint & ESLint AST', 'Vitest'],
+          methodology: ['Clean Architecture UI', 'Dependency Inversion Principle (DIP)', 'Atomic Design System Tokenization'],
+          certifications: ['Principal Software Engineer', 'Meta Senior Frontend Architect', 'W3C Web Standards Specialist']
+        },
+        avatarStyle: { hair: 0x1f2937, skin: 0xf5d0b5, outfit: 0x064e3b, glasses: true, hairStyle: 'slick', accessory: 'lanyard' }
+      },
+      {
+        id: 19,
+        name: "Danu Bratawidjaja",
+        persona: "Dr. Ir. Danu Bratawidjaja, Ph.D.",
+        role: "Principal Backend Architect & Clean Architecture Lead",
+        category: "tech",
+        division: "engineering",
+        avatar: "⚡",
+        color: 0x065f46,
+        pos: { x: -11.5, z: 2.5 },
+        workload: 96,
+        status: {
+          label: "Hexagonal Backend Domain Review Approved",
+          tone: "emerald",
+          action: "Mengaudit arsitektur backend, idempotency migrasi DDL PL/pgSQL, efisiensi composite index query (< 20ms), dan isolasi domain scoring kuis dari persistence layer.",
+          ticket: "CODE-BE / HEXAGONAL",
+          file: "supabase/migrations/ & docs/architecture/HEXAGONAL_ARCHITECTURE_BE.md",
+          collaborators: "Bagas Bimo (BE), Ir. Arkananta (Chief Architect), Saskia Wardhani (Security)",
+          cleanArchReview: "Hexagonal Gate: Domain scoring logic terisolasi murni; transaksi database menerapkan row-locking (FOR UPDATE) pada kuota.",
+          opinion: "Arsitektur heksagonal membebaskan logika bisnis dari keterikatan database vendor. Kode domain murni dapat diuji terisolasi 100%.",
+          ac: [
+            "Fungsi scoring kuis tidak memiliki efek samping ke tabel eksternal",
+            "Migrasi DDL bersifat idempotent dan lolos uji rollback",
+            "Query multi-tenant terisolasi sempurna dengan latensi < 20ms"
+          ],
+          codeSnippet: `// Hexagonal Backend Review Gate (Dr. Danu Bratawidjaja)
+export interface HexagonalBackendAudit {
+  domainCorePurity: 'ZERO_EXTERNAL_DEPENDENCY';
+  sqlMigrationsIdempotency: 'VERIFIED_SAFE';
+  compositeIndexingTarget: '< 20ms';
+  reviewSignOff: 'APPROVED';
+}`
+        },
+        screen: {
+          file: "HexagonalReview.be",
+          badge: "BE PRINCIPAL OK",
+          lines: [
+            "// HexagonalDomainReview.be.sql",
+            "✔ PL/pgSQL Idempotency: Verified safe",
+            "✔ Composite Index: (quiz_id, user_id)",
+            "✔ RLS Strict Isolation: multi_tenant",
+            "✔ Row Locking: FOR UPDATE on quota",
+            "[BE PRINCIPAL CODE REVIEW: APPROVED]"
+          ]
+        },
+        skills: {
+          primary: ['Principal Backend Architecture (99%)', 'Hexagonal Architecture (Ports & Adapters) (99%)', 'Sub-20ms PostgreSQL Query Tuning (98%)', 'Idempotent Migration & RLS Shielding (98%)'],
+          stack: ['Node.js 22 Enterprise', 'PostgreSQL 15 Enterprise Engine', 'Supabase PL/pgSQL Engine', 'PgBouncer', 'Prisma / Knex'],
+          methodology: ['Hexagonal Architecture (Alistair Cockburn)', 'Domain-Driven Design (DDD)', 'Zero-Downtime Database Migration'],
+          certifications: ['Principal Backend Architect', 'Doctor of Philosophy in Distributed Systems (Ph.D.)', 'AWS Certified Database Specialist']
+        },
+        avatarStyle: { hair: 0x374151, skin: 0xf5d0b5, outfit: 0x065f46, glasses: true, hairStyle: 'slick', accessory: 'lanyard' }
+      },
+      {
+        id: 20,
+        name: "Nadia Maharani",
+        persona: "Nadia Maharani, S.Ds.",
+        role: "Lead UI/UX Product Designer & Design System Specialist",
+        category: "design",
+        division: "engineering",
+        avatar: "🎨",
+        color: 0xf43f5e,
+        pos: { x: -14, z: 10.5 },
+        workload: 93,
+        status: {
+          label: "iOS Standalone PWA & Design System V2",
+          tone: "rose",
+          action: "Menyusun wireframe, rancangan standalone PWA iPhone (Dynamic Island & Safe Area insets), user flow panduan Add to Home Screen Safari, serta panduan Design System token Anti-AI-Slop WCAG 2.1 AA.",
+          ticket: "PWA-01 / DES-01",
+          file: "client/src/shared/ui/ & docs/planning/03_FINAL_SPRINT_BACKLOG_MINOR_TO_MAJOR.md",
+          collaborators: "Farel Faza (FE Lead), Surya Dimas (Student POV), Hendrawan (Principal FE)",
+          cleanArchReview: "Konsistensi token desain (border-zinc-200/800, kontras WCAG 2.1 AA minimal 4.5:1, radius kartu proporsional).",
+          opinion: "Pengguna iPhone layak mendapatkan pengalaman seamless seperti aplikasi native. Tanpa bilah URL Safari, aplikasi terasa fokus, elegan, dan profesional.",
+          ac: [
+            "Spesifikasi PWA iPhone standalone (apple-mobile-web-app-capable & safe-area-insets) tercatat di backlog PWA-01",
+            "User flow instalasi PWA iPhone (Add to Home Screen) di Safari memiliki instruksi visual jelas dan mudah dipahami",
+            "Design system token (border-zinc-200/800, high contrast slate) diterapkan konsisten di seluruh modul",
+            "Komponen form, tombol aksi, dan tabel data memiliki state hover/active/focus-visible yang tegas"
+          ],
+          codeSnippet: `// iOS Standalone PWA & Safe Area Design Tokens
+export const IOS_PWA_DESIGN = {
+  meta: { capable: 'yes', statusBarStyle: 'black-translucent', title: 'LokaTalenta' },
+  safeArea: { top: 'env(safe-area-inset-top)', bottom: 'env(safe-area-inset-bottom)' },
+  touchIcons: ['/apple-touch-icon-180x180.png', '/apple-touch-icon-152x152.png'],
+  a2hsGuidance: { shareIcon: 'ios-share-sheet', actionText: 'Tambahkan ke Layar Utama' }
+};`
+        },
+        screen: {
+          file: "DESIGN_SYSTEM.fig",
+          badge: "FIGMA TOKEN V2",
+          lines: [
+            "// DESIGN_SYSTEM_V2.figma",
+            "* Frame: iOS Standalone Viewport (390x844)",
+            "* Safe Area: Dynamic Island top padding",
+            "* Anti-AI-Slop: 1px contrast border",
+            "* Accessibility: WCAG 2.1 AA (4.5:1)",
+            "➔ Tokens: Fully Synchronized to Tailwind"
+          ]
+        },
+        skills: {
+          primary: ['Lead UI/UX Product Design (98%)', 'Figma Design System Tokenization (97%)', 'WCAG 2.1 AA Accessibility Standards (96%)', 'Tactile Micro-Interactions & Physics (97%)'],
+          stack: ['Figma Professional / Variables', 'Tailwind CSS', 'Lucide Icons Craft', 'Framer Motion / CSS Curves', 'Stark Accessibility'],
+          methodology: ['Anti-AI-Slop Craftsmanship (1px Crisp Borders)', 'Design Tokens as Single Source of Truth', 'Atomic Component Architecture'],
+          certifications: ['Sarjana Desain (S.Ds.)', 'Nielsen Norman Group UX Master Certified (NN/g)', 'Certified Accessibility Specialist (WAS)']
+        },
+        avatarStyle: { hair: 0x4c1d95, skin: 0xfcd5b5, outfit: 0xbe123c, hairStyle: 'bun', glasses: true }
+      },
+      {
+        id: 21,
+        name: "Gibran Al-Farabi",
+        persona: "Dr. Gibran Al-Farabi, Ph.D.",
+        role: "Lead AI/ML Engineer & Speech-To-Text Specialist",
+        category: "tech",
+        division: "architecture",
+        avatar: "🧠",
+        color: 0x8b5cf6,
+        pos: { x: 14, z: -8.5 },
+        workload: 95,
+        status: {
+          label: "Speech-To-Text & STAR Model Pipeline",
+          tone: "purple",
+          action: "Merancang pipeline Speech-To-Text (STT) ringan, kuantisasi model audio wawancara kandidat, dan evaluasi rubrik STAR (Situation, Task, Action, Result) berbasis AI dengan target latensi rendah.",
+          ticket: "AI-15A / STT-PIPELINE",
+          file: "client/src/features/player/StarInterviewLab.tsx & docs/planning/02_TRD_TECHNICAL_REQUIREMENTS.md",
+          collaborators: "Ir. Arkananta (Chief Architect), Satria Adhyasta (SA), Farel Faza (FE)",
+          cleanArchReview: "Inferensi model AI dijalankan via WebAssembly atau streaming asinkron; bundle utama tetap di bawah 250 kB.",
+          opinion: "Model AI pada aplikasi web tidak boleh membebani browser pengguna. Inferensi berat harus di-stream secara asinkron atau menggunakan lightweight WebAssembly model yang hemat memori.",
+          ac: [
+            "Pipeline audio STT mampu mentranskripsikan ucapan bahasa Indonesia dengan Word Error Rate (WER) < 12%",
+            "Evaluasi rubrik STAR menghasilkan skor kuantitatif 1-5 beserta umpan balik kalimat spesifik",
+            "Ukuran chunk komputasi AI di browser tidak melebihi anggaran bundle 250 kB (menggunakan lazy streaming)",
+            "Deteksi jeda bicara (voice activity detection / VAD) berfungsi akurat tanpa memotong kalimat kandidat"
+          ],
+          codeSnippet: `// Lightweight Speech-to-Text & STAR Competency Evaluator
+export interface StarInterviewEvaluation {
+  transcription: string;
+  metrics: { situation: number; task: number; action: number; result: number };
+  overallScore: number;
+  actionableFeedback: string[];
+}`
+        },
+        screen: {
+          file: "StarSpeechAI.ts",
+          badge: "NLP EVALUATOR",
+          lines: [
+            "// StarInterviewEvaluator.ts",
+            "const { wer, rubrics } = await evalAudio(stream);",
+            "// WER: 8.4% (< 12% target threshold)",
+            "// STAR Metrics: S:4.8, T:4.5, A:4.9, R:4.6",
+            "// Latency: 120ms (Wasm inference)",
+            "➔ Audio VAD: Calibrated to Indonesian"
+          ]
+        },
+        skills: {
+          primary: ['Lead AI/ML & Audio Model Engineering (98%)', 'Lightweight Speech-To-Text (STT) Pipeline (97%)', 'STAR Behavioral Rubric Quantization (96%)', 'Edge Audio Signal Processing (96%)'],
+          stack: ['Whisper.wasm', 'Web Audio API DSP', 'ONNX Runtime Web', 'TensorFlow.js', 'Python NumPy/PyTorch'],
+          methodology: ['Edge AI Quantization (INT8/4-bit)', 'STAR Matrix Semantic Scoring', 'Low-Latency Audio Streaming Pipeline'],
+          certifications: ['Doctor of Philosophy in Artificial Intelligence (Ph.D.)', 'TensorFlow Certified Developer', 'IEEE Audio & Speech Processing Member']
+        },
+        avatarStyle: { hair: 0x1f2937, skin: 0xf3c8a8, outfit: 0x5b21b6, glasses: true, hairStyle: 'beard', accessory: 'smartwatch' }
+      },
+      {
+        id: 22,
+        name: "Reza Pratama",
+        persona: "Reza Pratama, S.Kom.",
+        role: "Site Reliability Engineer & Real-Time Observability Lead",
+        category: "ops",
+        division: "devops",
+        avatar: "📊",
+        color: 0x0284c7,
+        pos: { x: -11, z: 20 },
+        workload: 94,
+        status: {
+          label: "Real-Time Telemetry & SLA 99.98% Monitored",
+          tone: "emerald",
+          action: "Memantau kestabilan infrastruktur, metrik latensi p95 API (< 50ms), pooling koneksi database Supabase, serta mitigasi risiko degradasi koneksi saat ujian massal.",
+          ticket: "OPS-SRE / SLA-9998",
+          file: "client/src/features/admin/AdminPanelPage.tsx & docs/architecture/SRE_OBSERVABILITY_RUNBOOK.md",
+          collaborators: "Damar Deva (DevOps Lead), Ir. Saskia Wardhani (Security), Pandu Respati (Perf)",
+          cleanArchReview: "Observability runbook: Metrik telemetry error client di-buffer secara debounced untuk mencegah flood request ke server.",
+          opinion: "Stabilitas sistem bukan kebetulan; itu adalah buah dari pemantauan proaktif, batas kapasitas yang teruji, dan kesiapsiagaan menghadapi lonjakan trafik tak terduga.",
+          ac: [
+            "Dashboard observabilitas menampilkan status koneksi pool Supabase real-time",
+            "Uptime sistem produksi berada di atas komitmen SLA enterprise 99.98%",
+            "Alerting otomatis terhubung ke kanal notifikasi saat error rate melampaui 0.1%"
+          ],
+          codeSnippet: `// SRE Real-Time Observability & Healthcheck
+export interface SystemHealthMetrics {
+  uptimePercent: 99.98;
+  apiP95LatencyMs: 42;
+  dbPoolUtilization: number;
+  activeQuizSessions: number;
+  status: 'OPTIMAL';
+}`
+        },
+        screen: {
+          file: "Prometheus.metrics",
+          badge: "SLA 99.98%",
+          lines: [
+            "// PrometheusGrafana.metrics",
+            "* Service Uptime: 99.98% (Target: 99.95%)",
+            "* p95 API Response Time: 42ms (< 50ms)",
+            "* DB Connection Pool: 14/100 active",
+            "* Error Rate: 0.001% (Healthy)",
+            "➔ Status: All Systems Operational"
+          ]
+        },
+        skills: {
+          primary: ['Site Reliability Engineering & Observability (98%)', 'Prometheus & Grafana Metric Telemetry (97%)', 'Write-Storm Debounce & Connection Pooling (97%)', 'SLA 99.99% Reliability Management (98%)'],
+          stack: ['Prometheus', 'Grafana Cloud', 'OpenTelemetry (OTel)', 'Sentry Error Tracking', 'PgBouncer Metrics', 'Vercel Analytics'],
+          methodology: ['Google SRE Reliability Handbooks', 'Error Budgets & SLO/SLI Architecture', 'Chaos Engineering & Self-Healing'],
+          certifications: ['Google Professional Cloud DevOps Engineer', 'Certified Prometheus Associate (PCA)', 'Datadog / Grafana SRE Specialist']
+        },
+        avatarStyle: { hair: 0x18181b, skin: 0xfed7aa, outfit: 0x0369a1, headphones: true, hairStyle: 'short' }
+      },
+      {
+        id: 23,
+        name: "Maya Safitri",
+        persona: "Maya Safitri, S.Psi., CHRP",
+        role: "Corporate Recruiter & Talent Acquisition Advocate",
+        category: "pov",
+        division: "lounge",
+        avatar: "💼",
+        color: 0xbe185d,
+        pos: { x: 16.5, z: 21 },
+        workload: 92,
+        status: {
+          label: "Candidate ATS Pipeline & 5D Radar Active",
+          tone: "rose",
+          action: "Menguji efektivitas alur pencarian talenta di RecruiterPortalPage.tsx, filtering Radar 5D, pemindahan status kandidat di ATS Kanban, dan kemudahan ekspor shortlist.",
+          ticket: "REC-06 / REC-08",
+          file: "client/src/features/recruiter/RecruiterPortalPage.tsx",
+          collaborators: "Farel Faza (FE Lead), Bramantyo (Business Lead), Pranadipa (PO)",
+          cleanArchReview: "Memastikan data profil kandidat yang disajikan objektif dan sesuai batasan persetujuan privasi pelamar (opt-in data sharing).",
+          opinion: "Sebagai perekrut, kami tidak butuh grafik yang rumit. Kami butuh data komparasi objektif yang memperlihatkan potensi kepemimpinan, ketahanan kerja, dan integritas kandidat.",
+          ac: [
+            "Perekrut dapat memfilter kandidat berdasarkan batas bawah skor Radar 5D dan KPM Kraepelin",
+            "Matriks komparasi berdampingan menyajikan 2-4 kandidat pilihan secara komparatif",
+            "Tautan Talent Passport kandidat terverifikasi publik dapat dibuka dan dibagikan dengan aman"
+          ],
+          codeSnippet: `// Candidate Shortlist & Comparison Matrix
+export interface CandidateComparisonView {
+  candidates: CandidateProfile[];
+  dimensions: ['leadership', 'problemSolving', 'technicalAgility', 'workResilience', 'collaboration'];
+  recommendationScore: number;
+}`
+        },
+        screen: {
+          file: "RecruiterATS.ts",
+          badge: "ATS KANBAN",
+          lines: [
+            "// RecruiterATS_Kanban.ts",
+            "* Invited: 18 | In Progress: 12",
+            "* Evaluated: 8 | Shortlisted: 5",
+            "* Candidate 5D Radar Matrix: Compared",
+            "* Talent Passport Links: Verified",
+            "➔ Recruiter Portal: Live in Production"
+          ]
+        },
+        skills: {
+          primary: ['Enterprise Talent Acquisition Advocacy (97%)', 'ATS Kanban Pipeline Usability (96%)', 'Bulk CSV Candidate Ingestion (95%)', 'Psychometric Radar & Talent Assessment (97%)'],
+          stack: ['Enterprise Recruiter Portal', 'ATS Kanban Boards', 'CSV / Excel Ingestion Engines', 'Candidate Profile Visualizer', 'DISC/MBTI Radar'],
+          methodology: ['Evidence-Based HR Assessment', 'Competency-Based Interviewing (STAR)', 'Recruitment Funnel Velocity Optimization'],
+          certifications: ['Sarjana Psikologi (S.Psi.)', 'Certified Human Resource Professional (CHRP)', 'Licensed Psychometrics Administrator']
+        },
+        avatarStyle: { hair: 0x1f2937, skin: 0xfcd5b5, outfit: 0x9d174d, hairStyle: 'wavy', accessory: 'pearl_necklace' }
+      }
+    ];
+
+    // ─── 3. STATE DAN VARIABEL UTAMA ENGINE ───────────────────────────────────────
+    let selectedAgent = AGENTS[0];
+    let currentEngine = 'webgl';
+    let isDayMode = false;
+    let currentDossierTab = 'code';
+
+    // Tour Variables (User-Requested 60 Seconds Tour Delay)
+    let isTouring = false;
+    let isTourPaused = false;
+    let tourIndex = 0;
+    const TOUR_DELAY_MS = 60000; // Exact 60 seconds delay requested by user
+    let tourRemainingSec = 60;
+    let tourIntervalTimer = null;
+
+    // Three.js Core
+    let scene, camera, renderer, controls, raycaster, mouse;
+    let animatedMeshes = [];
+    let avatarGroups = [];
+    let ambientLight, mainDirLight, hemiLight;
+    let divisionPointLights = [];
+
+    // ─── 4. THREE.JS WEBGL ENGINE SETUP ──────────────────────────────────────────
+    function initWebGL() {
+      const container = document.getElementById('canvas-container');
+      if (typeof THREE === 'undefined') {
+        switchEngine('canvas2d');
+        return;
+      }
+
+      try {
+        const width = container.clientWidth || 800;
+        const height = container.clientHeight || 720;
+        const aspect = width / height;
+
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color(isDayMode ? 0xf8fafc : 0x090d16);
+
+        camera = new THREE.PerspectiveCamera(40, aspect, 0.1, 1000);
+        camera.position.set(28, 30, 44);
+
+        renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
+        renderer.setSize(width, height);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.outputEncoding = THREE.sRGBEncoding;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.15;
+        container.appendChild(renderer.domElement);
+
+        if (THREE.OrbitControls) {
+          controls = new THREE.OrbitControls(camera, renderer.domElement);
+          controls.enableDamping = true;
+          controls.dampingFactor = 0.05;
+          controls.maxPolarAngle = Math.PI / 2 - 0.05;
+          controls.minDistance = 2.5;
+          controls.maxDistance = 95;
+          controls.target.set(0, 1.5, 6);
+        }
+
+        raycaster = new THREE.Raycaster();
+        mouse = new THREE.Vector2();
+        animatedMeshes = [];
+        avatarGroups = [];
+
+        setup3DLighting();
+        build3DEnvironment();
+        build3DDivisionSuites();
+        build3DCentralAmenities();
+        spawn3DAvatars();
+        initAgentAutonomousSim();
+
+        window.addEventListener('resize', on3DResize);
+        container.addEventListener('mousemove', on3DMouseMove);
+        container.addEventListener('click', on3DClick);
+
+        renderDossier(selectedAgent);
+        animateWebGL();
+      } catch (err) {
+        console.error('WebGL initialization error, falling back to 2.5D Canvas:', err);
+        switchEngine('canvas2d');
+      }
+    }
+
+    function setup3DLighting() {
+      hemiLight = new THREE.HemisphereLight(
+        isDayMode ? 0xf0f9ff : 0xdbeafe,
+        isDayMode ? 0xe2e8f0 : 0x1e293b,
+        isDayMode ? 1.05 : 0.85
+      );
+      scene.add(hemiLight);
+
+      ambientLight = new THREE.AmbientLight(0xffffff, isDayMode ? 0.95 : 0.72);
+      scene.add(ambientLight);
+
+      mainDirLight = new THREE.DirectionalLight(0xfff8ed, isDayMode ? 1.25 : 1.15);
+      mainDirLight.position.set(34, 52, 30);
+      mainDirLight.castShadow = true;
+      mainDirLight.shadow.mapSize.width = 2048;
+      mainDirLight.shadow.mapSize.height = 2048;
+      mainDirLight.shadow.bias = -0.0003;
+      scene.add(mainDirLight);
+
+      const fillLight = new THREE.DirectionalLight(0x60a5fa, isDayMode ? 0.5 : 0.48);
+      fillLight.position.set(-34, 30, -28);
+      scene.add(fillLight);
+
+      const rimLight = new THREE.DirectionalLight(0xa78bfa, 0.38);
+      rimLight.position.set(0, 28, -36);
+      scene.add(rimLight);
+
+      divisionPointLights = [];
+      Object.values(DIVISIONS).forEach(div => {
+        const pLight = new THREE.PointLight(div.lightColor || div.threeColor, isDayMode ? 0.6 : 0.95, 24, 1.8);
+        pLight.position.set(div.center.x, 4.2, div.center.z);
+        scene.add(pLight);
+        divisionPointLights.push(pLight);
+      });
+    }
+
+    function build3DEnvironment() {
+      // Main Floor Base Foundation Slab
+      const slabGeo = new THREE.BoxGeometry(58, 1.2, 68);
+      const slabMat = new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.6, metalness: 0.2 });
+      const slab = new THREE.Mesh(slabGeo, slabMat);
+      slab.position.y = -0.6;
+      slab.receiveShadow = true;
+      scene.add(slab);
+
+      // Deep Midnight Navy Floor Surface
+      const floorGeo = new THREE.PlaneGeometry(54, 64);
+      const floorMat = new THREE.MeshStandardMaterial({ color: 0x090d16, roughness: 0.5, metalness: 0.2 });
+      const floor = new THREE.Mesh(floorGeo, floorMat);
+      floor.rotation.x = -Math.PI / 2;
+      floor.position.y = 0.01;
+      floor.receiveShadow = true;
+      scene.add(floor);
+
+      // Central Grand Concourse
+      const corridorGeo = new THREE.PlaneGeometry(6.6, 64);
+      const corridorMat = new THREE.MeshStandardMaterial({ color: 0x131d2e, roughness: 0.2, metalness: 0.45 });
+      const corridor = new THREE.Mesh(corridorGeo, corridorMat);
+      corridor.rotation.x = -Math.PI / 2;
+      corridor.position.set(0, 0.02, 0);
+      corridor.receiveShadow = true;
+      scene.add(corridor);
+
+      // Transverse Cross Corridor
+      const crossGeo = new THREE.PlaneGeometry(54, 5.0);
+      const crossMat = new THREE.MeshStandardMaterial({ color: 0x101726, roughness: 0.25, metalness: 0.4 });
+      const cross = new THREE.Mesh(crossGeo, crossMat);
+      cross.rotation.x = -Math.PI / 2;
+      cross.position.set(0, 0.015, 6);
+      cross.receiveShadow = true;
+      scene.add(cross);
+
+      // Neon Guide Ribbons
+      const lineEmerald = new THREE.Mesh(new THREE.PlaneGeometry(0.18, 62), new THREE.MeshBasicMaterial({ color: 0x10b981 }));
+      lineEmerald.rotation.x = -Math.PI / 2;
+      lineEmerald.position.set(-0.7, 0.03, 0);
+      scene.add(lineEmerald);
+
+      const lineCyan = new THREE.Mesh(new THREE.PlaneGeometry(0.18, 62), new THREE.MeshBasicMaterial({ color: 0x06b6d4 }));
+      lineCyan.rotation.x = -Math.PI / 2;
+      lineCyan.position.set(0.7, 0.03, 0);
+      scene.add(lineCyan);
+
+      // Modern Architectural Perimeter Trim Walls
+      const wallMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.35, metalness: 0.6 });
+      create3DBox(0, 0.6, -32, 56, 1.2, 0.4, wallMat);
+      create3DBox(0, 0.6, 32, 56, 1.2, 0.4, wallMat);
+      create3DBox(-27, 0.6, 0, 0.4, 1.2, 64, wallMat);
+      create3DBox(27, 0.6, 0, 0.4, 1.2, 64, wallMat);
+
+      // Glowing Perimeter Top Railing
+      const railMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
+      create3DBox(0, 1.22, -32, 56, 0.04, 0.42, railMat);
+      create3DBox(0, 1.22, 32, 56, 0.04, 0.42, railMat);
+      create3DBox(-27, 1.22, 0, 0.42, 0.04, 64, railMat);
+      create3DBox(27, 1.22, 0, 0.42, 0.04, 64, railMat);
+    }
+
+    function create3DBox(x, y, z, w, h, d, mat) {
+      const geo = new THREE.BoxGeometry(w, h, d);
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.set(x, y, z);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      scene.add(mesh);
+      return mesh;
+    }
+
+    // ─── 5. BUILD DIVISION SUITES & PROMINENT WALL TARGET SCREENS ────────────────
+    function build3DDivisionSuites() {
+      const glassMat = new THREE.MeshStandardMaterial({
+        color: 0xe0f2fe,
+        transparent: true,
+        opacity: 0.22,
+        roughness: 0.05,
+        metalness: 0.35
+      });
+      const frameMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.2, metalness: 0.85 });
+
+      Object.values(DIVISIONS).forEach(div => {
+        const cx = div.center.x;
+        const cz = div.center.z;
+        const w = div.bounds.width;
+        const d = div.bounds.depth;
+
+        // Signature Floor Pad
+        const floorGeo = new THREE.PlaneGeometry(w - 0.2, d - 0.2);
+        const floorMat = new THREE.MeshStandardMaterial({
+          color: div.floorMat,
+          roughness: 0.55,
+          metalness: 0.25
+        });
+        const floor = new THREE.Mesh(floorGeo, floorMat);
+        floor.rotation.x = -Math.PI / 2;
+        floor.position.set(cx, 0.025, cz);
+        floor.receiveShadow = true;
+        scene.add(floor);
+
+        // Glowing 1px Perimeter Accent Strip
+        const borderGeo = new THREE.PlaneGeometry(w, d);
+        const borderMat = new THREE.MeshBasicMaterial({ color: div.floorAccent || div.threeColor, wireframe: true });
+        const border = new THREE.Mesh(borderGeo, borderMat);
+        border.rotation.x = -Math.PI / 2;
+        border.position.set(cx, 0.028, cz);
+        scene.add(border);
+
+        // Glass Walls
+        create3DGlassWall(cx, cz - d/2, w, 2.4, true, glassMat, frameMat);
+        create3DGlassWall(cx, cz + d/2, w, 2.4, true, glassMat, frameMat);
+        
+        // Doorway Wall
+        const isLeft = cx < 0;
+        const wallX = isLeft ? cx + w/2 : cx - w/2;
+        create3DGlassDoorway(wallX, cz, d, 2.4, glassMat, frameMat);
+
+        // Wall Display (Motto & Sprint 15 Targets Screen) on Primary Wall
+        create3DDivisionWallDisplay(cx, cz, div);
+
+        // Room Furniture Props
+        build3DRoomProps(div);
+      });
+    }
+
+    function create3DGlassWall(x, z, length, height, isHorizontal, glassMat, frameMat) {
+      const group = new THREE.Group();
+      group.position.set(x, 0, z);
+
+      const glassGeo = isHorizontal ? new THREE.BoxGeometry(length, height, 0.06) : new THREE.BoxGeometry(0.06, height, length);
+      const glass = new THREE.Mesh(glassGeo, glassMat);
+      glass.position.y = height / 2;
+      group.add(glass);
+
+      const frameGeo = isHorizontal ? new THREE.BoxGeometry(length, 0.06, 0.08) : new THREE.BoxGeometry(0.08, 0.06, length);
+      const topFrame = new THREE.Mesh(frameGeo, frameMat);
+      topFrame.position.y = height;
+      group.add(topFrame);
+
+      const botFrame = new THREE.Mesh(frameGeo, frameMat);
+      botFrame.position.y = 0.03;
+      group.add(botFrame);
+
+      scene.add(group);
+    }
+
+    function create3DGlassDoorway(x, z, length, height, glassMat, frameMat) {
+      const group = new THREE.Group();
+      group.position.set(x, 0, z);
+      const partLength = (length - 3.2) / 2;
+
+      const glassGeo = new THREE.BoxGeometry(0.06, height, partLength);
+      const glass1 = new THREE.Mesh(glassGeo, glassMat);
+      glass1.position.set(0, height / 2, -length/4 - 0.8);
+      group.add(glass1);
+
+      const glass2 = new THREE.Mesh(glassGeo, glassMat);
+      glass2.position.set(0, height / 2, length/4 + 0.8);
+      group.add(glass2);
+
+      const lintelGeo = new THREE.BoxGeometry(0.08, 0.12, length);
+      const lintel = new THREE.Mesh(lintelGeo, frameMat);
+      lintel.position.y = height;
+      group.add(lintel);
+
+      scene.add(group);
+    }
+
+    // ─── 6. PROMINENT WALL TARGET & MOTTO SCREEN PER ROOM ────────────────────────
+    function create3DDivisionWallDisplay(cx, cz, div) {
+      const w = 5.2;
+      const h = 2.4;
+      const z = cz - div.bounds.depth / 2 + 0.14;
+      const y = 2.45;
+
+      const group = new THREE.Group();
+      group.position.set(cx, y, z);
+
+      // High-tech Obsidian Bezel Frame
+      const frameGeo = new THREE.BoxGeometry(w + 0.16, h + 0.16, 0.08);
+      const frameMat = new THREE.MeshStandardMaterial({ color: 0x090d16, roughness: 0.3, metalness: 0.7 });
+      const frame = new THREE.Mesh(frameGeo, frameMat);
+      group.add(frame);
+
+      // Luminous Accent Top Strip
+      const edgeGeo = new THREE.BoxGeometry(w + 0.18, 0.04, 0.09);
+      const edgeMat = new THREE.MeshBasicMaterial({ color: div.threeColor });
+      const topEdge = new THREE.Mesh(edgeGeo, edgeMat);
+      topEdge.position.y = h / 2 + 0.08;
+      group.add(topEdge);
+
+      // High-Res Canvas Texture (1024x512) for Division Motto & Targets
+      const canvas = document.createElement('canvas');
+      canvas.width = 1024;
+      canvas.height = 512;
+      const ctx = canvas.getContext('2d');
+
+      // Background gradient
+      const grad = ctx.createLinearGradient(0, 0, 0, 512);
+      grad.addColorStop(0, '#0d1527');
+      grad.addColorStop(1, '#050811');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 1024, 512);
+
+      // Top Header Ribbon
+      ctx.fillStyle = div.color || '#3b82f6';
+      ctx.fillRect(0, 0, 1024, 62);
+
+      // Division Title
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 28px sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(div.name.toUpperCase(), 32, 42);
+
+      ctx.fillStyle = '#f8fafc';
+      ctx.font = 'bold 18px monospace';
+      ctx.textAlign = 'right';
+      ctx.fillText('TARGET & MOTO SPRINT 15', 992, 42);
+
+      // Division Motto Box
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
+      ctx.fillRect(32, 80, 960, 68);
+      ctx.strokeStyle = div.color || '#3b82f6';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(32, 80, 960, 68);
+
+      ctx.fillStyle = '#fbbf24';
+      ctx.font = 'bold 15px monospace';
+      ctx.textAlign = 'left';
+      ctx.fillText('★ MOTO DIVISI:', 50, 106);
+
+      ctx.fillStyle = '#f1f5f9';
+      ctx.font = 'italic bold 20px sans-serif';
+      ctx.fillText(`"${div.motto}"`, 50, 134);
+
+      // Active Targets Section Header
+      ctx.fillStyle = '#38bdf8';
+      ctx.font = 'bold 17px monospace';
+      ctx.fillText('⚡ TARGET UTAMA & KPI SPRINT 15:', 32, 182);
+
+      // Targets List
+      div.targets.forEach((tgt, idx) => {
+        const rowY = 220 + idx * 68;
+        ctx.fillStyle = '#111927';
+        ctx.fillRect(32, rowY - 26, 960, 54);
+        ctx.strokeStyle = '#1e293b';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(32, rowY - 26, 960, 54);
+
+        // Code Pill
+        const isOk = tgt.status === 'VERIFIED' || tgt.status === 'APPROVED' || tgt.status === 'COMPLIANT' || tgt.status === 'LOCKED';
+        ctx.fillStyle = isOk ? '#065f46' : '#1e3a8a';
+        ctx.fillRect(48, rowY - 16, 120, 32);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 14px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(tgt.code, 108, rowY + 5);
+
+        // Description
+        ctx.fillStyle = '#f8fafc';
+        ctx.font = 'bold 18px sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText(tgt.text, 185, rowY + 6);
+
+        // Status
+        ctx.fillStyle = isOk ? '#10b981' : '#38bdf8';
+        ctx.font = 'bold 15px monospace';
+        ctx.textAlign = 'right';
+        ctx.fillText(`[${tgt.status}]`, 968, rowY + 5);
+      });
+
+      const tex = new THREE.CanvasTexture(canvas);
+      tex.anisotropy = 4;
+      const screenMesh = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: tex }));
+      screenMesh.position.z = 0.045;
+      group.add(screenMesh);
+
+      scene.add(group);
+    }
+
+    function build3DRoomProps(div) {
+      if (div.id === 'executive') {
+        create3DMeetingTable(div.center.x, div.center.z - 1.5, 4.5, 2.0);
+        create3DPottedPlant(div.center.x - 5.5, div.center.z - 5);
+      } else if (div.id === 'architecture') {
+        create3DPottedPlant(div.center.x + 5.5, div.center.z - 5);
+      } else if (div.id === 'engineering') {
+        create3DPottedPlant(div.center.x - 5.5, div.center.z + 5);
+      } else if (div.id === 'qa') {
+        create3DPottedPlant(div.center.x + 5.5, div.center.z + 5);
+      } else if (div.id === 'devops') {
+        create3DServerRack(div.center.x - 5.2, div.center.z + 2.5);
+        create3DServerRack(div.center.x - 5.2, div.center.z - 0.5);
+        create3DServerRack(div.center.x - 5.2, div.center.z - 3.5);
+      } else if (div.id === 'lounge') {
+        // DEFECT FIXED: Removed colliding sofa that was blocking agents #14 & #15!
+        // Ample clear room walkways with side potted plants
+        create3DPottedPlant(div.center.x + 5.2, div.center.z + 5);
+        create3DPottedPlant(div.center.x - 5.2, div.center.z + 5);
+      }
+    }
+
+    function create3DMeetingTable(x, z, w, d) {
+      const group = new THREE.Group();
+      group.position.set(x, 0, z);
+      const topGeo = new THREE.BoxGeometry(w, 0.1, d);
+      const topMat = new THREE.MeshStandardMaterial({ color: 0x261d17, roughness: 0.3 });
+      const top = new THREE.Mesh(topGeo, topMat);
+      top.position.y = 0.8;
+      top.castShadow = true;
+      group.add(top);
+
+      const legMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.3 });
+      [[-w/2 + 0.3, -d/2 + 0.3], [w/2 - 0.3, -d/2 + 0.3], [-w/2 + 0.3, d/2 - 0.3], [w/2 - 0.3, d/2 - 0.3]].forEach(([lx, lz]) => {
+        const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.8, 12), legMat);
+        leg.position.set(lx, 0.4, lz);
+        leg.castShadow = true;
+        group.add(leg);
+      });
+      scene.add(group);
+    }
+
+    function create3DServerRack(x, z) {
+      const group = new THREE.Group();
+      group.position.set(x, 1.4, z);
+      const rack = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.8, 1.2), new THREE.MeshStandardMaterial({ color: 0x020617, roughness: 0.5, metalness: 0.8 }));
+      rack.castShadow = true;
+      group.add(rack);
+
+      for (let i = 0; i < 8; i++) {
+        const ledGeo = new THREE.SphereGeometry(0.04, 8, 8);
+        const ledMat = new THREE.MeshBasicMaterial({ color: i % 2 === 0 ? 0x10b981 : 0x38bdf8 });
+        const led = new THREE.Mesh(ledGeo, ledMat);
+        led.position.set(0.61, -1.0 + i * 0.28, (Math.random() - 0.5) * 0.6);
+        group.add(led);
+        animatedMeshes.push({ mesh: led, type: 'server-led' });
+      }
+      scene.add(group);
+    }
+
+    function create3DPottedPlant(x, z) {
+      const group = new THREE.Group();
+      group.position.set(x, 0, z);
+      const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.25, 0.65, 16), new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.5 }));
+      pot.position.y = 0.325;
+      pot.castShadow = true;
+      group.add(pot);
+
+      for (let i = 0; i < 3; i++) {
+        const leaf = new THREE.Mesh(new THREE.SphereGeometry(0.35 - i * 0.05, 8, 8), new THREE.MeshStandardMaterial({ color: 0x16a34a, roughness: 0.8 }));
+        leaf.position.set((Math.random() - 0.5) * 0.2, 0.7 + i * 0.3, (Math.random() - 0.5) * 0.2);
+        leaf.castShadow = true;
+        group.add(leaf);
+      }
+      scene.add(group);
+    }
+
+    function create3DLoungeSofa(x, z) {
+      const group = new THREE.Group();
+      group.position.set(x, 0, z);
+      const sofaMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.85 });
+      const seat = new THREE.Mesh(new THREE.BoxGeometry(4.8, 0.45, 1.5), sofaMat);
+      seat.position.y = 0.35;
+      seat.castShadow = true;
+      group.add(seat);
+
+      const back = new THREE.Mesh(new THREE.BoxGeometry(4.8, 0.8, 0.35), sofaMat);
+      back.position.set(0, 0.75, -0.6);
+      back.castShadow = true;
+      group.add(back);
+      scene.add(group);
+    }
+
+    // ─── 6B. CENTRAL REALISTIC AMENITIES: PANTRY, LOUNGE, GYM & LOBBY ─────────
+    function build3DCentralAmenities() {
+      const amenitiesGroup = new THREE.Group();
+
+      // Floor Materials
+      const quartzMat = new THREE.MeshStandardMaterial({ color: 0xf1f5f9, roughness: 0.15, metalness: 0.2 });
+      const woodMat = new THREE.MeshStandardMaterial({ color: 0x3f2e20, roughness: 0.65 });
+      const chromeMat = new THREE.MeshStandardMaterial({ color: 0xd1d5db, roughness: 0.1, metalness: 0.95 });
+      const darkSteelMat = new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.35, metalness: 0.8 });
+      const cushionDarkMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.8 });
+      const amberGlowMat = new THREE.MeshBasicMaterial({ color: 0xf59e0b });
+      const cyanGlowMat = new THREE.MeshBasicMaterial({ color: 0x06b6d4 });
+      const emeraldGlowMat = new THREE.MeshBasicMaterial({ color: 0x10b981 });
+
+      // ── A. ENTRANCE & RECEPTION LOBBY (x: 0, z: -16) ──
+      const lobbyGroup = new THREE.Group();
+      lobbyGroup.position.set(0, 0, -16);
+
+      // Curved Reception Desk
+      const deskBaseGeo = new THREE.CylinderGeometry(2.4, 2.4, 1.05, 32, 1, false, 0, Math.PI);
+      const deskBase = new THREE.Mesh(deskBaseGeo, woodMat);
+      deskBase.position.set(0, 0.525, 0);
+      deskBase.rotation.y = Math.PI / 2;
+      lobbyGroup.add(deskBase);
+
+      const deskTopGeo = new THREE.CylinderGeometry(2.5, 2.5, 0.08, 32, 1, false, 0, Math.PI);
+      const deskTop = new THREE.Mesh(deskTopGeo, quartzMat);
+      deskTop.position.set(0, 1.08, 0);
+      deskTop.rotation.y = Math.PI / 2;
+      lobbyGroup.add(deskTop);
+
+      // Illuminated 3D Logo Plaque: "LokaTalenta Office"
+      const signCanvas = document.createElement('canvas');
+      signCanvas.width = 512; signCanvas.height = 128;
+      const sCtx = signCanvas.getContext('2d');
+      sCtx.fillStyle = '#090d16'; sCtx.fillRect(0, 0, 512, 128);
+      sCtx.strokeStyle = '#14b8a6'; sCtx.lineWidth = 4; sCtx.strokeRect(4, 4, 504, 120);
+      sCtx.fillStyle = '#14b8a6'; sCtx.font = 'bold 36px sans-serif'; sCtx.textAlign = 'center';
+      sCtx.fillText('LOKATALENTA OFFICE', 256, 52);
+      sCtx.fillStyle = '#94a3b8'; sCtx.font = 'bold 18px monospace';
+      sCtx.fillText('AI AGENT HEADQUARTER • 24 ROLES', 256, 92);
+      const signTex = new THREE.CanvasTexture(signCanvas);
+      const signMesh = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 0.6), new THREE.MeshBasicMaterial({ map: signTex }));
+      signMesh.position.set(0, 0.65, 0.02);
+      lobbyGroup.add(signMesh);
+
+      // Dual Security Optical Turnstiles
+      [-2.8, 2.8].forEach(tx => {
+        const turnstile = new THREE.Mesh(new THREE.BoxGeometry(0.35, 1.0, 1.2), chromeMat);
+        turnstile.position.set(tx, 0.5, 0.2);
+        const glassFlap = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.6, 0.6), new THREE.MeshStandardMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.5 }));
+        glassFlap.position.set(tx > 0 ? tx - 0.25 : tx + 0.25, 0.6, 0.2);
+        const ledPass = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.03, 0.12), emeraldGlowMat);
+        ledPass.position.set(tx, 1.02, 0.2);
+        lobbyGroup.add(turnstile);
+        lobbyGroup.add(glassFlap);
+        lobbyGroup.add(ledPass);
+      });
+      amenitiesGroup.add(lobbyGroup);
+
+      // ── B. MODERN CENTRAL PANTRY & COFFEE BAR (x: 0, z: 0) ──
+      const pantryGroup = new THREE.Group();
+      pantryGroup.position.set(0, 0, 0);
+
+      // Kitchen Island Base
+      const islandBase = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.95, 1.3), woodMat);
+      islandBase.position.set(0, 0.475, 0);
+      islandBase.castShadow = true;
+      pantryGroup.add(islandBase);
+
+      // Quartz Countertop with Waterfall Edge
+      const islandTop = new THREE.Mesh(new THREE.BoxGeometry(4.4, 0.08, 1.45), quartzMat);
+      islandTop.position.set(0, 0.99, 0);
+      islandTop.castShadow = true;
+      pantryGroup.add(islandTop);
+
+      // Under-counter Amber Ambient LED
+      const pantryLed = new THREE.Mesh(new THREE.BoxGeometry(4.35, 0.02, 1.42), amberGlowMat);
+      pantryLed.position.set(0, 0.94, 0);
+      pantryGroup.add(pantryLed);
+
+      // Commercial Espresso Machine (Polished Steel with Dual Portafilters)
+      const espressoGroup = new THREE.Group();
+      espressoGroup.position.set(-1.1, 1.03, 0);
+      const espressoBody = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.45, 0.55), chromeMat);
+      espressoBody.position.y = 0.225;
+      espressoGroup.add(espressoBody);
+      // Drip Tray & Cup Warmer Top
+      const dripTray = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.05, 0.2), darkSteelMat);
+      dripTray.position.set(0, 0.025, 0.22);
+      espressoGroup.add(dripTray);
+      // Dual Portafilter Spouts
+      [-0.15, 0.15].forEach(sx => {
+        const spout = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.03, 0.08, 12), darkSteelMat);
+        spout.position.set(sx, 0.18, 0.18);
+        espressoGroup.add(spout);
+      });
+      // Steam Wand
+      const steamWand = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.25, 8), chromeMat);
+      steamWand.position.set(0.32, 0.22, 0.16);
+      steamWand.rotation.z = -0.4;
+      espressoGroup.add(steamWand);
+      // Ceramic Coffee Cups
+      const cupMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.2 });
+      [-0.15, 0.15].forEach(cx => {
+        const cup = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.035, 0.07, 12), cupMat);
+        cup.position.set(cx, 0.08, 0.22);
+        espressoGroup.add(cup);
+      });
+      pantryGroup.add(espressoGroup);
+
+      // Dual-Tap Cold/Hot Water Dispenser Cooler
+      const coolerGroup = new THREE.Group();
+      coolerGroup.position.set(1.4, 1.03, 0);
+      const coolerBody = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.55, 0.38), darkSteelMat);
+      coolerBody.position.y = 0.275;
+      coolerGroup.add(coolerBody);
+      const coldTap = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.08, 8), cyanGlowMat);
+      coldTap.position.set(-0.06, 0.26, 0.18);
+      const hotTap = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.08, 8), amberGlowMat);
+      hotTap.position.set(0.06, 0.26, 0.18);
+      coolerGroup.add(coldTap);
+      coolerGroup.add(hotTap);
+      pantryGroup.add(coolerGroup);
+
+      // 4 Modern Scandinavian High Barstools
+      [-1.4, -0.45, 0.45, 1.4].forEach(bx => {
+        const stoolGroup = new THREE.Group();
+        stoolGroup.position.set(bx, 0, 1.15);
+        const cushion = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.08, 24), cushionDarkMat);
+        cushion.position.y = 0.72;
+        stoolGroup.add(cushion);
+        const stoolStem = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.68, 12), chromeMat);
+        stoolStem.position.y = 0.34;
+        stoolGroup.add(stoolStem);
+        const stoolBase = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.24, 0.03, 24), chromeMat);
+        stoolBase.position.y = 0.015;
+        stoolGroup.add(stoolBase);
+        const footRing = new THREE.Mesh(new THREE.TorusGeometry(0.14, 0.015, 8, 24), chromeMat);
+        footRing.position.y = 0.25;
+        footRing.rotation.x = Math.PI / 2;
+        stoolGroup.add(footRing);
+        pantryGroup.add(stoolGroup);
+      });
+      amenitiesGroup.add(pantryGroup);
+
+      // ── C. RELAXATION & NAP LOUNGE (x: 0, z: 14) ──
+      const relaxGroup = new THREE.Group();
+      relaxGroup.position.set(0, 0, 14);
+
+      // Circular Acoustic Lounge Rug (D: 4.8m)
+      const rugGeo = new THREE.CircleGeometry(2.4, 32);
+      const rugMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.95 });
+      const rug = new THREE.Mesh(rugGeo, rugMat);
+      rug.rotation.x = -Math.PI / 2;
+      rug.position.y = 0.022;
+      relaxGroup.add(rug);
+
+      // Plush Center 3-Seater Sofa (Placed safely at z = 1.4 inside lounge, away from walkways)
+      const sofaMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.85 });
+      const sofaBase = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.42, 0.95), sofaMat);
+      sofaBase.position.set(0, 0.21, 1.4);
+      sofaBase.castShadow = true;
+      relaxGroup.add(sofaBase);
+      const sofaBack = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.65, 0.25), sofaMat);
+      sofaBack.position.set(0, 0.68, 1.8);
+      relaxGroup.add(sofaBack);
+      // Armrests
+      [-1.4, 1.4].forEach(ax => {
+        const arm = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.45, 0.95), sofaMat);
+        arm.position.set(ax, 0.45, 1.4);
+        relaxGroup.add(arm);
+      });
+
+      // 2 Soft Ergonomic Beanbag Chairs
+      const beanMat = new THREE.MeshStandardMaterial({ color: 0x0d9488, roughness: 0.9 });
+      [-1.4, 1.4].forEach(bx => {
+        const bean = new THREE.Mesh(new THREE.SphereGeometry(0.55, 16, 12), beanMat);
+        bean.scale.set(1.0, 0.75, 1.1);
+        bean.position.set(bx, 0.35, -0.6);
+        bean.castShadow = true;
+        relaxGroup.add(bean);
+      });
+
+      // Low Scandinavian Round Coffee Table with Books & Tablet
+      const tableTop = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.65, 0.05, 24), woodMat);
+      tableTop.position.set(0, 0.42, 0.2);
+      tableTop.castShadow = true;
+      relaxGroup.add(tableTop);
+      const tableLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.4, 12), darkSteelMat);
+      tableLeg.position.set(0, 0.2, 0.2);
+      relaxGroup.add(tableLeg);
+
+      // Floor Standing Arched Reading Lamp
+      const lampBase = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 0.04, 16), darkSteelMat);
+      lampBase.position.set(1.8, 0.02, 1.6);
+      relaxGroup.add(lampBase);
+      const lampPole = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 1.8, 12), chromeMat);
+      lampPole.position.set(1.8, 0.9, 1.6);
+      relaxGroup.add(lampPole);
+      const lampShade = new THREE.Mesh(new THREE.ConeGeometry(0.2, 0.25, 16), amberGlowMat);
+      lampShade.position.set(1.5, 1.75, 1.3);
+      lampShade.rotation.z = 0.5;
+      relaxGroup.add(lampShade);
+      amenitiesGroup.add(relaxGroup);
+
+      // ── D. WELLNESS & GYM CORNER (x: 0, z: 26) ──
+      const gymGroup = new THREE.Group();
+      gymGroup.position.set(0, 0, 26);
+
+      // Textured Dark Gym Rubber Floor Pad
+      const gymFloor = new THREE.Mesh(
+        new THREE.PlaneGeometry(5.4, 4.4),
+        new THREE.MeshStandardMaterial({ color: 0x0a0f1d, roughness: 0.95, metalness: 0.1 })
+      );
+      gymFloor.rotation.x = -Math.PI / 2;
+      gymFloor.position.y = 0.024;
+      gymGroup.add(gymFloor);
+
+      // Cyan Accent Perimeter Line
+      const gymBorder = new THREE.Mesh(
+        new THREE.PlaneGeometry(5.42, 4.42),
+        new THREE.MeshBasicMaterial({ color: 0x06b6d4, wireframe: true })
+      );
+      gymBorder.rotation.x = -Math.PI / 2;
+      gymBorder.position.y = 0.026;
+      gymGroup.add(gymBorder);
+
+      // 2 Commercial Motorized Treadmills
+      [-1.1, 1.1].forEach((tmX, tmIdx) => {
+        const tm = new THREE.Group();
+        tm.position.set(tmX, 0, 0);
+
+        // Deck Frame & Running Belt
+        const deck = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.22, 1.9), darkSteelMat);
+        deck.position.set(0, 0.15, 0);
+        deck.rotation.x = 0.04;
+        tm.add(deck);
+
+        const belt = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.03, 1.7), new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.9 }));
+        belt.position.set(0, 0.27, 0);
+        belt.rotation.x = 0.04;
+        tm.add(belt);
+
+        // Side Rails & Digital Console
+        [-0.42, 0.42].forEach(rx => {
+          const post = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 1.1, 8), chromeMat);
+          post.position.set(rx, 0.65, -0.65);
+          post.rotation.x = -0.25;
+          tm.add(post);
+        });
+
+        const crossBar = new THREE.Mesh(new THREE.BoxGeometry(0.88, 0.05, 0.05), chromeMat);
+        crossBar.position.set(0, 1.12, -0.78);
+        tm.add(crossBar);
+
+        // Console Screen with Glowing Speed/BPM Display
+        const consoleMesh = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.25, 0.04), darkSteelMat);
+        consoleMesh.position.set(0, 1.25, -0.8);
+        consoleMesh.rotation.x = -0.3;
+        tm.add(consoleMesh);
+
+        const consoleScreen = new THREE.Mesh(new THREE.PlaneGeometry(0.44, 0.21), cyanGlowMat);
+        consoleScreen.position.set(0, 1.25, -0.77);
+        consoleScreen.rotation.x = -0.3;
+        tm.add(consoleScreen);
+
+        gymGroup.add(tm);
+
+        // Register animated treadmill belt
+        animatedMeshes.push({
+          type: 'treadmill-belt',
+          mesh: belt,
+          speed: 1.5 + tmIdx * 0.4
+        });
+      });
+
+      // Tiered Steel Dumbbell Weight Rack
+      const rackGroup = new THREE.Group();
+      rackGroup.position.set(0, 0, 1.6);
+      const rackFrame = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.75, 0.5), darkSteelMat);
+      rackFrame.position.y = 0.38;
+      rackGroup.add(rackFrame);
+      [-0.8, -0.3, 0.3, 0.8].forEach(dx => {
+        const dumbbell = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.3, 12), chromeMat);
+        dumbbell.rotation.z = Math.PI / 2;
+        dumbbell.position.set(dx, 0.78, 0);
+        rackGroup.add(dumbbell);
+      });
+      gymGroup.add(rackGroup);
+      amenitiesGroup.add(gymGroup);
+
+      scene.add(amenitiesGroup);
+    }
+
+    // ─── 7. LIVING AGENT AVATARS, ARTICULATED HUMANOIDS & SPEECH BUBBLES ─────────
+    const agentAvatars = {}; // Map of agent.id -> { group, upperBody, leftUpperArm, rightUpperArm, leftForearm, rightForearm, leftHand, rightHand, leftLeg, rightLeg, speechSprite, state, progress, homePos, targetPos, isWalking }
+    const AGENT_COLLABORATION_PAIRS = [
+      {
+        initiator: 8, // Farel Faza (FE Lead)
+        target: 6,    // Hendrawan (FE Principal)
+        dialogueInitiator: "Hendrawan, tolong review struktur Clean Architecture untuk PWA-01 iOS & bundle < 250kB",
+        dialogueTarget: "Sudah dicek Farel, isolasi Web API dari Core Domain sudah rapi, siap merge!",
+        taskDesc: "Review Clean Architecture PWA-01 iOS bersama FE Principal"
+      },
+      {
+        initiator: 9, // Bagas Haryanto (Fullstack)
+        target: 11,   // Nadia Maharani (Lead UI/UX)
+        dialogueInitiator: "Nadia, token Anti-AI-Slop V2 sudah terpasang di ATS Kanban drag-and-drop",
+        dialogueTarget: "Keren Bagas! Kontras 1px border dan typography hierarchy-nya sangat clean",
+        taskDesc: "Validasi token visual Anti-AI-Slop V2 di ATS Kanban"
+      },
+      {
+        initiator: 7, // Dr. Danu (BE Principal)
+        target: 4,    // Ir. Arkananta (Chief Architect)
+        dialogueInitiator: "Pak Arka, benchmark idempotency key di RPC Supabase tembus 5.000 ops",
+        dialogueTarget: "Bagus Danu, pastikan Zero Tech Debt & Hexagonal Ports tetap konsisten",
+        taskDesc: "Verifikasi Idempotency Key Supabase RPC bersama Chief Architect"
+      },
+      {
+        initiator: 16, // Qaisar (Lead QA)
+        target: 1,     // Rizco Renova (Team Leader)
+        dialogueInitiator: "Pak Rizco, seluruh 163 test Vitest pass 100% dan zero regression di iOS Safari",
+        dialogueTarget: "Excellent Qaisar, release gate Sprint 15 resmi di-sign off!",
+        taskDesc: "Pelaporan status 163/163 Vitest Pass kepada Team Leader"
+      },
+      {
+        initiator: 23, // Maya Safitri (Recruiter)
+        target: 2,     // Bramantyo (Business Lead)
+        dialogueInitiator: "Pak Bram, 14 corporate client sudah aktif menguji Recruiter Portal ATS",
+        dialogueTarget: "Potensial ARR Rp 175jt/bulan, pipeline B2B sangat menjanjikan!",
+        taskDesc: "Diskusi traksi 14 corporate client Recruiter Portal bersama Business Lead"
+      },
+      {
+        initiator: 18, // Pandu (Performance QA)
+        target: 5,     // Satria (System Analyst)
+        dialogueInitiator: "Satria, stress test 5.000 ops Kraepelin tembus latensi 180ms",
+        dialogueTarget: "Mantap Pandu, state machine DISC & MBTI sudah stabil di high-load",
+        taskDesc: "Analisis throughput latensi stress test 5.000 ops Kraepelin"
+      }
+    ];
+
+    function spawn3DAvatars() {
+      AGENTS.forEach(agent => {
+        // 1. Stationary Workstation Group (Desks, Monitors, Chairs stay at assigned room coordinates)
+        const deskGroup = new THREE.Group();
+        deskGroup.position.set(agent.pos.x, 0, agent.pos.z);
+        deskGroup.userData = { agentId: agent.id, agent: agent, isDesk: true };
+        build3DWorkstation(deskGroup, agent);
+        scene.add(deskGroup);
+        avatarGroups.push(deskGroup);
+
+        // 2. Mobile Living Humanoid Avatar Group (Can walk autonomously through corridors)
+        const avatarGroup = new THREE.Group();
+        avatarGroup.position.set(agent.pos.x, 0, agent.pos.z);
+        avatarGroup.userData = { agentId: agent.id, agent: agent, isAvatar: true };
+
+        const avatarParts = build3DProportionalHumanoid(avatarGroup, agent);
+        const statusSprite = create3DFloatingStatusSprite(avatarGroup, agent);
+        const speechSprite = create3DSpeechBubbleSprite(avatarGroup, agent);
+
+        scene.add(avatarGroup);
+        avatarGroups.push(avatarGroup);
+
+        // Store avatar state handle for autonomous simulation engine
+        agentAvatars[agent.id] = {
+          agent: agent,
+          group: avatarGroup,
+          parts: avatarParts,
+          statusSprite: statusSprite,
+          speechSprite: speechSprite,
+          state: 'WORKING', // WORKING | WALKING | COLLABORATING | COFFEE | GYM | LOUNGE
+          progress: Math.floor(Math.random() * 45) + 40, // 40-85% initial
+          currentTask: agent.status.action,
+          homePos: { x: agent.pos.x, y: 0, z: agent.pos.z },
+          targetPos: null,
+          partnerId: null,
+          speechTimer: null,
+          activityTimer: null,
+          isWalking: false,
+          walkProgress: 0,
+          walkStartPos: null,
+          walkEndPos: null,
+          walkDuration: 3000
+        };
+      });
+    }
+
+    // Actual Screen Content Texture Renderer (512x256 High-Resolution)
+    function create3DAgentMonitorTexture(agent) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 512;
+      canvas.height = 256;
+      const ctx = canvas.getContext('2d');
+
+      // Deep obsidian IDE background
+      ctx.fillStyle = '#090d16';
+      ctx.fillRect(0, 0, 512, 256);
+
+      // Top Window Tab Bar
+      ctx.fillStyle = '#111827';
+      ctx.fillRect(0, 0, 512, 34);
+
+      // Mac OS Window Control Dots
+      ctx.fillStyle = '#ef4444'; ctx.beginPath(); ctx.arc(14, 17, 4.5, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#f59e0b'; ctx.beginPath(); ctx.arc(28, 17, 4.5, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#10b981'; ctx.beginPath(); ctx.arc(42, 17, 4.5, 0, Math.PI * 2); ctx.fill();
+
+      // Active File Tab
+      const accentHex = agent.color ? '#' + agent.color.toString(16).padStart(6, '0') : '#38bdf8';
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(60, 6, 210, 24);
+      ctx.fillStyle = accentHex;
+      ctx.fillRect(60, 28, 210, 2);
+
+      ctx.fillStyle = '#f8fafc';
+      ctx.font = 'bold 12px monospace';
+      ctx.textAlign = 'left';
+      ctx.fillText(agent.screen.file, 70, 22);
+
+      // Status Badge on Right
+      ctx.fillStyle = agent.status.tone === 'emerald' ? '#065f46' : agent.status.tone === 'purple' ? '#581c87' : '#1e3a8a';
+      ctx.fillRect(360, 7, 142, 21);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 10px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(agent.screen.badge, 431, 21);
+
+      // Code / Data Lines Rendering
+      const lines = agent.screen.lines || [];
+      const lineColors = ['#38bdf8', '#34d399', '#fcd34d', '#f472b6', '#a78bfa', '#cbd5e1'];
+
+      for (let i = 0; i < lines.length; i++) {
+        const lineY = 65 + i * 28;
+        // Line number
+        ctx.fillStyle = '#475569';
+        ctx.font = '11px monospace';
+        ctx.textAlign = 'right';
+        ctx.fillText(String(i + 1).padStart(2, '0'), 34, lineY);
+
+        // Content
+        ctx.fillStyle = i === lines.length - 1 ? '#34d399' : lineColors[i % lineColors.length];
+        ctx.font = 'bold 13px monospace';
+        ctx.textAlign = 'left';
+        ctx.fillText(lines[i], 46, lineY);
+      }
+
+      // Blinking Cursor on Active Line
+      const cursorY = 65 + (lines.length - 1) * 28;
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillRect(46 + (lines[lines.length - 1] ? lines[lines.length - 1].length * 7.8 : 80), cursorY - 12, 8, 14);
+
+      const tex = new THREE.CanvasTexture(canvas);
+      tex.anisotropy = 4;
+      return tex;
+    }
+
+    function build3DWorkstation(group, agent) {
+      const div = DIVISIONS[agent.division] || {};
+      
+      let deskColor = 0x334155;
+      if (agent.division === 'executive') deskColor = 0x4a2e1b;
+      else if (agent.division === 'engineering') deskColor = 0x1e293b;
+      else if (agent.division === 'architecture') deskColor = 0x384252;
+      else if (agent.division === 'devops') deskColor = 0x111827;
+
+      // Desk Top
+      const desk = new THREE.Mesh(
+        new THREE.BoxGeometry(2.3, 0.08, 1.15),
+        new THREE.MeshStandardMaterial({ color: deskColor, roughness: 0.35, metalness: 0.15 })
+      );
+      desk.position.set(0, 0.8, 0);
+      desk.castShadow = true;
+      desk.receiveShadow = true;
+      group.add(desk);
+
+      // Glowing LED Edge Strip
+      const edgeStrip = new THREE.Mesh(
+        new THREE.BoxGeometry(2.32, 0.02, 0.03),
+        new THREE.MeshBasicMaterial({ color: agent.color || 0x10b981 })
+      );
+      edgeStrip.position.set(0, 0.81, 0.58);
+      group.add(edgeStrip);
+
+      // Desk Mat / Mousepad
+      const deskPad = new THREE.Mesh(
+        new THREE.BoxGeometry(1.6, 0.01, 0.65),
+        new THREE.MeshStandardMaterial({ color: 0x18202f, roughness: 0.9 })
+      );
+      deskPad.position.set(0, 0.845, 0.1);
+      group.add(deskPad);
+
+      // Metallic Desk Legs
+      const legMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.2, metalness: 0.8 });
+      [[-1.0, -0.48], [1.0, -0.48], [-1.0, 0.48], [1.0, 0.48]].forEach(([lx, lz]) => {
+        const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.8, 12), legMat);
+        leg.position.set(lx, 0.4, lz);
+        leg.castShadow = true;
+        group.add(leg);
+      });
+
+      // Monitor Stand & Pole
+      const stand = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.02, 0.2), legMat);
+      stand.position.set(0, 0.85, -0.2);
+      group.add(stand);
+
+      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.32, 8), legMat);
+      pole.position.set(0, 1.01, -0.2);
+      group.add(pole);
+
+      // Monitor Casing Bezel (Matte Obsidian)
+      const bezelGeo = new THREE.BoxGeometry(1.36, 0.72, 0.03);
+      const bezelMat = new THREE.MeshStandardMaterial({ color: 0x090d16, roughness: 0.2, metalness: 0.8 });
+      const bezel = new THREE.Mesh(bezelGeo, bezelMat);
+      bezel.position.set(0, 1.30, -0.2);
+      bezel.rotation.x = 0.04;
+      group.add(bezel);
+
+      // Monitor Display Surface (Front Plane with Actual Work Texture)
+      const screenGeo = new THREE.PlaneGeometry(1.30, 0.66);
+      const screenTex = create3DAgentMonitorTexture(agent);
+      const screenMat = new THREE.MeshBasicMaterial({ map: screenTex });
+      const screen = new THREE.Mesh(screenGeo, screenMat);
+      screen.position.set(0, 1.30, -0.183);
+      screen.rotation.x = 0.04;
+      group.add(screen);
+
+      // Mechanical Keyboard
+      const kb = new THREE.Mesh(
+        new THREE.BoxGeometry(0.55, 0.02, 0.18),
+        new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.5 })
+      );
+      kb.position.set(0, 0.855, 0.2);
+      group.add(kb);
+
+      // Ergonomic Office Chair
+      const chairGroup = new THREE.Group();
+      chairGroup.position.set(0, 0, 0.7);
+      
+      const chairFrameMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.5 });
+      const cushionColor = div.floorAccent || agent.color || 0x2563eb;
+      const cushionMat = new THREE.MeshStandardMaterial({ color: cushionColor, roughness: 0.8 });
+
+      const seat = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.08, 0.6), cushionMat);
+      seat.position.y = 0.5;
+      seat.castShadow = true;
+      chairGroup.add(seat);
+
+      const back = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.7, 0.08), chairFrameMat);
+      back.position.set(0, 0.88, 0.26);
+      back.castShadow = true;
+      chairGroup.add(back);
+
+      const backMesh = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.58, 0.02), cushionMat);
+      backMesh.position.set(0, 0.88, 0.22);
+      chairGroup.add(backMesh);
+
+      group.add(chairGroup);
+    }
+
+    // ─── PROPORTIONAL HUMANOID MODEL WITH ARTICULATED RESTING ARMS ─────────────
+    // DEFECT 1 FIXED: Hands and forearms rest flat on desk/keyboard with typing keystrokes.
+    // Zero rigid floating arms pointing into mid-air!
+    function build3DProportionalHumanoid(group, agent) {
+      const humanoidGroup = new THREE.Group();
+      humanoidGroup.position.set(0, 0, 0.65); // Seated position by default
+
+      const skinMat = new THREE.MeshStandardMaterial({ color: agent.avatarStyle.skin, roughness: 0.55 });
+      const outfitMat = new THREE.MeshStandardMaterial({ color: agent.avatarStyle.outfit, roughness: 0.65 });
+      const hairMat = new THREE.MeshStandardMaterial({ color: agent.avatarStyle.hair, roughness: 0.45 });
+      const pantsMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.8 });
+      const shoeMat = new THREE.MeshStandardMaterial({ color: 0x030712, roughness: 0.4 });
+      const eyeMat = new THREE.MeshBasicMaterial({ color: 0x0f172a });
+      const whiteMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+
+      // ── Lower Body (Legs & Shoes) ──
+      const lowerBody = new THREE.Group();
+      lowerBody.position.y = 0;
+
+      // Seated Thighs (horizontal forward towards desk)
+      const leftThigh = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.14, 0.44), pantsMat);
+      leftThigh.position.set(-0.16, 0.50, -0.18);
+      lowerBody.add(leftThigh);
+
+      const rightThigh = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.14, 0.44), pantsMat);
+      rightThigh.position.set(0.16, 0.50, -0.18);
+      lowerBody.add(rightThigh);
+
+      // Calves (vertical downward towards floor)
+      const leftCalf = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.44, 0.14), pantsMat);
+      leftCalf.position.set(-0.16, 0.25, -0.36);
+      lowerBody.add(leftCalf);
+
+      const rightCalf = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.44, 0.14), pantsMat);
+      rightCalf.position.set(0.16, 0.25, -0.36);
+      lowerBody.add(rightCalf);
+
+      // Shoes (flat on floor, pointing forward)
+      const leftShoe = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.08, 0.26), shoeMat);
+      leftShoe.position.set(-0.16, 0.04, -0.42);
+      lowerBody.add(leftShoe);
+
+      const rightShoe = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.08, 0.26), shoeMat);
+      rightShoe.position.set(0.16, 0.04, -0.42);
+      lowerBody.add(rightShoe);
+
+      humanoidGroup.add(lowerBody);
+
+      // ── Upper Body (Torso, Head & Articulated Arms) ──
+      const upperBody = new THREE.Group();
+      upperBody.position.y = 0.54; // Sits right on chair cushion
+
+      // Torso
+      const torso = new THREE.Mesh(new THREE.BoxGeometry(0.50, 0.56, 0.26), outfitMat);
+      torso.position.y = 0.28;
+      torso.castShadow = true;
+      upperBody.add(torso);
+
+      // Shirt Collar & Necktie / LokaTalenta ID Lanyard
+      const collarMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.6 });
+      const collar = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.06, 0.27), collarMat);
+      collar.position.set(0, 0.56, 0);
+      upperBody.add(collar);
+
+      const tie = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.28, 0.02), new THREE.MeshStandardMaterial({ color: agent.color || 0x14b8a6 }));
+      tie.position.set(0, 0.38, -0.132);
+      upperBody.add(tie);
+
+      // LokaTalenta ID Badge
+      const badgeMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
+      const badge = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.09, 0.02), badgeMat);
+      badge.position.set(-0.15, 0.36, -0.133);
+      upperBody.add(badge);
+
+      // ── Head & Expressive Facial Features ──
+      const headGroup = new THREE.Group();
+      headGroup.position.set(0, 0.74, 0);
+
+      // Proportional Head (Slightly tapered chin)
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.19, 20, 20), skinMat);
+      head.scale.set(1.0, 1.14, 0.96);
+      head.castShadow = true;
+      headGroup.add(head);
+
+      // Expressive Eyes (Left & Right)
+      [-0.065, 0.065].forEach(ex => {
+        // White sclera
+        const eyeWhite = new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 8), whiteMat);
+        eyeWhite.position.set(ex, 0.02, -0.17);
+        headGroup.add(eyeWhite);
+        // Dark pupil
+        const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.016, 8, 8), eyeMat);
+        pupil.position.set(ex, 0.02, -0.19);
+        headGroup.add(pupil);
+      });
+
+      // Nose Bridge
+      const nose = new THREE.Mesh(new THREE.BoxGeometry(0.024, 0.045, 0.03), skinMat);
+      nose.position.set(0, -0.01, -0.19);
+      headGroup.add(nose);
+
+      // Styled Hair according to avatar personality
+      const hairStyle = agent.avatarStyle.hairStyle || 'short';
+      if (hairStyle === 'wavy' || hairStyle === 'long') {
+        const hairTop = new THREE.Mesh(new THREE.SphereGeometry(0.22, 16, 16), hairMat);
+        hairTop.position.set(0, 0.08, 0.02);
+        headGroup.add(hairTop);
+        // Side locks
+        [-0.18, 0.18].forEach(hx => {
+          const lock = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.32, 0.12), hairMat);
+          lock.position.set(hx, -0.06, 0.02);
+          headGroup.add(lock);
+        });
+      } else {
+        const hair = new THREE.Mesh(new THREE.BoxGeometry(0.40, 0.14, 0.38), hairMat);
+        hair.position.set(0, 0.15, -0.01);
+        headGroup.add(hair);
+      }
+
+      // Glasses
+      if (agent.avatarStyle.glasses) {
+        const frameMat = new THREE.MeshBasicMaterial({ color: 0x09090b });
+        const glasses = new THREE.Mesh(new THREE.BoxGeometry(0.30, 0.06, 0.02), frameMat);
+        glasses.position.set(0, 0.02, -0.195);
+        headGroup.add(glasses);
+      }
+
+      // Headphones
+      if (agent.avatarStyle.headphones) {
+        const hpMat = new THREE.MeshStandardMaterial({ color: 0x09090b, roughness: 0.3 });
+        const hp = new THREE.Mesh(new THREE.TorusGeometry(0.22, 0.035, 8, 24), hpMat);
+        hp.position.set(0, -0.10, 0);
+        hp.rotation.x = Math.PI / 2;
+        headGroup.add(hp);
+      }
+
+      upperBody.add(headGroup);
+
+      // ── ARTICULATED ARMS (NATURALLY RESTING ON DESK & KEYBOARD) ──
+      // Left Arm Hierarchy:
+      // Shoulder pivot -> Upper Arm (angles down-forward) -> Elbow -> Forearm (flat horizontally on table) -> Hand (flat on keyboard)
+      const leftShoulder = new THREE.Group();
+      leftShoulder.position.set(-0.28, 0.48, -0.02);
+      
+      const leftUpperArm = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.26, 0.10), outfitMat);
+      leftUpperArm.position.set(0, -0.13, 0);
+      leftShoulder.add(leftUpperArm);
+      leftShoulder.rotation.x = 0.42; // Upper arm angles forward
+      leftShoulder.rotation.z = -0.12;
+
+      const leftElbow = new THREE.Group();
+      leftElbow.position.set(0, -0.26, 0);
+      leftShoulder.add(leftElbow);
+
+      // Forearm extends horizontally forward towards the desk surface
+      const leftForearm = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.08, 0.28), outfitMat);
+      leftForearm.position.set(0.04, -0.02, -0.14);
+      leftForearm.rotation.x = -0.42; // Levels out horizontally with the desk!
+      leftElbow.add(leftForearm);
+
+      // Hand resting flat on top of keyboard keys
+      const leftHand = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.03, 0.10), skinMat);
+      leftHand.position.set(0.04, -0.02, -0.28);
+      leftElbow.add(leftHand);
+
+      upperBody.add(leftShoulder);
+
+      // Right Arm Hierarchy (Mirroring Left Arm)
+      const rightShoulder = new THREE.Group();
+      rightShoulder.position.set(0.28, 0.48, -0.02);
+
+      const rightUpperArm = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.26, 0.10), outfitMat);
+      rightUpperArm.position.set(0, -0.13, 0);
+      rightShoulder.add(rightUpperArm);
+      rightShoulder.rotation.x = 0.42;
+      rightShoulder.rotation.z = 0.12;
+
+      const rightElbow = new THREE.Group();
+      rightElbow.position.set(0, -0.26, 0);
+      rightShoulder.add(rightElbow);
+
+      const rightForearm = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.08, 0.28), outfitMat);
+      rightForearm.position.set(-0.04, -0.02, -0.14);
+      rightForearm.rotation.x = -0.42; // Levels out horizontally with desk!
+      rightElbow.add(rightForearm);
+
+      const rightHand = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.03, 0.10), skinMat);
+      rightHand.position.set(-0.04, -0.02, -0.28);
+      rightElbow.add(rightHand);
+
+      upperBody.add(rightShoulder);
+
+      humanoidGroup.add(upperBody);
+      group.add(humanoidGroup);
+
+      // Register parts for live animation & walk simulation
+      return {
+        humanoidGroup: humanoidGroup,
+        upperBody: upperBody,
+        headGroup: headGroup,
+        lowerBody: lowerBody,
+        leftShoulder: leftShoulder,
+        rightShoulder: rightShoulder,
+        leftElbow: leftElbow,
+        rightElbow: rightElbow,
+        leftHand: leftHand,
+        rightHand: rightHand,
+        leftThigh: leftThigh,
+        rightThigh: rightThigh,
+        leftCalf: leftCalf,
+        rightCalf: rightCalf,
+        seed: agent.id * 1.7
+      };
+    }
+
+    // Sleek, Non-Intrusive Floating Tag Badge
+    function create3DFloatingStatusSprite(group, agent) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 320;
+      canvas.height = 100;
+      const ctx = canvas.getContext('2d');
+
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
+      ctx.roundRect(6, 6, 308, 88, 14);
+      ctx.fill();
+      ctx.strokeStyle = agent.color ? '#' + agent.color.toString(16).padStart(6, '0') : '#10b981';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      ctx.fillStyle = agent.status.tone === 'emerald' ? '#10b981' : agent.status.tone === 'blue' ? '#3b82f6' : '#ec4899';
+      ctx.beginPath();
+      ctx.arc(28, 32, 8, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 20px sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(`${agent.avatar} ${agent.name}`, 44, 38);
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = 'bold 14px monospace';
+      ctx.fillText(`${agent.status.label.substring(0, 18)} • ${agent.workload}%`, 18, 74);
+
+      const tex = new THREE.CanvasTexture(canvas);
+      const spriteMat = new THREE.SpriteMaterial({ map: tex, transparent: true });
+      const sprite = new THREE.Sprite(spriteMat);
+      sprite.position.set(0, 2.45, 0);
+      sprite.scale.set(1.9, 0.6, 1);
+      group.add(sprite);
+      return sprite;
+    }
+
+    // ─── 3D SPEECH DIALOG BUBBLE (APPEARS ABOVE HEAD DURING INTERACTION) ────────
+    function create3DSpeechBubbleSprite(group, agent) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 512;
+      canvas.height = 140;
+      const tex = new THREE.CanvasTexture(canvas);
+      const spriteMat = new THREE.SpriteMaterial({ map: tex, transparent: true, opacity: 0 });
+      const sprite = new THREE.Sprite(spriteMat);
+      sprite.position.set(0, 3.10, 0);
+      sprite.scale.set(2.8, 0.76, 1);
+      group.add(sprite);
+
+      sprite.userData = { canvas: canvas, ctx: canvas.getContext('2d'), tex: tex, agent: agent };
+      return sprite;
+    }
+
+    function show3DSpeech(agentId, text, durationMs = 12000) {
+      const avatarObj = agentAvatars[agentId];
+      if (!avatarObj || !avatarObj.speechSprite) return;
+
+      const sprite = avatarObj.speechSprite;
+      const { canvas, ctx, tex, agent } = sprite.userData;
+
+      ctx.clearRect(0, 0, 512, 140);
+
+      // Bubble Body
+      ctx.fillStyle = 'rgba(10, 15, 28, 0.96)';
+      ctx.roundRect(8, 8, 496, 108, 16);
+      ctx.fill();
+      ctx.strokeStyle = agent.color ? '#' + agent.color.toString(16).padStart(6, '0') : '#14b8a6';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      // Speech Tail Pointer pointing down to agent head
+      ctx.fillStyle = 'rgba(10, 15, 28, 0.96)';
+      ctx.beginPath();
+      ctx.moveTo(240, 116);
+      ctx.lineTo(256, 136);
+      ctx.lineTo(272, 116);
+      ctx.closePath();
+      ctx.fill();
+
+      // Speaker Name Tag
+      ctx.fillStyle = '#38bdf8';
+      ctx.font = 'bold 15px monospace';
+      ctx.textAlign = 'left';
+      ctx.fillText(`💬 ${agent.name} (${DIVISIONS[agent.division].name.split('&')[0]}):`, 24, 34);
+
+      // Speech Text
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 16px sans-serif';
+      
+      // Auto-wrap text if long
+      if (text.length > 52) {
+        ctx.fillText(text.substring(0, 50) + '...', 24, 68);
+        ctx.fillStyle = '#cbd5e1';
+        ctx.font = '14px sans-serif';
+        ctx.fillText(text.substring(50, 105), 24, 94);
+      } else {
+        ctx.fillText(`"${text}"`, 24, 76);
+      }
+
+      tex.needsUpdate = true;
+      sprite.material.opacity = 1.0;
+
+      if (avatarObj.speechTimer) clearTimeout(avatarObj.speechTimer);
+      avatarObj.speechTimer = setTimeout(() => {
+        sprite.material.opacity = 0;
+      }, durationMs);
+    }
+
+    // ─── AUTONOMOUS MULTI-AGENT SIMULATION ENGINE ───────────────────────────────
+    let simIntervalTimer = null;
+    let simSecondTicker = null;
+
+    function initAgentAutonomousSim() {
+      // 1. Start real-time second progress ticker
+      if (simSecondTicker) clearInterval(simSecondTicker);
+      simSecondTicker = setInterval(() => {
+        updateRealtimeAgentProgress();
+      }, 1000);
+
+      // 2. Start autonomous event scheduler (Every 14 seconds an agent takes action)
+      if (simIntervalTimer) clearInterval(simIntervalTimer);
+      simIntervalTimer = setInterval(() => {
+        triggerAutonomousSimulationStep();
+      }, 14000);
+
+      // Trigger initial welcoming event
+      setTimeout(() => {
+        triggerAutonomousSimulationStep(0); // Farel & Hendrawan clean arch review
+      }, 2000);
+    }
+
+    function updateRealtimeAgentProgress() {
+      // Tick progress for working agents
+      Object.values(agentAvatars).forEach(av => {
+        if (av.state === 'WORKING') {
+          av.progress = Math.min(100, av.progress + Math.floor(Math.random() * 2) + 1);
+          if (av.progress >= 100) {
+            av.progress = 15; // Reset to new sub-task
+            logLiveEvent(`[${getTimestamp()}] ${av.agent.name} menyelesaikan sub-task tiket ${av.agent.status.ticket}`);
+          }
+        }
+      });
+
+      // Update Dossier if selected agent is visible
+      updateDossierRealtimeStatus();
+      updateCensusCounts();
+    }
+
+    function updateCensusCounts() {
+      let pantryCount = 0;
+      let gymCount = 0;
+      let collabCount = 0;
+      let workCount = 0;
+
+      Object.values(agentAvatars).forEach(av => {
+        if (av.state === 'COFFEE') pantryCount++;
+        else if (av.state === 'GYM') gymCount++;
+        else if (av.state === 'COLLABORATING') collabCount++;
+        else workCount++;
+      });
+
+      const censusEl = document.getElementById('live-census-text');
+      if (censusEl) {
+        censusEl.innerText = `☕ ${pantryCount} di Pantry • 🏃 ${gymCount} di Gym • 💬 ${collabCount} Kolaborasi • 💻 ${workCount} di Meja`;
+      }
+    }
+
+    function getTimestamp() {
+      const now = new Date();
+      return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+    }
+
+    function logLiveEvent(msg) {
+      const ticker = document.getElementById('live-activity-ticker-text');
+      if (ticker) {
+        ticker.innerText = msg;
+      }
+    }
+
+    let simCycleIdx = 0;
+    function triggerAutonomousSimulationStep(forcedPairIdx = null) {
+      const pairIdx = forcedPairIdx !== null ? forcedPairIdx : (simCycleIdx % AGENT_COLLABORATION_PAIRS.length);
+      simCycleIdx++;
+
+      // Pick scenario: 60% Collaboration, 20% Coffee break, 20% Gym workout
+      const scenarioRand = Math.random();
+      if (scenarioRand < 0.60) {
+        executeCollaborationScenario(pairIdx);
+      } else if (scenarioRand < 0.80) {
+        // Random agent visits pantry
+        const idleAgents = Object.values(agentAvatars).filter(a => a.state === 'WORKING');
+        if (idleAgents.length > 0) {
+          const pick = idleAgents[Math.floor(Math.random() * idleAgents.length)];
+          triggerAgentActivity(pick.agent.id, 'coffee');
+        }
+      } else {
+        // Random agent visits gym
+        const idleAgents = Object.values(agentAvatars).filter(a => a.state === 'WORKING');
+        if (idleAgents.length > 0) {
+          const pick = idleAgents[Math.floor(Math.random() * idleAgents.length)];
+          triggerAgentActivity(pick.agent.id, 'gym');
+        }
+      }
+    }
+
+    function executeCollaborationScenario(pairIdx, forcedInitiatorId = null) {
+      let pair = AGENT_COLLABORATION_PAIRS[pairIdx];
+      if (!pair) pair = AGENT_COLLABORATION_PAIRS[0];
+
+      let initiatorId = forcedInitiatorId !== null ? forcedInitiatorId : pair.initiator;
+      let targetId = initiatorId === pair.initiator ? pair.target : pair.initiator;
+
+      const initAv = agentAvatars[initiatorId];
+      const targetAv = agentAvatars[targetId];
+      if (!initAv || !targetAv) return;
+
+      // Immediately mark both agents as COLLABORATING so dossier reflects state at once
+      initAv.state = 'COLLABORATING';
+      initAv.partnerId = targetId;
+      initAv.currentTask = pair.taskDesc;
+
+      targetAv.state = 'COLLABORATING';
+      targetAv.partnerId = initiatorId;
+      targetAv.currentTask = `Mendiskusikan ${pair.taskDesc} bersama ${initAv.agent.name}`;
+
+      updateDossierRealtimeStatus();
+      updateCensusCounts();
+
+      logLiveEvent(`[${getTimestamp()}] ${initAv.agent.name} menghampiri meja ${targetAv.agent.name} untuk kolaborasi`);
+
+      // Initiator stands up and walks to target agent desk
+      const targetDeskPos = { x: targetAv.agent.pos.x + 1.1, y: 0, z: targetAv.agent.pos.z + 0.4 };
+      moveAgentSmoothly(initAv.agent.id, targetDeskPos, () => {
+        // Show dialogue
+        show3DSpeech(initAv.agent.id, pair.dialogueInitiator, 8000);
+        setTimeout(() => {
+          show3DSpeech(targetAv.agent.id, pair.dialogueTarget, 8000);
+        }, 3200);
+
+        // Turn initiator avatar to face target
+        initAv.group.rotation.y = -Math.PI / 2;
+
+        updateDossierRealtimeStatus();
+        updateCensusCounts();
+
+        // After 12 seconds, finish collaboration and walk back to desk
+        setTimeout(() => {
+          logLiveEvent(`[${getTimestamp()}] ${initAv.agent.name} menyelesaikan review bersama ${targetAv.agent.name} dan kembali ke meja`);
+          moveAgentSmoothly(initAv.agent.id, initAv.homePos, () => {
+            initAv.state = 'WORKING';
+            initAv.partnerId = null;
+            initAv.currentTask = initAv.agent.status.action;
+            initAv.group.rotation.y = 0;
+
+            targetAv.state = 'WORKING';
+            targetAv.partnerId = null;
+            targetAv.currentTask = targetAv.agent.status.action;
+
+            updateDossierRealtimeStatus();
+            updateCensusCounts();
+          });
+        }, 12000);
+      });
+    }
+
+    function triggerAgentActivity(agentId, type) {
+      const av = agentAvatars[agentId];
+      if (!av) return;
+
+      if (type === 'coffee') {
+        const pantryPos = { x: (Math.random() - 0.5) * 1.8, y: 0, z: 0.85 };
+        logLiveEvent(`[${getTimestamp()}] ${av.agent.name} berjalan ke Pantry untuk rehat kopi espresso`);
+        moveAgentSmoothly(agentId, pantryPos, () => {
+          av.state = 'COFFEE';
+          av.currentTask = "Rehat ngopi espresso & diskusi santai di Central Pantry";
+          show3DSpeech(agentId, "Rehat sejenak ngopi espresso di pantry...", 6000);
+          updateDossierRealtimeStatus();
+          updateCensusCounts();
+
+          setTimeout(() => {
+            logLiveEvent(`[${getTimestamp()}] ${av.agent.name} selesai ngopi dan kembali bekerja di meja`);
+            moveAgentSmoothly(agentId, av.homePos, () => {
+              av.state = 'WORKING';
+              av.currentTask = av.agent.status.action;
+              av.group.rotation.y = 0;
+              updateDossierRealtimeStatus();
+              updateCensusCounts();
+            });
+          }, 10000);
+        });
+      } else if (type === 'gym') {
+        const gymPos = { x: Math.random() > 0.5 ? -1.1 : 1.1, y: 0, z: 26.0 };
+        logLiveEvent(`[${getTimestamp()}] ${av.agent.name} berolahraga cardio di Wellness Gym Corner`);
+        moveAgentSmoothly(agentId, gymPos, () => {
+          av.state = 'GYM';
+          av.currentTask = "Latihan treadmill cardio di Wellness Gym Corner";
+          show3DSpeech(agentId, "Lari treadmill 15 menit agar tetap bugar!", 6000);
+          updateDossierRealtimeStatus();
+          updateCensusCounts();
+
+          setTimeout(() => {
+            logLiveEvent(`[${getTimestamp()}] ${av.agent.name} selesai gym dan kembali ke meja kerja`);
+            moveAgentSmoothly(agentId, av.homePos, () => {
+              av.state = 'WORKING';
+              av.currentTask = av.agent.status.action;
+              av.group.rotation.y = 0;
+              updateDossierRealtimeStatus();
+              updateCensusCounts();
+            });
+          }, 11000);
+        });
+      } else if (type === 'collaborate') {
+        const pairIdx = AGENT_COLLABORATION_PAIRS.findIndex(p => p.initiator === agentId || p.target === agentId);
+        executeCollaborationScenario(pairIdx >= 0 ? pairIdx : 0, agentId);
+      } else if (type === 'work') {
+        moveAgentSmoothly(agentId, av.homePos, () => {
+          av.state = 'WORKING';
+          av.currentTask = av.agent.status.action;
+          av.group.rotation.y = 0;
+          updateDossierRealtimeStatus();
+          updateCensusCounts();
+        });
+      }
+    }
+
+    function moveAgentSmoothly(agentId, targetPos, onComplete) {
+      const av = agentAvatars[agentId];
+      if (!av) return;
+
+      av.isWalking = true;
+      const startPos = { x: av.group.position.x, z: av.group.position.z };
+
+      // Transition legs to standing
+      if (av.parts) {
+        av.parts.leftThigh.position.set(-0.16, 0.40, 0);
+        av.parts.rightThigh.position.set(0.16, 0.40, 0);
+        av.parts.leftCalf.position.set(-0.16, 0.15, 0);
+        av.parts.rightCalf.position.set(0.16, 0.15, 0);
+        av.parts.leftShoulder.rotation.x = 0;
+        av.parts.rightShoulder.rotation.x = 0;
+      }
+
+      // Tween along corridor path
+      if (typeof TWEEN !== 'undefined') {
+        new TWEEN.Tween(av.group.position)
+          .to({ x: targetPos.x, y: 0, z: targetPos.z }, 2800)
+          .easing(TWEEN.Easing.Quadratic.InOut)
+          .onUpdate(() => {
+            // Face movement direction
+            const dx = targetPos.x - av.group.position.x;
+            const dz = targetPos.z - av.group.position.z;
+            if (Math.abs(dx) > 0.05 || Math.abs(dz) > 0.05) {
+              av.group.rotation.y = Math.atan2(dx, dz);
+            }
+          })
+          .onComplete(() => {
+            av.isWalking = false;
+            // Return legs to appropriate pose
+            if (targetPos === av.homePos) {
+              av.parts.leftThigh.position.set(-0.16, 0.50, -0.18);
+              av.parts.rightThigh.position.set(0.16, 0.50, -0.18);
+              av.parts.leftCalf.position.set(-0.16, 0.25, -0.36);
+              av.parts.rightCalf.position.set(0.16, 0.25, -0.36);
+              av.parts.leftShoulder.rotation.x = 0.42;
+              av.parts.rightShoulder.rotation.x = 0.42;
+            }
+            if (onComplete) onComplete();
+          })
+          .start();
+      } else {
+        av.group.position.set(targetPos.x, 0, targetPos.z);
+        av.isWalking = false;
+        if (onComplete) onComplete();
+      }
+    }
+
+    function updateDossierRealtimeStatus() {
+      if (!selectedAgent) return;
+      const av = agentAvatars[selectedAgent.id];
+      if (!av) return;
+
+      const stateBadge = document.getElementById('dossier-activity-state');
+      const descEl = document.getElementById('dossier-activity-desc');
+      const progNum = document.getElementById('dossier-progress-num');
+      const progBar = document.getElementById('dossier-progress-bar');
+
+      if (stateBadge) {
+        stateBadge.innerText = av.state;
+        if (av.state === 'WORKING') {
+          stateBadge.className = 'font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-teal-950 text-teal-300 border border-teal-800';
+        } else if (av.state === 'COLLABORATING') {
+          stateBadge.className = 'font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-800 animate-pulse';
+        } else if (av.state === 'COFFEE') {
+          stateBadge.className = 'font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-800';
+        } else if (av.state === 'GYM') {
+          stateBadge.className = 'font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-800';
+        }
+      }
+
+      if (descEl) {
+        descEl.innerText = av.currentTask || av.agent.status.action;
+      }
+
+      if (progNum && progBar) {
+        progNum.innerText = `${av.progress}%`;
+        progBar.style.width = `${av.progress}%`;
+      }
+    }
+
+    // ─── 8. ANIMATION LOOP WITH NATURAL ARTICULATION ─────────────────────────────
+    const clock = typeof THREE !== 'undefined' ? new THREE.Clock() : null;
+
+    function animateWebGL() {
+      if (currentEngine !== 'webgl') return;
+      requestAnimationFrame(animateWebGL);
+
+      if (clock) {
+        const elapsedTime = clock.getElapsedTime();
+        if (typeof TWEEN !== 'undefined') TWEEN.update();
+        if (controls) controls.update();
+
+        // Animate all 24 living avatars based on their real-time state
+        Object.values(agentAvatars).forEach(av => {
+          const parts = av.parts;
+          if (!parts) return;
+          const seed = parts.seed;
+
+          if (av.isWalking) {
+            // Articulated walking gait
+            const walkSpeed = 9.0;
+            const legSwing = Math.sin(elapsedTime * walkSpeed + seed) * 0.45;
+            parts.leftThigh.rotation.x = legSwing;
+            parts.rightThigh.rotation.x = -legSwing;
+            parts.leftShoulder.rotation.x = -legSwing * 0.6;
+            parts.rightShoulder.rotation.x = legSwing * 0.6;
+            parts.upperBody.position.y = 0.54 + Math.abs(Math.sin(elapsedTime * walkSpeed + seed)) * 0.03;
+          } else if (av.state === 'WORKING') {
+            // Seated working pose: Gentle breathing
+            parts.upperBody.position.y = 0.54 + Math.sin(elapsedTime * 1.5 + seed) * 0.008;
+            parts.headGroup.rotation.y = Math.sin(elapsedTime * 0.8 + seed) * 0.06;
+            // Crisp typing keystroke micro-movements on keyboard
+            const typeKeystroke = Math.sin(elapsedTime * 11.0 + seed) * 0.008;
+            parts.leftHand.position.y = -0.02 + typeKeystroke;
+            parts.rightHand.position.y = -0.02 - typeKeystroke;
+          } else if (av.state === 'GYM') {
+            // Running on treadmill
+            const runSpeed = 14.0;
+            const legSwing = Math.sin(elapsedTime * runSpeed) * 0.65;
+            parts.leftThigh.rotation.x = legSwing;
+            parts.rightThigh.rotation.x = -legSwing;
+            parts.leftShoulder.rotation.x = -legSwing * 0.8;
+            parts.rightShoulder.rotation.x = legSwing * 0.8;
+            parts.upperBody.position.y = 0.54 + Math.abs(Math.sin(elapsedTime * runSpeed)) * 0.05;
+          } else if (av.state === 'COLLABORATING') {
+            // Gesturing explaining code / design
+            parts.upperBody.position.y = 0.54 + Math.sin(elapsedTime * 1.5 + seed) * 0.01;
+            parts.headGroup.rotation.y = Math.sin(elapsedTime * 1.2 + seed) * 0.12;
+            parts.rightShoulder.rotation.x = 0.3 + Math.sin(elapsedTime * 3.5 + seed) * 0.25;
+            parts.leftShoulder.rotation.x = 0.1 + Math.cos(elapsedTime * 2.8 + seed) * 0.15;
+          }
+        });
+
+        animatedMeshes.forEach(item => {
+          if (item.type === 'treadmill-belt') {
+            item.mesh.position.z = ((elapsedTime * item.speed) % 0.4) - 0.2;
+          } else if (item.type === 'server-led') {
+            if (Math.random() > 0.94) {
+              item.mesh.material.color.setHex(Math.random() > 0.5 ? 0x10b981 : 0xef4444);
+            }
+          }
+        });
+      }
+
+      if (renderer && scene && camera) {
+        renderer.render(scene, camera);
+      }
+    }
+
+    function on3DResize() {
+      if (currentEngine !== 'webgl') return;
+      const container = document.getElementById('canvas-container');
+      const width = container.clientWidth || 800;
+      const height = container.clientHeight || 720;
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+      renderer.setSize(width, height);
+    }
+
+    function on3DMouseMove(event) {
+      if (currentEngine !== 'webgl') return;
+      const rect = renderer.domElement.getBoundingClientRect();
+      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(avatarGroups, true);
+      document.body.style.cursor = intersects.length > 0 ? 'pointer' : 'default';
+    }
+
+    function on3DClick(event) {
+      if (currentEngine !== 'webgl') return;
+      const rect = renderer.domElement.getBoundingClientRect();
+      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(avatarGroups, true);
+
+      if (intersects.length > 0) {
+        let root = intersects[0].object;
+        while (root.parent && !root.userData.agentId && root.userData.agentId !== 0) {
+          root = root.parent;
+        }
+        if (root.userData && root.userData.agent) {
+          selectAgent(root.userData.agent);
+        }
+      }
+    }
+
+    // ─── 9. CAMERA AUTO-ZOOM & 60-SECOND CINEMATIC TOUR ──────────────────────────
+    function focusAgentCamera(agent = selectedAgent) {
+      if (!agent) return;
+      const agentObj = typeof agent === 'number' ? AGENTS.find(a => a.id === agent) : agent;
+      if (!agentObj) return;
+
+      if (currentEngine === 'webgl' && camera && controls) {
+        // Intimate desk-side view: Inside room, completely unobstructed by outer glass walls
+        // Camera placed at (+1.25, 1.55, +1.70) looking at desk monitor (-0.20)
+        smoothCameraTo(
+          { x: agentObj.pos.x + 1.25, y: 1.55, z: agentObj.pos.z + 1.70 },
+          { x: agentObj.pos.x, y: 1.15, z: agentObj.pos.z - 0.20 },
+          1400
+        );
+      } else if (currentEngine === 'canvas2d') {
+        const iso = toIso(agentObj.pos.x * 9, 0, agentObj.pos.z * 9);
+        camera2D = { x: -iso.x * 2.2, y: -iso.y * 2.2, zoom: 2.0 };
+      }
+    }
+
+    function smoothCameraTo(targetPos, lookAtPos, duration = 1200) {
+      if (typeof TWEEN !== 'undefined' && camera && controls) {
+        new TWEEN.Tween(camera.position)
+          .to(targetPos, duration)
+          .easing(TWEEN.Easing.Cubic.Out)
+          .start();
+
+        new TWEEN.Tween(controls.target)
+          .to(lookAtPos, duration)
+          .easing(TWEEN.Easing.Cubic.Out)
+          .start();
+      } else if (camera && controls) {
+        camera.position.set(targetPos.x, targetPos.y, targetPos.z);
+        controls.target.set(lookAtPos.x, lookAtPos.y, lookAtPos.z);
+      }
+    }
+
+    function setCameraView(viewMode) {
+      if (currentEngine === 'webgl' && camera && controls) {
+        if (viewMode === 'isometric') {
+          smoothCameraTo({ x: 28, y: 30, z: 44 }, { x: 0, y: 1.5, z: 6 });
+          document.getElementById('active-room-indicator').innerText = '🏢 Seluruh Gedung • 6 Divisi Aktif';
+        } else if (viewMode === 'topdown') {
+          smoothCameraTo({ x: 0, y: 64, z: 6.1 }, { x: 0, y: 0, z: 6 });
+          document.getElementById('active-room-indicator').innerText = '🗺️ Denah Lantai (Top-Down 2D)';
+        }
+      }
+    }
+
+    function toggleLightingMode() {
+      isDayMode = !isDayMode;
+      const btn = document.getElementById('btn-light');
+      btn.innerText = isDayMode ? '☀️' : '🌙';
+
+      if (currentEngine === 'webgl' && scene) {
+        scene.background.set(isDayMode ? 0xf8fafc : 0x090d16);
+        if (ambientLight) ambientLight.intensity = isDayMode ? 0.95 : 0.72;
+        if (mainDirLight) mainDirLight.intensity = isDayMode ? 1.25 : 1.15;
+        if (divisionPointLights) {
+          divisionPointLights.forEach(pl => {
+            pl.intensity = isDayMode ? 0.6 : 0.95;
+          });
+        }
+      }
+    }
+
+    // 60-Second Automated Tour Execution
+    function toggleTour() {
+      isTouring = !isTouring;
+      const btn = document.getElementById('btn-tour');
+      const hud = document.getElementById('tour-hud-bar');
+
+      if (isTouring) {
+        isTourPaused = false;
+        btn.className = 'px-2.5 py-1 rounded bg-emerald-600 text-white font-medium flex items-center gap-1.5 shadow-md shadow-emerald-900/50';
+        if (hud) hud.classList.remove('hidden');
+        startTourCycle();
+      } else {
+        btn.className = 'px-2.5 py-1 rounded hover:bg-zinc-800 text-zinc-300 hover:text-white transition font-medium flex items-center gap-1.5';
+        if (hud) hud.classList.add('hidden');
+        clearInterval(tourIntervalTimer);
+      }
+    }
+
+    function startTourCycle() {
+      clearInterval(tourIntervalTimer);
+      tourRemainingSec = 60;
+      runTourStep();
+
+      tourIntervalTimer = setInterval(() => {
+        if (!isTouring || isTourPaused) return;
+        tourRemainingSec--;
+        updateTourHud();
+
+        if (tourRemainingSec <= 0) {
+          tourIndex = (tourIndex + 1) % AGENTS.length;
+          tourRemainingSec = 60;
+          runTourStep();
+        }
+      }, 1000);
+    }
+
+    function runTourStep() {
+      if (!isTouring) return;
+      const agent = AGENTS[tourIndex];
+      selectAgent(agent);
+      updateTourHud();
+    }
+
+    function updateTourHud() {
+      const agent = AGENTS[tourIndex];
+      const titleEl = document.getElementById('tour-hud-title');
+      const timerEl = document.getElementById('tour-hud-timer');
+      const pauseBtn = document.getElementById('tour-hud-pause');
+
+      if (titleEl && agent) {
+        titleEl.innerText = `Agen ${tourIndex + 1}/24: ${agent.persona || agent.name} • ${DIVISIONS[agent.division].name}`;
+      }
+      if (timerEl) {
+        timerEl.innerText = `⏱️ ${tourRemainingSec}s tersisa`;
+      }
+      if (pauseBtn) {
+        pauseBtn.innerText = isTourPaused ? '▶️ Lanjut' : '⏸️ Jeda';
+      }
+    }
+
+    function toggleTourPause() {
+      isTourPaused = !isTourPaused;
+      updateTourHud();
+    }
+
+    function nextTourStep() {
+      tourIndex = (tourIndex + 1) % AGENTS.length;
+      tourRemainingSec = 60;
+      runTourStep();
+    }
+
+    // ─── 10. INTERACTION, SEARCH & DOSSIER BINDINGS ─────────────────────────────
+    function selectAgent(agentOrId) {
+      const agent = typeof agentOrId === 'number' ? AGENTS.find(a => a.id === agentOrId) : agentOrId;
+      if (!agent) return;
+      selectedAgent = agent;
+      renderDossier(agent);
+      focusAgentCamera(agent);
+    }
+
+    function focusCurrentAgentCamera() {
+      focusAgentCamera(selectedAgent);
+    }
+
+    function prevAgent() {
+      const curIdx = AGENTS.findIndex(a => a.id === selectedAgent.id);
+      const prevIdx = (curIdx - 1 + AGENTS.length) % AGENTS.length;
+      selectAgent(AGENTS[prevIdx]);
+    }
+
+    function nextAgent() {
+      const curIdx = AGENTS.findIndex(a => a.id === selectedAgent.id);
+      const nextIdx = (curIdx + 1) % AGENTS.length;
+      selectAgent(AGENTS[nextIdx]);
+    }
+
+    function focusDivision(divKey) {
+      document.querySelectorAll('.div-btn').forEach(btn => {
+        btn.className = 'div-btn px-2.5 py-1 rounded-md font-medium text-zinc-400 hover:text-white hover:bg-zinc-800/60 transition';
+      });
+      const activeBtn = document.getElementById(`btn-div-${divKey}`);
+      if (activeBtn) {
+        activeBtn.className = 'div-btn px-2.5 py-1 rounded-md font-medium bg-zinc-800 text-white border border-zinc-700 shadow-sm transition';
+      }
+
+      if (currentEngine === 'webgl' && camera && controls) {
+        if (divKey === 'all') {
+          smoothCameraTo({ x: 28, y: 30, z: 44 }, { x: 0, y: 1.5, z: 6 });
+          document.getElementById('active-room-indicator').innerText = '🏢 Seluruh Gedung • 6 Divisi Aktif';
+          return;
+        }
+        const div = DIVISIONS[divKey];
+        if (div) {
+          smoothCameraTo(div.cameraPos, div.cameraTarget);
+          document.getElementById('active-room-indicator').innerText = `${div.shortName} • ${div.name}`;
+        }
+      } else if (currentEngine === 'canvas2d') {
+        if (divKey === 'all') {
+          camera2D = { x: 0, y: 0, zoom: 1 };
+        } else {
+          const div = DIVISIONS[divKey];
+          const iso = toIso(div.center.x * 9, 0, div.center.z * 9);
+          camera2D = { x: -iso.x * 1.5, y: -iso.y * 1.5, zoom: 1.4 };
+        }
+      }
+    }
+
+    function setDossierTab(tabKey) {
+      currentDossierTab = tabKey;
+      ['code', 'ac', 'skills'].forEach(k => {
+        const btn = document.getElementById(`tab-btn-${k}`);
+        const content = document.getElementById(`tab-content-${k}`);
+        if (k === tabKey) {
+          btn.className = 'flex-1 py-1 px-2 rounded font-medium text-xs bg-zinc-800 text-white transition';
+          content.classList.remove('hidden');
+        } else {
+          btn.className = 'flex-1 py-1 px-2 rounded font-medium text-xs text-zinc-400 hover:text-white transition';
+          content.classList.add('hidden');
+        }
+      });
+    }
+
+    function renderDossier(agent) {
+      document.getElementById('dossier-name').innerText = agent.persona || agent.name;
+      document.getElementById('dossier-role').innerText = `${agent.role} • ${agent.name}`;
+      document.getElementById('dossier-avatar-container').innerText = agent.avatar;
+      document.getElementById('dossier-division').innerText = DIVISIONS[agent.division].name;
+      document.getElementById('dossier-id-badge').innerText = agent.id === 0 ? 'LEAD #00' : `AGENT #${String(agent.id).padStart(2, '0')}`;
+      
+      const catBadge = document.getElementById('dossier-category-badge');
+      catBadge.innerText = agent.category.toUpperCase();
+      catBadge.className = `px-2 py-0.5 rounded text-[10px] font-mono uppercase font-bold ${
+        agent.category === 'lead' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' :
+        agent.category === 'sec' ? 'bg-red-500/20 text-red-400 border border-red-500/40' :
+        agent.category === 'design' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40' :
+        agent.category === 'product' ? 'bg-blue-500/20 text-blue-300 border border-blue-500/40' :
+        agent.category === 'tech' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' :
+        agent.category === 'qa' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' :
+        agent.category === 'ops' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40' :
+        'bg-pink-500/20 text-pink-300 border border-pink-500/40'
+      }`;
+
+      document.getElementById('dossier-workload').innerText = `${agent.workload}% (Sprint Peak)`;
+      document.getElementById('dossier-status-label').innerText = agent.status.label;
+      document.getElementById('dossier-ticket').innerText = agent.status.ticket;
+      document.getElementById('dossier-file').innerText = agent.status.file;
+      document.getElementById('dossier-action').innerText = agent.status.action;
+      document.getElementById('dossier-collaborators').innerText = agent.status.collaborators || "Tim LokaTalenta";
+      document.getElementById('dossier-clean-arch').innerText = agent.status.cleanArchReview || "Memenuhi standar Clean Architecture & Hexagonal Ports/Adapters.";
+      document.getElementById('dossier-opinion').innerText = `"${agent.status.opinion}"`;
+
+      // Code / Screen Content
+      document.getElementById('dossier-code').innerText = agent.screen.lines.join('\n');
+
+      // Acceptance Criteria List
+      const acList = document.getElementById('dossier-ac-list');
+      if (acList) {
+        acList.innerHTML = '';
+        agent.status.ac.forEach(item => {
+          const li = document.createElement('li');
+          li.className = 'flex items-start gap-2 bg-zinc-900/60 p-2 rounded border border-zinc-800/80';
+          li.innerHTML = `<span class="text-emerald-400 font-bold mt-0.5">✓</span><span class="leading-normal">${item}</span>`;
+          acList.appendChild(li);
+        });
+      }
+
+      // Comprehensive Skills & Stack Binding
+      const skillsContainer = document.getElementById('dossier-skills-primary');
+      if (skillsContainer) {
+        skillsContainer.innerHTML = '';
+        if (agent.skills && agent.skills.primary) {
+          agent.skills.primary.forEach(skill => {
+            const badge = document.createElement('span');
+            badge.className = 'px-2 py-0.5 rounded text-[11px] font-medium bg-teal-950/70 text-teal-300 border border-teal-800/80';
+            badge.innerText = skill;
+            skillsContainer.appendChild(badge);
+          });
+        }
+      }
+      
+      const stackContainer = document.getElementById('dossier-skills-stack');
+      if (stackContainer) {
+        stackContainer.innerHTML = '';
+        if (agent.skills && agent.skills.stack) {
+          agent.skills.stack.forEach(tool => {
+            const badge = document.createElement('span');
+            badge.className = 'px-1.5 py-0.5 rounded text-[10px] font-mono bg-zinc-800 text-zinc-300 border border-zinc-700';
+            badge.innerText = tool;
+            stackContainer.appendChild(badge);
+          });
+        }
+      }
+
+      const methEl = document.getElementById('dossier-skills-methodology');
+      if (methEl) {
+        methEl.innerText = agent.skills?.methodology?.join(', ') || 'Clean Architecture, Agile Scrum';
+      }
+
+      const certEl = document.getElementById('dossier-skills-certifications');
+      if (certEl) {
+        certEl.innerText = agent.skills?.certifications?.join(', ') || 'Lead Role Verified';
+      }
+
+      renderAgentGrid();
+    }
+
+    function renderAgentGrid() {
+      const grid = document.getElementById('agents-grid');
+      if (!grid) return;
+      grid.innerHTML = '';
+
+      AGENTS.forEach(a => {
+        const isSelected = a.id === selectedAgent.id;
+        const card = document.createElement('div');
+        card.onclick = () => selectAgent(a);
+        card.className = `p-2.5 rounded-xl cursor-pointer border transition-all ${
+          isSelected ? 'bg-teal-950/60 border-teal-500 shadow-md shadow-teal-950' : 'bg-zinc-900/80 border-zinc-800 hover:border-zinc-700 hover:bg-zinc-800/60'
+        }`;
+
+        card.innerHTML = `
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-xl">${a.avatar}</span>
+            <span class="text-[10px] font-mono px-1.5 py-0.5 rounded ${
+              a.category === 'lead' ? 'bg-amber-500/20 text-amber-300' :
+              a.category === 'sec' ? 'bg-red-500/20 text-red-400' :
+              a.category === 'design' ? 'bg-rose-500/20 text-rose-300' :
+              a.category === 'tech' ? 'bg-emerald-500/20 text-emerald-300' :
+              a.category === 'qa' ? 'bg-amber-500/20 text-amber-300' :
+              'bg-zinc-800 text-zinc-300'
+            }">${a.id === 0 ? 'LEAD #00' : '#' + a.id}</span>
+          </div>
+          <h4 class="text-xs font-bold text-white truncate">${a.name}</h4>
+          <p class="text-[11px] text-zinc-400 truncate">${a.role.split('&')[0]}</p>
+          <div class="mt-2 pt-1.5 border-t border-zinc-800/60 flex items-center justify-between text-[10px]">
+            <span class="text-zinc-500 font-mono">${a.screen.file}</span>
+            <span class="text-teal-400 font-bold">${a.workload}%</span>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function onSearchInput(val) {
+      if (!val) {
+        renderAgentGrid();
+        return;
+      }
+      const q = val.toLowerCase().trim();
+      const match = AGENTS.find(a => 
+        a.name.toLowerCase().includes(q) ||
+        (a.persona && a.persona.toLowerCase().includes(q)) ||
+        a.role.toLowerCase().includes(q) ||
+        a.status.ticket.toLowerCase().includes(q) ||
+        a.status.action.toLowerCase().includes(q) ||
+        a.screen.file.toLowerCase().includes(q)
+      );
+      if (match) {
+        selectAgent(match);
+      }
+    }
+
+    // ─── 11. 2.5D VECTOR CANVAS FALLBACK ENGINE ──────────────────────────────────
+    let canvas2D, ctx2D;
+    let camera2D = { x: 0, y: 0, zoom: 1 };
+    let is2DDragging = false;
+    let dragStart2D = { x: 0, y: 0 };
+
+    function toIso(x, y, z) {
+      const isoX = (x - z) * Math.cos(Math.PI / 6);
+      const isoY = (x + z) * Math.sin(Math.PI / 6) - y;
+      return { x: isoX, y: isoY };
+    }
+
+    function init2DCanvas() {
+      const container = document.getElementById('canvas-container');
+      container.innerHTML = '<canvas id="vectorCanvas" style="width:100%;height:100%;cursor:grab;"></canvas>';
+      canvas2D = document.getElementById('vectorCanvas');
+      ctx2D = canvas2D.getContext('2d');
+
+      resize2DCanvas();
+      window.addEventListener('resize', resize2DCanvas);
+
+      canvas2D.addEventListener('mousedown', (e) => {
+        is2DDragging = true;
+        dragStart2D = { x: e.clientX - camera2D.x, y: e.clientY - camera2D.y };
+        canvas2D.style.cursor = 'grabbing';
+      });
+
+      window.addEventListener('mousemove', (e) => {
+        if (!is2DDragging) return;
+        camera2D.x = e.clientX - dragStart2D.x;
+        camera2D.y = e.clientY - dragStart2D.y;
+        render2DScene();
+      });
+
+      window.addEventListener('mouseup', () => {
+        is2DDragging = false;
+        if (canvas2D) canvas2D.style.cursor = 'grab';
+      });
+
+      canvas2D.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const factor = e.deltaY < 0 ? 1.08 : 0.92;
+        camera2D.zoom = Math.max(0.4, Math.min(3.0, camera2D.zoom * factor));
+        render2DScene();
+      }, { passive: false });
+
+      render2DScene();
+    }
+
+    function resize2DCanvas() {
+      if (!canvas2D) return;
+      const container = document.getElementById('canvas-container');
+      canvas2D.width = container.clientWidth;
+      canvas2D.height = container.clientHeight;
+      render2DScene();
+    }
+
+    function render2DScene() {
+      if (!ctx2D || !canvas2D) return;
+      const w = canvas2D.width;
+      const h = canvas2D.height;
+
+      ctx2D.clearRect(0, 0, w, h);
+      ctx2D.save();
+      ctx2D.translate(w / 2 + camera2D.x, h / 2 + camera2D.y);
+      ctx2D.scale(camera2D.zoom, camera2D.zoom);
+
+      // Render 6 Division Floor Polygons
+      Object.values(DIVISIONS).forEach(div => {
+        const cx = div.center.x * 9;
+        const cz = div.center.z * 9;
+        const hw = (div.bounds.width * 9) / 2;
+        const hd = (div.bounds.depth * 9) / 2;
+
+        const p1 = toIso(cx - hw, 0, cz - hd);
+        const p2 = toIso(cx + hw, 0, cz - hd);
+        const p3 = toIso(cx + hw, 0, cz + hd);
+        const p4 = toIso(cx - hw, 0, cz + hd);
+
+        ctx2D.beginPath();
+        ctx2D.moveTo(p1.x, p1.y);
+        ctx2D.lineTo(p2.x, p2.y);
+        ctx2D.lineTo(p3.x, p3.y);
+        ctx2D.lineTo(p4.x, p4.y);
+        ctx2D.closePath();
+        ctx2D.fillStyle = '#' + div.floorMat.toString(16).padStart(6, '0');
+        ctx2D.fill();
+        ctx2D.strokeStyle = div.color;
+        ctx2D.lineWidth = 1.5;
+        ctx2D.stroke();
+
+        const labelPos = toIso(cx, 0, cz - hd + 15);
+        ctx2D.fillStyle = '#ffffff';
+        ctx2D.font = 'bold 13px sans-serif';
+        ctx2D.textAlign = 'center';
+        ctx2D.fillText(div.name.toUpperCase(), labelPos.x, labelPos.y);
+      });
+
+      // Render 24 Agent Nodes
+      AGENTS.forEach(a => {
+        const iso = toIso(a.pos.x * 9, 0, a.pos.z * 9);
+        const isSel = a.id === selectedAgent.id;
+
+        ctx2D.beginPath();
+        ctx2D.arc(iso.x, iso.y, isSel ? 14 : 10, 0, Math.PI * 2);
+        ctx2D.fillStyle = '#' + (a.color || 0x10b981).toString(16).padStart(6, '0');
+        ctx2D.fill();
+        ctx2D.strokeStyle = isSel ? '#ffffff' : '#0f172a';
+        ctx2D.lineWidth = isSel ? 3 : 1.5;
+        ctx2D.stroke();
+
+        ctx2D.fillStyle = '#ffffff';
+        ctx2D.font = 'bold 11px sans-serif';
+        ctx2D.textAlign = 'center';
+        ctx2D.fillText(a.name, iso.x, iso.y + 22);
+      });
+
+      ctx2D.restore();
+    }
+
+    // ─── 12. SWITCH ENGINE & INITIALIZATION ──────────────────────────────────────
+    function switchEngine(engineKey) {
+      currentEngine = engineKey;
+      const btnWebgl = document.getElementById('btn-engine-webgl');
+      const btn2D = document.getElementById('btn-engine-2d');
+      const container = document.getElementById('canvas-container');
+
+      if (engineKey === 'webgl') {
+        btnWebgl.className = 'px-2.5 py-1 rounded font-medium bg-teal-600 text-white transition';
+        btn2D.className = 'px-2.5 py-1 rounded font-medium text-zinc-400 hover:text-white transition';
+        container.innerHTML = '';
+        initWebGL();
+      } else {
+        btn2D.className = 'px-2.5 py-1 rounded font-medium bg-teal-600 text-white transition';
+        btnWebgl.className = 'px-2.5 py-1 rounded font-medium text-zinc-400 hover:text-white transition';
+        init2DCanvas();
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initWebGL();
+      renderAgentGrid();
+    });
+  </script>
+</body>
+</html>
