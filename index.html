@@ -49,7 +49,6 @@
     }
     #canvas-container {
       width: 100%;
-      height: 720px;
       position: relative;
       background: radial-gradient(circle at 50% 40%, #0d1527 0%, #060911 100%);
       overflow: hidden;
@@ -78,7 +77,7 @@
 <body class="selection:bg-teal-500 selection:text-white">
 
   <!-- Floating Tour HUD Bar -->
-  <div id="tour-hud-bar" class="hidden fixed bottom-6 right-6 z-50 glass-card border border-teal-500/50 px-4 py-2.5 rounded-2xl shadow-2xl flex items-center gap-3 backdrop-blur-xl animate-fade-in transition-all text-xs">
+  <div id="tour-hud-bar" class="hidden fixed bottom-4 left-4 right-4 sm:bottom-6 sm:left-auto sm:right-6 z-50 glass-card border border-teal-500/50 px-4 py-2.5 rounded-2xl shadow-2xl flex flex-wrap items-center gap-3 backdrop-blur-xl animate-fade-in transition-all text-xs">
     <div class="flex items-center gap-2">
       <span class="w-3 h-3 rounded-full bg-emerald-400 animate-ping"></span>
       <span class="w-3 h-3 rounded-full bg-emerald-500 -ml-5"></span>
@@ -97,7 +96,7 @@
     <!-- Ecosystem Quick-Switcher Bar -->
   <div class="border-b border-zinc-800 bg-zinc-950 px-4 py-1.5 text-xs">
     <div class="max-w-[1700px] mx-auto flex items-center justify-between flex-wrap gap-2">
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2 flex-wrap">
         <span class="text-zinc-500 font-mono text-[11px] uppercase tracking-wider font-semibold">LokaTalenta Ecosystem:</span>
         <div class="flex items-center gap-1.5 flex-wrap">
           <a href="https://lokatalenta-office-3d.vercel.app" class="px-2.5 py-0.5 rounded-full bg-teal-500/20 text-teal-300 border border-teal-500/40 font-semibold flex items-center gap-1 shadow-sm">
@@ -130,12 +129,12 @@
   <!-- Header & Telemetry Summary -->
   <header class="border-b border-zinc-800/80 bg-zinc-950/90 backdrop-blur-md sticky top-0 z-40 px-4 py-2.5">
     <div class="max-w-[1700px] mx-auto flex flex-wrap items-center justify-between gap-3">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-emerald-700 flex items-center justify-center shadow-lg shadow-teal-900/30 font-bold text-xl text-white">
+      <div class="flex items-center gap-3 min-w-0">
+        <div class="w-10 h-10 shrink-0 rounded-xl bg-gradient-to-br from-teal-500 to-emerald-700 flex items-center justify-center shadow-lg shadow-teal-900/30 font-bold text-xl text-white">
           🏢
         </div>
-        <div>
-          <div class="flex items-center gap-2">
+        <div class="min-w-0">
+          <div class="flex items-center gap-2 flex-wrap">
             <h1 class="text-base font-bold text-white tracking-tight">LokaTalenta Office</h1>
             <span class="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">SPRINT 15 LIVE</span>
             <span class="px-2 py-0.5 rounded text-[11px] font-mono bg-teal-500/20 text-teal-300 border border-teal-500/30">24 Roles • Lead: Rizco Renova</span>
@@ -144,15 +143,15 @@
         </div>
       </div>
 
-      <div class="flex items-center gap-2 flex-wrap">
+      <div class="flex items-center gap-2 flex-wrap w-full sm:w-auto">
         <!-- Search Box -->
-        <div class="relative">
-          <input type="text" id="agent-search" placeholder="Cari personel, peran, tiket, file..." oninput="onSearchInput(this.value)" class="w-56 px-3 py-1.5 pl-8 rounded-lg bg-zinc-900 border border-zinc-700/80 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-teal-500 transition" />
+        <div class="relative w-full sm:w-auto">
+          <input type="text" id="agent-search" placeholder="Cari personel, peran, tiket, file..." oninput="onSearchInput(this.value)" class="w-full sm:w-56 px-3 py-1.5 pl-8 rounded-lg bg-zinc-900 border border-zinc-700/80 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-teal-500 transition" />
           <span class="absolute left-2.5 top-2 text-zinc-500 text-xs">🔍</span>
         </div>
 
         <!-- Floor Switcher Controls -->
-        <div class="flex items-center bg-zinc-900 border border-zinc-800 rounded-lg p-0.5 text-xs shadow-inner">
+        <div class="flex flex-wrap items-center max-w-full bg-zinc-900 border border-zinc-800 rounded-lg p-0.5 text-xs shadow-inner">
           <button onclick="switchFloor(0)" id="btn-floor-0" class="floor-btn px-2.5 py-1 rounded font-semibold bg-teal-600 text-white transition shadow" title="Lihat Seluruh Gedung 3 Lantai">🏢 Semua Lt</button>
           <button onclick="switchFloor(1)" id="btn-floor-1" class="floor-btn px-2.5 py-1 rounded font-medium text-zinc-400 hover:text-white transition" title="Lantai 1: Lobi Utama, Kafetaria & Espresso Bar, Musholla & Wudhu">1️⃣ Lt. 1: Lobi/Kafe/Musholla</button>
           <button onclick="switchFloor(2)" id="btn-floor-2" class="floor-btn px-2.5 py-1 rounded font-medium text-zinc-400 hover:text-white transition" title="Lantai 2: Studio Core Engineering, QA Lab, Ruang Meeting Boardroom & UX Lounge">2️⃣ Lt. 2: Eng/QA/Meeting</button>
@@ -160,7 +159,7 @@
         </div>
 
         <!-- Camera POV Mode Controls -->
-        <div class="flex items-center bg-zinc-900 border border-zinc-800 rounded-lg p-0.5 text-xs shadow-inner">
+        <div class="flex flex-wrap items-center max-w-full bg-zinc-900 border border-zinc-800 rounded-lg p-0.5 text-xs shadow-inner">
           <button onclick="setCameraPOV('orbit')" id="btn-pov-orbit" class="pov-btn px-2 py-1 rounded font-semibold bg-teal-600 text-white transition" title="Orbit Bebas 3D">🌐 Orbit</button>
           <button onclick="setCameraPOV('walkthrough')" id="btn-pov-walkthrough" class="pov-btn px-2 py-1 rounded font-medium text-zinc-400 hover:text-white transition" title="1st-Person View — Jalan Orang Pertama (WASD / Panah)">🚶 1st-Person</button>
           <button onclick="setCameraPOV('follow')" id="btn-pov-follow" class="pov-btn px-2 py-1 rounded font-medium text-zinc-400 hover:text-white transition" title="3rd-Person View — Ikuti Agen Aktif">👤 3rd-Person</button>
@@ -208,15 +207,15 @@
   <!-- Live Real-Time Activity Ticker -->
   <div id="live-activity-bar" class="max-w-[1700px] mx-auto px-4 mt-2">
     <div class="glass-card px-3.5 py-1.5 rounded-xl border border-teal-500/30 flex flex-wrap items-center justify-between text-xs gap-2 shadow-lg">
-      <div class="flex items-center gap-2.5 min-w-0">
-        <span class="relative flex h-2.5 w-2.5">
+      <div class="flex items-center gap-2.5 min-w-0 max-w-full">
+        <span class="relative flex h-2.5 w-2.5 shrink-0">
           <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
           <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-teal-500"></span>
         </span>
-        <span class="font-mono font-bold text-teal-400 uppercase text-[10px] tracking-wider px-1.5 py-0.5 bg-teal-950/80 rounded border border-teal-800/80">AKTIVITAS REAL-TIME:</span>
-        <span id="live-activity-ticker-text" class="text-zinc-100 font-medium truncate max-w-[700px]">Farel Faza Nugraha sedang mengetik modul PWA-01 di Studio Core Engineering</span>
+        <span class="shrink-0 font-mono font-bold text-teal-400 uppercase text-[10px] tracking-wider px-1.5 py-0.5 bg-teal-950/80 rounded border border-teal-800/80">AKTIVITAS REAL-TIME:</span>
+        <span id="live-activity-ticker-text" class="min-w-0 text-zinc-100 font-medium truncate max-w-[700px]">Farel Faza Nugraha sedang mengetik modul PWA-01 di Studio Core Engineering</span>
       </div>
-      <div class="flex items-center gap-3 text-[11px] font-mono text-zinc-400">
+      <div class="flex flex-wrap items-center gap-2 sm:gap-3 min-w-0 text-[11px] font-mono text-zinc-400">
         <span id="live-census-text">☕ 2 di Pantry • 🏃 1 di Gym • 💬 2 Kolaborasi • 💻 19 di Meja</span>
         <span class="text-emerald-400 font-bold bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800/60">LIVE SDLC v3.1.0</span>
       </div>
@@ -225,7 +224,7 @@
 
   <!-- 3D Viewport Area -->
   <main class="relative w-full">
-    <div id="canvas-container">
+    <div id="canvas-container" class="h-[460px] sm:h-[720px]">
       <!-- Floating First-Person Walkthrough HUD Overlay -->
       <div id="walkthrough-hud" class="hidden absolute bottom-14 left-4 z-40 glass-card border border-teal-500/60 px-4 py-2 rounded-xl text-xs flex items-center gap-3 backdrop-blur-md shadow-2xl animate-fade-in">
         <div class="flex items-center gap-2">
@@ -238,7 +237,7 @@
       </div>
 
       <!-- In-Canvas Top Status Bar -->
-      <div class="absolute top-3 left-4 z-20 flex items-center gap-3 pointer-events-none">
+      <div class="absolute top-3 left-3 right-3 z-20 flex flex-wrap items-center gap-2 sm:gap-3 pointer-events-none">
         <span class="glass-card px-3 py-1 rounded-md text-xs font-mono text-zinc-300 border border-zinc-700/60 shadow" id="active-room-indicator">
           🏢 Seluruh Gedung • 6 Divisi Aktif
         </span>
@@ -249,7 +248,7 @@
       </div>
 
       <!-- In-Canvas Bottom Controls Overlay -->
-      <div class="absolute bottom-3 left-4 z-20 pointer-events-none text-xs text-zinc-400 font-mono glass-card px-3 py-1.5 rounded-lg border border-zinc-800/80 shadow">
+      <div class="absolute bottom-3 left-3 right-3 sm:left-4 sm:right-auto z-20 pointer-events-none text-[11px] sm:text-xs text-zinc-400 font-mono glass-card px-3 py-1.5 rounded-lg border border-zinc-800/80 shadow">
         💡 Kontrol Kamera: <span class="text-zinc-200">Orbit</span>: Drag Kiri • <span class="text-zinc-200">Pan</span>: Shift+Drag / Drag Kanan • <span class="text-zinc-200">Zoom</span>: Scroll • <span class="text-teal-300 font-bold">Klik agen / meja</span> untuk auto-zoom inspeksi monitor actual
       </div>
     </div>
