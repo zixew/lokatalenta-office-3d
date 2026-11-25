@@ -9,7 +9,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   
   <!-- 3D Graphics Engines: Three.js r128 + OrbitControls + Tween.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -22,8 +22,9 @@
       theme: {
         extend: {
           fontFamily: {
-            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
-            mono: ['"JetBrains Mono"', 'monospace']
+            sans: ['"Inter"', 'system-ui', 'sans-serif'],
+            mono: ['"Geist Mono"', '"JetBrains Mono"', 'monospace'],
+            display: ['"Geist Mono"', 'monospace']
           },
           colors: {
             brand: {
@@ -44,20 +45,21 @@
       margin: 0;
       padding: 0;
       overflow-x: hidden;
-      background-color: #090d16;
+      background-color: #0E1015;
       color: #f8fafc;
-      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-family: 'Inter', system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
     }
     #canvas-container {
       width: 100%;
       position: relative;
-      background: radial-gradient(circle at 50% 40%, #0d1527 0%, #060911 100%);
+      background: radial-gradient(circle at 50% 40%, #161B24 0%, #0E1015 100%);
       overflow: hidden;
     }
     .glass-card {
-      background: rgba(15, 23, 42, 0.85);
+      background: rgba(22, 27, 36, 0.88);
       backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
     .custom-scroll::-webkit-scrollbar {
       width: 6px;
@@ -72,6 +74,14 @@
     }
     .custom-scroll::-webkit-scrollbar-thumb:hover {
       background: #475569;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, ::before, ::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
     }
   </style>
 </head>
@@ -137,7 +147,7 @@
         <div class="min-w-0">
           <div class="flex items-center gap-2 flex-wrap">
             <h1 class="text-base font-bold text-white tracking-tight">LokaTalenta Office</h1>
-            <span class="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">SPRINT 15 LIVE</span>
+            <span class="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">SPRINT 18 LIVE</span>
             <span class="px-2 py-0.5 rounded text-[11px] font-mono bg-teal-500/20 text-teal-300 border border-teal-500/30">24 Roles • Lead: Rizco Renova</span>
           </div>
           <p class="text-xs text-zinc-400">Living 3D Headquarter: Simulasi aktivitas otonom 24 agen, interaksi kolaborasi, pantry ngopi, gym, lounge, monitor actual real-time, dan tur sinematik non-intrusif.</p>
