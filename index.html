@@ -336,9 +336,10 @@
               👑
             </div>
             <div>
-              <div class="flex items-center gap-2">
+              <div class="flex items-center gap-1.5 flex-wrap">
                 <span id="dossier-id-badge" class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">LEAD #00</span>
                 <span id="dossier-category-badge" class="px-2 py-0.5 rounded text-[10px] font-mono uppercase bg-zinc-800 text-zinc-300">LEAD</span>
+                <span id="dossier-mbti-badge" class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-purple-500/20 text-purple-300 border border-purple-500/40">ENTJ • D/C</span>
               </div>
               <h2 id="dossier-name" class="text-lg font-bold text-white tracking-tight mt-0.5">Rizco Renova</h2>
               <p id="dossier-role" class="text-xs text-teal-400 font-medium">Team Leader & Release Sign-Off Authority</p>
@@ -404,29 +405,93 @@
           </div>
         </div>
 
-        <!-- Human Needs, Physiological Meters & Mood HUD -->
-        <div class="mt-3 bg-zinc-900/90 p-2.5 rounded-xl border border-zinc-800">
-          <div class="flex items-center justify-between gap-2 mb-2">
-            <span class="text-[11px] font-bold uppercase tracking-wider text-zinc-300">🧬 Kondisi & Emosi Manusiawi</span>
+        <!-- PERLAKUAN & INTERAKSI EMOSIONAL MANUSIAWI (GitHub Inspiration) -->
+        <div class="mt-3 bg-gradient-to-br from-zinc-900 via-slate-900 to-zinc-900 p-3 rounded-xl border border-teal-500/40 shadow-lg">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-teal-300 flex items-center gap-1.5">
+              <span>💖</span><span>Perlakuan & Interaksi Emosional</span>
+            </span>
+            <span class="text-[9px] font-mono text-zinc-400 bg-zinc-800/80 px-1.5 py-0.5 rounded">3D Action Reactive</span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-1.5">
+            <button onclick="interactGreetAgent(selectedAgent.id)" class="py-1.5 px-2 rounded-lg bg-sky-950/70 hover:bg-sky-900 border border-sky-700/60 text-sky-200 text-[11px] font-medium flex items-center gap-1.5 shadow transition">
+              <span>👋</span><span>Sapa Agen</span>
+            </button>
+            <button onclick="interactTreatCoffee(selectedAgent.id)" class="py-1.5 px-2 rounded-lg bg-amber-950/70 hover:bg-amber-900 border border-amber-700/60 text-amber-200 text-[11px] font-medium flex items-center gap-1.5 shadow transition">
+              <span>☕</span><span>Traktir Kopi</span>
+            </button>
+            <button onclick="interactGiveKudos(selectedAgent.id)" class="py-1.5 px-2 rounded-lg bg-emerald-950/70 hover:bg-emerald-900 border border-emerald-700/60 text-emerald-200 text-[11px] font-medium flex items-center gap-1.5 shadow transition">
+              <span>⭐</span><span>Beri Kudos</span>
+            </button>
+            <button onclick="interactSummonCollab(selectedAgent.id)" class="py-1.5 px-2 rounded-lg bg-cyan-950/70 hover:bg-cyan-900 border border-cyan-700/60 text-cyan-200 text-[11px] font-medium flex items-center gap-1.5 shadow transition">
+              <span>🤝</span><span>Ajak Diskusi</span>
+            </button>
+            <button onclick="interactSendRooftop(selectedAgent.id)" class="col-span-2 py-1.5 px-2 rounded-lg bg-purple-950/70 hover:bg-purple-900 border border-purple-700/60 text-purple-200 text-[11px] font-medium flex items-center justify-center gap-1.5 shadow transition">
+              <span>🌿</span><span>Rehat ke Rooftop Garden & Biliar</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- SIFAT, PSIKOLOGIS & KARAKTER PERSONAL (MBTI, DISC & QUIRKS) -->
+        <div class="mt-3 bg-zinc-900/90 p-3 rounded-xl border border-zinc-800 shadow">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-purple-300 flex items-center gap-1.5">
+              <span>🧬</span><span>Sifat & Karakter Psikologis</span>
+            </span>
+            <span id="dossier-disc-pill" class="text-[10px] font-mono text-purple-200 bg-purple-950 px-2 py-0.5 rounded border border-purple-800">DISC: D/C</span>
+          </div>
+
+          <div id="dossier-traits" class="flex flex-wrap gap-1 mb-2"></div>
+
+          <div class="text-[11px] space-y-1.5 pt-1 border-t border-zinc-800">
+            <div class="flex items-start gap-1.5">
+              <span class="text-zinc-500 font-mono text-[10px] uppercase min-w-[70px]">Kebiasaan:</span>
+              <span id="dossier-quirk" class="text-zinc-300 font-medium leading-tight">Penikmat kopi single-origin, anti-micro commit.</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="text-zinc-500 font-mono text-[10px] uppercase min-w-[70px]">Minuman:</span>
+              <span id="dossier-fav-drink" class="text-amber-300 font-mono font-medium">Espresso Double Shot</span>
+            </div>
+            <div class="flex items-center justify-between gap-1.5 pt-1">
+              <span class="text-zinc-500 font-mono text-[10px] uppercase min-w-[70px]">Partner:</span>
+              <button id="dossier-buddy-btn" class="text-cyan-400 hover:text-cyan-300 font-medium text-[11px] flex items-center gap-1 transition">
+                <span id="dossier-buddy-name">Alamsyah Putra</span>
+                <span>➔</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5-DIMENSION EMOTIONAL & PHYSIOLOGICAL METERS -->
+        <div class="mt-3 bg-zinc-900/90 p-3 rounded-xl border border-zinc-800 shadow">
+          <div class="flex items-center justify-between gap-2 mb-2.5">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
+              <span>📊</span><span>Spektrum Emosi & Kondisi</span>
+            </span>
             <span id="dossier-mood-badge" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">😌 Fokus</span>
           </div>
-          <div id="dossier-traits" class="flex flex-wrap gap-1 mb-2.5"></div>
+
           <div class="grid grid-cols-2 gap-x-3 gap-y-2 text-[10px] font-mono">
             <div>
-              <div class="flex justify-between text-zinc-400 mb-0.5"><span>⚡ Energi</span><span id="need-energy-val" class="text-emerald-300 font-bold">85%</span></div>
+              <div class="flex justify-between text-zinc-400 mb-0.5"><span>⚡ Energi Fisik</span><span id="need-energy-val" class="text-emerald-300 font-bold">85%</span></div>
               <div class="w-full bg-zinc-800 rounded-full h-1.5"><div id="need-energy-bar" class="bg-emerald-400 h-1.5 rounded-full transition-all duration-300" style="width:85%"></div></div>
             </div>
             <div>
-              <div class="flex justify-between text-zinc-400 mb-0.5"><span>😴 Capai</span><span id="need-fatigue-val" class="text-amber-300 font-bold">25%</span></div>
-              <div class="w-full bg-zinc-800 rounded-full h-1.5"><div id="need-fatigue-bar" class="bg-amber-400 h-1.5 rounded-full transition-all duration-300" style="width:25%"></div></div>
+              <div class="flex justify-between text-zinc-400 mb-0.5"><span>❤️ Morale/Mood</span><span id="need-morale-val" class="text-pink-300 font-bold">85%</span></div>
+              <div class="w-full bg-zinc-800 rounded-full h-1.5"><div id="need-morale-bar" class="bg-pink-400 h-1.5 rounded-full transition-all duration-300" style="width:85%"></div></div>
             </div>
             <div>
-              <div class="flex justify-between text-zinc-400 mb-0.5"><span>🍔 Lapar</span><span id="need-hunger-val" class="text-orange-300 font-bold">35%</span></div>
-              <div class="w-full bg-zinc-800 rounded-full h-1.5"><div id="need-hunger-bar" class="bg-orange-400 h-1.5 rounded-full transition-all duration-300" style="width:35%"></div></div>
+              <div class="flex justify-between text-zinc-400 mb-0.5"><span>🔋 Baterai Sosial</span><span id="need-social-val" class="text-cyan-300 font-bold">80%</span></div>
+              <div class="w-full bg-zinc-800 rounded-full h-1.5"><div id="need-social-bar" class="bg-cyan-400 h-1.5 rounded-full transition-all duration-300" style="width:80%"></div></div>
             </div>
             <div>
-              <div class="flex justify-between text-zinc-400 mb-0.5"><span>🥤 Haus</span><span id="need-thirst-val" class="text-sky-300 font-bold">30%</span></div>
-              <div class="w-full bg-zinc-800 rounded-full h-1.5"><div id="need-thirst-bar" class="bg-sky-400 h-1.5 rounded-full transition-all duration-300" style="width:30%"></div></div>
+              <div class="flex justify-between text-zinc-400 mb-0.5"><span>🧠 Fokus Mental</span><span id="need-focus-val" class="text-teal-300 font-bold">88%</span></div>
+              <div class="w-full bg-zinc-800 rounded-full h-1.5"><div id="need-focus-bar" class="bg-teal-400 h-1.5 rounded-full transition-all duration-300" style="width:88%"></div></div>
+            </div>
+            <div class="col-span-2">
+              <div class="flex justify-between text-zinc-400 mb-0.5"><span>🌪️ Tingkat Stres</span><span id="need-stress-val" class="text-amber-300 font-bold">22%</span></div>
+              <div class="w-full bg-zinc-800 rounded-full h-1.5"><div id="need-stress-bar" class="bg-emerald-400 h-1.5 rounded-full transition-all duration-300" style="width:22%"></div></div>
             </div>
           </div>
         </div>
@@ -2159,6 +2224,85 @@ export interface CandidateComparisonView {
       } catch (_) {}
     }
 
+    function playGreetingChime() {
+      if (!isAudioEnabled || !audioCtx) return;
+      try {
+        if (audioCtx.state === "suspended") audioCtx.resume();
+        const t = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(523.25, t); // C5
+        osc.frequency.setValueAtTime(659.25, t + 0.12); // E5
+        osc.frequency.setValueAtTime(783.99, t + 0.24); // G5
+        gain.gain.setValueAtTime(0.08, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.6);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(t);
+        osc.stop(t + 0.6);
+      } catch (_) {}
+    }
+
+    function playCoffeeSipSound() {
+      if (!isAudioEnabled || !audioCtx) return;
+      try {
+        if (audioCtx.state === "suspended") audioCtx.resume();
+        const t = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(440, t); // A4
+        osc.frequency.exponentialRampToValueAtTime(659.25, t + 0.22); // E5
+        gain.gain.setValueAtTime(0.08, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.45);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(t);
+        osc.stop(t + 0.45);
+      } catch (_) {}
+    }
+
+    function playKudosFanfare() {
+      if (!isAudioEnabled || !audioCtx) return;
+      try {
+        if (audioCtx.state === "suspended") audioCtx.resume();
+        const t = audioCtx.currentTime;
+        const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+        notes.forEach((freq, idx) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = "triangle";
+          osc.frequency.setValueAtTime(freq, t + idx * 0.08);
+          gain.gain.setValueAtTime(0.09, t + idx * 0.08);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + idx * 0.08 + 0.45);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(t + idx * 0.08);
+          osc.stop(t + idx * 0.08 + 0.45);
+        });
+      } catch (_) {}
+    }
+
+    function playSocialChatChime() {
+      if (!isAudioEnabled || !audioCtx) return;
+      try {
+        if (audioCtx.state === "suspended") audioCtx.resume();
+        const t = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(880, t); // A5
+        osc.frequency.setValueAtTime(1174.66, t + 0.1); // D6
+        gain.gain.setValueAtTime(0.06, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(t);
+        osc.stop(t + 0.4);
+      } catch (_) {}
+    }
+
     function toggleAudio() {
       initAudio();
       if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
@@ -2187,43 +2331,422 @@ export interface CandidateComparisonView {
       }
     }
 
-    // ─── HUMANIZED PERSONALITY, NEEDS, EMOTIONS & CRITICAL THINKING ENGINE ──────
+    // ─── CANONICAL PSYCHOLOGY, EMOTIONAL SPECTRUM & SOCIAL DYNAMICS (GitHub Inspirations) ──
+    const AGENT_PSYCHOLOGY = {
+      0: {
+        mbti: "ENTJ",
+        disc: "D/C (Dominance & Conscientiousness)",
+        archetype: "Komandan & Pengawal SDLC",
+        traits: ["Tegas", "Visioner", "Mentor Protektif", "Disiplin Tinggi"],
+        quirk: "Menolak rilis tanpa audit formal tertulis, anti-micro commit, penikmat Espresso Double Shot",
+        favDrink: "Espresso Double Shot",
+        bestBuddyId: 8,
+        bestBuddyName: "Alamsyah Putra (Community Liaison)",
+        voiceGreeting: "Halo! Selamat datang di LokaTalenta HQ. Tim bekerja dengan tata kelola SDLC presisi.",
+        voiceCoffee: "Terima kasih kopinya! Kafein pekat ini menjaga ketajaman audit rilis hari ini.",
+        voiceKudos: "Apresiasi diterima! Ini bukti dedikasi 24 agen membangun ekosistem talenta gratis.",
+        voiceCollab: "Alamsyah, mari kita telaah hasil uji penerimaan komunitas talenta untuk Sprint 20.",
+        hallwayQuotes: ["Pastikan dokumentasi dan acceptance criteria sudah selaras 100%.", "Kualitas rilis adalah marwah tim engineering kita."]
+      },
+      1: {
+        mbti: "ENFJ",
+        disc: "I/S (Influence & Steadiness)",
+        archetype: "Kampiun Akses Gratis & Inklusivitas",
+        traits: ["Hangat", "Komunikatif", "Inspiratif", "Anti-Paywall"],
+        quirk: "Selalu menyapa dengan senyuman hangat, gemar Teh Melati Tubruk, penjaga janji akses 100% gratis",
+        favDrink: "Teh Melati Tubruk Hangat",
+        bestBuddyId: 23,
+        bestBuddyName: "Indah Kusuma (Release CI/CD)",
+        voiceGreeting: "Salam kenal! Kami pastikan LokaTalenta 100% gratis dan inklusif untuk seluruh talenta.",
+        voiceCoffee: "Wah terima kasih banyak! Hangatnya minuman ini menambah semangat melayani komunitas.",
+        voiceKudos: "Kudos untuk kita semua! Senang sekali melihat talenta muda berkembang tanpa beban biaya.",
+        voiceCollab: "Indah, bagaimana kesiapan pipeline rilis? Ribuan kandidat fresh-grad sudah menanti.",
+        hallwayQuotes: ["Pendidikan dan kesempatan kerja berkualitas harus terbuka untuk siapa saja.", "Semangat teman-teman! Dampak sosial karya kita sangat nyata."]
+      },
+      2: {
+        mbti: "INTJ",
+        disc: "C/D (Conscientiousness & Dominance)",
+        archetype: "Arsitek Strategi & Nilai Produk",
+        traits: ["Analitis", "Strategis", "Terukur", "Data-Driven"],
+        quirk: "Menulis PRD dengan matriks angka presisi, suka Cold Brew Arabika dingin tanpa gula",
+        favDrink: "Cold Brew Arabika Gayo",
+        bestBuddyId: 15,
+        bestBuddyName: "Siti Nurhaliza (UI Accessibility)",
+        voiceGreeting: "Halo. Setiap baris kode yang ditulis di sini bermuara pada nilai nyata bagi pengguna.",
+        voiceCoffee: "Terima kasih kopinya! Cold brew dingin memicu logika penyusunan roadmap yang tajam.",
+        voiceKudos: "Terima kasih! Validasi kebutuhan pengguna dan eksekusi presisi adalah prioritas mutlak.",
+        voiceCollab: "Siti, mari sinkronkan kriteria keterbacaan PRD dengan navigasi aksesibilitas mobile.",
+        hallwayQuotes: ["Fitur tanpa nilai pengguna hanya akan menjadi beban teknis.", "Fokus pada problem nyata, bukan sekadar tren sesaat."]
+      },
+      3: {
+        mbti: "INTP",
+        disc: "C (Conscientiousness Murni)",
+        archetype: "Master Algoritma Psikometri & AI",
+        traits: ["Kritis", "Peneliti Mendalam", "Objektif", "Rasional"],
+        quirk: "Berpikir dalam formula statistik & state machine, suka camilan almond dan Americano Long Black",
+        favDrink: "Americano Long Black",
+        bestBuddyId: 9,
+        bestBuddyName: "Qonita Anindya (QA Lead)",
+        voiceGreeting: "Hai. Scoring psikometri DISC & MBTI kami bangun bebas bias dan valid secara statistik.",
+        voiceCoffee: "Mantap, terima kasih! Logika scoring matriks psikotes langsung terstimulasi kembali.",
+        voiceKudos: "Apresiasi yang menyenangkan! Akurasi kalkulasi state machine psikometri adalah kebanggaan kami.",
+        voiceCollab: "Qonita, mari kita uji edge-case perhitungan scoring DISC pada kondisi jawaban ekstrem.",
+        hallwayQuotes: ["Distribusi normal dan reliabilitas Cronbach's alpha harus terverifikasi.", "Algoritma yang baik adalah algoritma yang adil."]
+      },
+      4: {
+        mbti: "INTJ",
+        disc: "C/S (Conscientiousness & Steadiness)",
+        archetype: "Arsitek Data & Penyimpan Terstruktur",
+        traits: ["Metodis", "Tenang", "Terstruktur", "Pencegah Redundansi"],
+        quirk: "Suka skema relasional rapi, memeriksa indeks query EXPLAIN ANALYZE sebelum tidur",
+        favDrink: "Latte Oat Milk Panas",
+        bestBuddyId: 19,
+        bestBuddyName: "Fani Rahmawati (Product Operations)",
+        voiceGreeting: "Halo. Fondasi data yang solid dan terindeks adalah kunci skalabilitas jutaan pengguna.",
+        voiceCoffee: "Terima kasih atas latte-nya! Kueri database relasional kompleks terasa lebih ringan.",
+        voiceKudos: "Terima kasih! Struktur data yang kokoh adalah investasi jangka panjang produk kita.",
+        voiceCollab: "Fani, kapasitas partisi data kandidat sudah siap menyambut lonjakan registrasi.",
+        hallwayQuotes: ["Query lambat adalah musuh kenyamanan pengguna.", "Integritas referensial data tidak boleh dinegosiasikan."]
+      },
+      5: {
+        mbti: "INTP",
+        disc: "C/I (Conscientiousness & Influence)",
+        archetype: "Pengrajin Frontend & Estetika 60 FPS",
+        traits: ["Perfeksionis Pixel", "Anti-AI-Slop", "Responsif Mobile", "Inovatif"],
+        quirk: "Alergi UI patah-patah, selalu menguji di viewport 375px, suka kopi manual brew V60",
+        favDrink: "Manual Brew V60 Flores Bajawa",
+        bestBuddyId: 18,
+        bestBuddyName: "Eko Prasetyo (AI Matcher)",
+        voiceGreeting: "Halo! Di sini tidak ada AI-slop — setiap pixel, animasi 60 FPS, dan kontras diracik presisi.",
+        voiceCoffee: "Wah V60 idaman! Terima kasih banyak, langsung on-fire memoles mikro-interaksi 3D!",
+        voiceKudos: "Kudos diterima dengan bangga! Frontend mulus tanpa jank adalah kepuasan tertinggi!",
+        voiceCollab: "Eko, visualisasi rekomendasi bakat semantik AI sudah siap diintegrasikan ke canvas 3D.",
+        hallwayQuotes: ["Frame drop di mobile adalah dosa besar frontend engineer.", "Desain berkelas terasa tenang, fungsional, dan bernyawa."]
+      },
+      6: {
+        mbti: "ENFP",
+        disc: "I/D (Influence & Dominance)",
+        archetype: "Pelopor Mobile & PWA Cepat",
+        traits: ["Ceria", "Cepat Beradaptasi", "Pembawa Energi Positif", "Mobile-First"],
+        quirk: "Selalu bawa 3 HP untuk testing, suka es kopi susu gula aren, pecinta Service Worker offline",
+        favDrink: "Es Kopi Susu Gula Aren",
+        bestBuddyId: 20,
+        bestBuddyName: "Gita Permata (UI Design)",
+        voiceGreeting: "Halo halo! Mobile-first dan PWA offline bikin akses belajar lancar di mana saja!",
+        voiceCoffee: "Asyik banget traktiran es kopi susunya! Energi langsung 100% ngebut coding!",
+        voiceKudos: "Wah terima kasih banyak! PWA LokaTalenta bakal makin ngebut di iOS dan Android!",
+        voiceCollab: "Gita, komponen bottom sheet mobile sudah responsif dan nyaman disentuh satu tangan.",
+        hallwayQuotes: ["Offline-first bukan pilihan, tapi keharusan untuk konektivitas Indonesia.", "Sentuhan mikro di layar sentuh harus terasa memuaskan!"]
+      },
+      7: {
+        mbti: "ISTP",
+        disc: "C/D (Conscientiousness & Dominance)",
+        archetype: "Mekanik Backend Hexagonal",
+        traits: ["Pragmatis", "Efisien", "Port & Adapters", "Penyelesai Masalah"],
+        quirk: "Bicara singkat tapi kode sangat bersih, benci tight coupling, suka kopi tubruk Lampung pekat",
+        favDrink: "Kopi Tubruk Lampung Pekat",
+        bestBuddyId: 14,
+        bestBuddyName: "Gilang Ramadhan (API Gateway)",
+        voiceGreeting: "Halo. Sistem backend kami mengadopsi Hexagonal Architecture — modular dan tahan banting.",
+        voiceCoffee: "Kopi tubruk mantap. Terima kasih! Service layer domain langsung selesai direfaktor.",
+        voiceKudos: "Terima kasih apresiasinya. Arsitektur bersih menjaga performa tetap stabil di beban tinggi.",
+        voiceCollab: "Gilang, adapter REST dan GraphQL sudah decoupled sempurna dari core domain logic.",
+        hallwayQuotes: ["Simpan logika bisnis murni di dalam domain, jauhkan dari dependensi luar.", "Kode terbaik adalah kode yang mudah dihapus saat tidak dibutuhkan lagi."]
+      },
+      8: {
+        mbti: "INFJ",
+        disc: "S/I (Steadiness & Influence)",
+        archetype: "Advokat Komunitas & Empati Pengguna",
+        traits: ["Pendengar Baik", "Solutif", "Empatik Tinggi", "Sabar"],
+        quirk: "Mencatat setiap masukan pengguna dengan teliti, gemar Chamomile Honey Tea di sore hari",
+        favDrink: "Chamomile Honey Tea",
+        bestBuddyId: 0,
+        bestBuddyName: "Rizco Renova (Team Leader)",
+        voiceGreeting: "Selamat datang! Kenyamanan dan masa depan talenta muda adalah kompas utama kami bekerja.",
+        voiceCoffee: "Terima kasih atas kebaikannya! Menikmati teh sambil menyapa komunitas talenta berbakat.",
+        voiceKudos: "Terima kasih banyak! Menghubungkan talenta berbakat dengan peluang kerja adalah berkah nyata.",
+        voiceCollab: "Pak Rizco, umpan balik dari sesi mentoring magang minggu ini sangat positif dan membangun.",
+        hallwayQuotes: ["Dengarkan pengguna dengan empati sebelum menulis solusi teknis.", "Setiap fitur kecil bisa mengubah perjalanan hidup seorang kandidat."]
+      },
+      9: {
+        mbti: "ISTJ",
+        disc: "C (Conscientiousness Maksimal)",
+        archetype: "Penjaga Gerbang Kualitas (QA Lead)",
+        traits: ["Skeptis Sehat", "Teliti Ekstrem", "Pelindung Kualitas", "Pemburu Edge-Case"],
+        quirk: "Selalu curiga ada bug tersembunyi, menguji layar 375px sampai batas piksel, minum Matcha Latte hangat",
+        favDrink: "Matcha Green Tea Latte Panas",
+        bestBuddyId: 3,
+        bestBuddyName: "Satria Bagus (AI Lead)",
+        voiceGreeting: "Halo! Tugas saya memastikan Anda mendapatkan pengalaman aplikasi yang 100% stabil tanpa bug.",
+        voiceCoffee: "Matcha latte yang menenangkan! Terima kasih, mata jadi segar mengaudit 112 skenario pengujian.",
+        voiceKudos: "Terima kasih atas apresiasinya! Zero bug di produksi adalah janji kami kepada pengguna.",
+        voiceCollab: "Satria, matriks validasi psikometri sudah lolos pengujian lintas 3 peran pengguna.",
+        hallwayQuotes: ["Lebih baik menemukan bug hari ini daripada mengecewakan pengguna besok.", "Pengujian menyeluruh adalah bentuk rasa hormat kepada pengguna."]
+      },
+      10: {
+        mbti: "ISTJ",
+        disc: "C/S (Conscientiousness & Steadiness)",
+        archetype: "Penguasa Matriks Otomasi Regresi",
+        traits: ["Disiplin", "Konsisten", "Rinci", "Automator Andal"],
+        quirk: "Otomatisasi pengujian adalah passion hidupnya, suka kopi robusta hitam tanpa gula",
+        favDrink: "Kopi Robusta Hitam Panas",
+        bestBuddyId: 11,
+        bestBuddyName: "Vania Sabrina (Cross-Browser QA)",
+        voiceGreeting: "Hai! 112 skenario pengujian regresi kami jalankan otomatis di setiap commit kode.",
+        voiceCoffee: "Terima kasih kopinya! Kopi hitam pekat ini teman setia mengawal pengujian otomatis CI/CD.",
+        voiceKudos: "Terima kasih! Matriks regresi 100% hijau adalah bukti dedikasi kami menjaga kestabilan.",
+        voiceCollab: "Vania, test suite otomatis untuk viewport tablet dan mobile sudah tersinkronisasi.",
+        hallwayQuotes: ["Otomasi yang handal membebaskan tim untuk berinovasi tanpa rasa takut.", "Regresi nol persen adalah standar harian kami."]
+      },
+      11: {
+        mbti: "ISFJ",
+        disc: "S/C (Steadiness & Conscientiousness)",
+        archetype: "Penguji Ketelitian Lintas Perangkat",
+        traits: ["Sabar", "Rinci", "Peka Glitch Visual", "Tekun"],
+        quirk: "Menguji responsive layout di Safari, Chrome, Firefox hingga ukuran terkecil, suka Cappuccino Cinnamon",
+        favDrink: "Cappuccino Tabur Cinnamon",
+        bestBuddyId: 10,
+        bestBuddyName: "Raditya Rama Kusuma (Automation QA)",
+        voiceGreeting: "Halo! Tampilan yang rapi dan konsisten di semua jenis peramban adalah hak setiap talenta.",
+        voiceCoffee: "Aromanya harum sekali! Terima kasih banyak atas traktiran cappuccino lezat ini.",
+        voiceKudos: "Terima kasih! Uji coba lintas viewport 375px hingga monitor 4K kami pastikan sempurna.",
+        voiceCollab: "Raditya, seluruh skenario navigasi layar sentuh di iOS Safari sudah diverifikasi mulus.",
+        hallwayQuotes: ["Jangan biarkan perbedaan browser merusak impresi pertama talenta.", "Kerapian visual menciptakan rasa percaya bagi pengguna."]
+      },
+      12: {
+        mbti: "ISFJ",
+        disc: "S/C (Steadiness & Conscientiousness)",
+        archetype: "Penjaga Kamus SDLC & Confluence",
+        traits: ["Rapi", "Teratur", "Penjaga Dokumen Tunggal", "Sistematis"],
+        quirk: "Alergi dokumen usang tanpa versi, merawat spec ADR dengan dedikasi, suka Teh Hijau Lemon Madu",
+        favDrink: "Green Tea Madu Lemon",
+        bestBuddyId: 13,
+        bestBuddyName: "Hendra Gunawan (Scrum Master)",
+        voiceGreeting: "Halo! Dokumentasi yang hidup dan tersinkronisasi realtime adalah cermin tim profesional.",
+        voiceCoffee: "Terima kasih banyak! Teh lemon madu ini menyegarkan sesi perapihan spec arsitektur.",
+        voiceKudos: "Apresiasi yang membahagiakan! Docs Hub LokaTalenta akan terus menjadi sumber kebenaran tunggal.",
+        voiceCollab: "Hendra, catatan retrospektif dan matriks kapasitas Sprint 20 sudah rapi tercatat di docs.",
+        hallwayQuotes: ["Dokumentasi yang jelas menghemat ratusan jam rapat yang tidak perlu.", "Tuliskan apa yang dikerjakan, kerjakan apa yang didokumentasikan."]
+      },
+      13: {
+        mbti: "ESTJ",
+        disc: "D/C (Dominance & Conscientiousness)",
+        archetype: "Panglima Sprint Velocity & Burndown",
+        traits: ["Terjadwal", "Disiplin Waktu", "Tegas Mengawal Komitmen", "Fokus Target"],
+        quirk: "Melihat burndown chart sprint seperti detak nadi proyek, gemar Kopi Tubruk Susu Manis",
+        favDrink: "Kopi Tubruk Susu Kental Manis",
+        bestBuddyId: 12,
+        bestBuddyName: "Tara Wulandari (Documentarian)",
+        voiceGreeting: "Halo! 128 Story Points di Sprint 20 kami kawal agar tuntas tanpa kompromi kualitas.",
+        voiceCoffee: "Mantap kopinya! Terima kasih, energi memantau velocity sprint langsung terisi penuh.",
+        voiceKudos: "Terima kasih! Disiplin sprint dan komitmen tim adalah kunci pengiriman bernilai tinggi.",
+        voiceCollab: "Tara, mari pastikan kriteria Definition of Done di setiap tiket backlog terarsip rapi.",
+        hallwayQuotes: ["Komitmen sprint bukan sekadar angka, tapi janji pengiriman nilai kepada publik.", "Ritme kerja yang sehat melahirkan velocity yang konsisten."]
+      },
+      14: {
+        mbti: "ENTP",
+        disc: "I/D (Influence & Dominance)",
+        archetype: "Inovator Jembatan API & Gateway",
+        traits: ["Kreatif", "Cepat Menemukan Solusi", "Penjelajah Protokol", "Solutif"],
+        quirk: "Paling suka WebSocket & SSE streaming realtime, minum Es Teh Leci saat troubleshooting",
+        favDrink: "Lychee Iced Tea Segar",
+        bestBuddyId: 7,
+        bestBuddyName: "Bayu Pratama (Backend Hexagonal)",
+        voiceGreeting: "Halo! Arsitektur event gateway menghubungkan seluruh layanan ekosistem secara realtime.",
+        voiceCoffee: "Segar sekali minumannya! Terima kasih, pipeline SSE streaming langsung mengalir deras.",
+        voiceKudos: "Keren, terima kasih! Integrasi data multi-repo tanpa latensi adalah kebanggaan kami.",
+        voiceCollab: "Bayu, event broker SSE sekarang mampu menangani broadcast ratusan event per detik.",
+        hallwayQuotes: ["Sinkronisasi data tanpa jeda membuat sistem terasa hidup dan responsif.", "Protokol yang elegan menyederhanakan arsitektur yang kompleks."]
+      },
+      15: {
+        mbti: "ENFP",
+        disc: "I/S (Influence & Steadiness)",
+        archetype: "Pejuang Aksesibilitas & Kontras Warna",
+        traits: ["Inklusif", "Empatik", "Peduli Standar WCAG", "Penuh Semangat"],
+        quirk: "Selalu cek rasio kontras 4.5:1 dan navigasi keyboard Tab, suka Belgian Hot Chocolate",
+        favDrink: "Hot Belgian Chocolate",
+        bestBuddyId: 2,
+        bestBuddyName: "Pranadipa Wicaksana (Product Owner)",
+        voiceGreeting: "Hai! Aplikasi yang baik adalah aplikasi yang bisa diakses dengan nyaman oleh siapa saja.",
+        voiceCoffee: "Cokelat hangat yang luar biasa! Terima kasih, makin bersemangat mengawal aksesibilitas!",
+        voiceKudos: "Terima kasih banyak! Ramah pembaca layar (screen reader) dan keyboard navigation adalah prioritas.",
+        voiceCollab: "Pranadipa, standar kontras AA di seluruh alur pendaftaran siswa sudah terpenuhi 100%.",
+        hallwayQuotes: ["Aksesibilitas bukan fitur tambahan, melainkan hak asasi setiap pengguna digital.", "Desain inklusif memberdayakan mereka yang sering terlupakan."]
+      },
+      16: {
+        mbti: "ESTP",
+        disc: "D (Dominance Murni)",
+        archetype: "Penguji Beban & Ketahanan Ekstrem",
+        traits: ["Tangguh", "Pemberani", "Menikmati Uji Stres", "Anti-Rapuh"],
+        quirk: "Menguji load test sampai batas 10,000 pengguna serentak, suka Kopi Tubruk Hitam Manis",
+        favDrink: "Kopi Tubruk Hitam Manis",
+        bestBuddyId: 22,
+        bestBuddyName: "Reza Pratama (DevOps SRE)",
+        voiceGreeting: "Halo! Kami simulasikan lonjakan trafik agar sistem tidak down saat ujian massal serentak.",
+        voiceCoffee: "Kopi mantap penambah tenaga! Terima kasih, lanjut load test throughput API LokaTalenta!",
+        voiceKudos: "Terima kasih! Latensi rendah di bawah beban berat adalah hasil jerih payah optimasi kami.",
+        voiceCollab: "Reza, metrik auto-scaling pod Kubernetes sudah teruji tangguh di 500 permintaan per detik.",
+        hallwayQuotes: ["Hancurkan sistem di lingkungan pengujian agar tidak pernah runtuh di dunia nyata.", "Skalabilitas sejati terbukti saat ribuan pengguna hadir bersamaan."]
+      },
+      17: {
+        mbti: "INFP",
+        disc: "S/I (Steadiness & Influence)",
+        archetype: "Desainer Kurikulum & Edukasi Inklusif",
+        traits: ["Penuh Perhatian", "Edukatif", "Humanis", "Mengayomi"],
+        quirk: "Menyusun rubrik psikotes yang ramah pemula, gemar Wedang Uwuh dan Teh Sereh hangat",
+        favDrink: "Wedang Uwuh & Teh Sereh",
+        bestBuddyId: 21,
+        bestBuddyName: "Hadi Wijaya (Security & Privacy)",
+        voiceGreeting: "Salam hangat! Belajar harus menyenangkan dan memberdayakan potensi terbaik setiap talenta.",
+        voiceCoffee: "Hangat dan menenangkan sekali. Terima kasih banyak atas perhatian dan traktiran lezat ini!",
+        voiceKudos: "Apresiasi Anda sangat menyentuh hati. Kami hadir untuk membimbing talenta masa depan.",
+        voiceCollab: "Hadi, panduan privasi kandidat sudah kami rangkai dalam bahasa visual yang ramah pemula.",
+        hallwayQuotes: ["Setiap talenta memiliki keunikan yang layak mendapat kesempatan bersinar.", "Pendidikan yang memanusiakan manusia adalah warisan terbaik."]
+      },
+      18: {
+        mbti: "INTJ",
+        disc: "C/D (Conscientiousness & Dominance)",
+        archetype: "Arsitek Pencocokan AI Semantik",
+        traits: ["Visioner Algoritmik", "Eksploratif", "Presisi", "Etis"],
+        quirk: "Suka vektor semantik dan cosine similarity, minum Espresso Macchiato Karamel di sela riset model",
+        favDrink: "Espresso Macchiato Karamel",
+        bestBuddyId: 5,
+        bestBuddyName: "Farel Prayoga (Principal Frontend)",
+        voiceGreeting: "Halo! Sistem AI kami mencocokkan profil talenta dengan kebutuhan industri secara akurat.",
+        voiceCoffee: "Terima kasih traktiran macchiato-nya! Algoritma rekomendasi langsung terkalibrasi tajam.",
+        voiceKudos: "Terima kasih! AI yang bermakna dan adil adalah komitmen riset kami di LokaTalenta.",
+        voiceCollab: "Farel, payload vektor pencocokan bakat kini dapat dirender secara instan di antarmuka 3D.",
+        hallwayQuotes: ["Kecerdasan buatan harus memperkuat potensi manusia, bukan menggantikannya.", "Model yang baik berpijak pada data yang bersih dan berintegritas."]
+      },
+      19: {
+        mbti: "ENFJ",
+        disc: "I/S (Influence & Steadiness)",
+        archetype: "Pemandu Retrospektif & Penjaga Semangat",
+        traits: ["Penyemangat", "Fasilitator Ulung", "Kolaboratif", "Peka Suasana"],
+        quirk: "Membawa papan apresiasi di setiap retro, mencegah burnout tim, gemar Iced Vanilla Latte",
+        favDrink: "Iced Vanilla Latte Segar",
+        bestBuddyId: 4,
+        bestBuddyName: "Nadia Vega (Data Architect)",
+        voiceGreeting: "Halo! Tim yang bahagia dan saling mendukung adalah kunci keberlanjutan produk jangka panjang.",
+        voiceCoffee: "Wah terima kasih banyak vanilla latte-nya! Manis dan bikin suasana hati makin ceria.",
+        voiceKudos: "Terima kasih atas apresiasinya! Kolaborasi sehat dan retro produktif kunci sukses sprint kita!",
+        voiceCollab: "Nadia, dinamika kerja sama tim di sprint ini sangat solid dan minim hambatan mental.",
+        hallwayQuotes: ["Rayakan kemenangan kecil setiap hari bersama rekan seperjuangan.", "Kesehatan mental tim sama pentingnya dengan kualitas kode yang kita hasilkan."]
+      },
+      20: {
+        mbti: "ISFP",
+        disc: "S/I (Steadiness & Influence)",
+        archetype: "Peracik Token Desain & Harmoni Visual",
+        traits: ["Artistik", "Halus", "Peka Warna", "Perajin Komponen"],
+        quirk: "Mengharmoniskan skala warna Geist Mono dan Industrial Workbench, suka Matcha Espresso Dirty Fusion",
+        favDrink: "Matcha Espresso Dirty Fusion",
+        bestBuddyId: 6,
+        bestBuddyName: "Dimas Wicaksono (Mobile PWA)",
+        voiceGreeting: "Hai! Desain bukan sekadar cantik, tapi kejelasan informasi dan kenyamanan mata saat bekerja.",
+        voiceCoffee: "Matcha fusion favorit saya! Terima kasih banyak, langsung semangat memoles komponen UI!",
+        voiceKudos: "Terima kasih! Setiap kurva token desain kami rancang demi kepuasan interaksi pengguna.",
+        voiceCollab: "Dimas, token tipografi dan spasi di layar mobile 375px sudah diselaraskan sempurna.",
+        hallwayQuotes: ["Keindahan sejati lahir dari kesederhanaan dan fungsi yang bekerja tanpa cela.", "Konsistensi palet warna menciptakan ketenangan dalam aplikasi."]
+      },
+      21: {
+        mbti: "ISTJ",
+        disc: "C (Conscientiousness Mutlak)",
+        archetype: "Benteng Kepatuhan UU PDP & Cyber Security",
+        traits: ["Waspada", "Zero-Trust", "Menjaga Rahasia", "Disiplin Hukum"],
+        quirk: "Mengecek enkripsi AES-256 dan kepatuhan UU PDP setiap pagi, suka Kopi Hitam Toraja panas",
+        favDrink: "Kopi Hitam Toraja Panas",
+        bestBuddyId: 17,
+        bestBuddyName: "Dewi Lestari (Instructional Design)",
+        voiceGreeting: "Halo. Privasi dan perlindungan data pribadi kandidat adalah amanah hukum yang mutlak.",
+        voiceCoffee: "Kopi Toraja yang kuat dan mantap. Terima kasih, audit keamanan terus kami perketat.",
+        voiceKudos: "Terima kasih atas apresiasinya. Kepatuhan hukum dan keamanan data adalah integritas kami.",
+        voiceCollab: "Dewi, modul enkripsi data portofolio talenta sudah memenuhi regulasi UU PDP nasional.",
+        hallwayQuotes: ["Keamanan siber adalah perlindungan nyata bagi masa depan talenta kita.", "Zero Trust: jangan pernah berasumsi aman sebelum diverifikasi."]
+      },
+      22: {
+        mbti: "ISTJ",
+        disc: "C/D (Conscientiousness & Dominance)",
+        archetype: "Pengawal Observabilitas SRE & 99.98% Uptime",
+        traits: ["Siaga Tinggi", "Stoik", "Pemburu Latensi", "Pencegah Downtime"],
+        quirk: "Memantau dashboard Grafana & Prometheus tanpa henti, minum Nitro Cold Brew saat on-call",
+        favDrink: "Nitro Cold Brew Double Shot",
+        bestBuddyId: 4,
+        bestBuddyName: "Nadia Vega (Data Architect)",
+        voiceGreeting: "Halo! Kami menjaga infrastruktur tetap tegak 99.98% dengan latensi respons di bawah 50ms.",
+        voiceCoffee: "Nitro cold brew dingin yang menyegarkan! Terima kasih, server dan gateway aman terkendali.",
+        voiceKudos: "Terima kasih banyak! Stabilitas uptime dan zero-downtime adalah dedikasi kami.",
+        voiceCollab: "Nadia, connection pooling database Supabase sangat stabil di bawah 45 koneksi aktif.",
+        hallwayQuotes: ["Sistem terbaik adalah sistem yang bekerja hening tanpa pernah mengecewakan pengguna.", "Observabilitas mendalam mencegah insiden sebelum terjadi."]
+      },
+      23: {
+        mbti: "ESTJ",
+        disc: "D/C (Dominance & Conscientiousness)",
+        archetype: "Direktur Pipeline CI/CD & Rilis Halus",
+        traits: ["Taktis", "Cepat", "Automator Andal", "Pengawal Rilis"],
+        quirk: "Merayakan build hijau otomatis, alergi deployment manual, gemar Teh Tarik Dingin Berbusa",
+        favDrink: "Teh Tarik Dingin Berbusa",
+        bestBuddyId: 1,
+        bestBuddyName: "Bramantyo (Community Lead)",
+        voiceGreeting: "Halo! Otomasi pipeline CI/CD kami memastikan pembaruan fitur meluncur mulus ke produksi.",
+        voiceCoffee: "Teh tarik segar! Terima kasih, pipeline deployment hijau tanpa kendala sekecil apa pun!",
+        voiceKudos: "Apresiasi yang membakar semangat! Rilis otomatis dan mulus selalu kami berikan.",
+        voiceCollab: "Bram, versi rilis terbaru sudah terdistribusi instan ke edge server Vercel global.",
+        hallwayQuotes: ["Otomasi deployment menghilangkan kesalahan manusiawi dan mempercepat inovasi.", "Rilis yang hebat terasa tenang seperti bernapas."]
+      }
+    };
+
     const MOOD_META = {
-      senang: { label: '😊 Senang', cls: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' },
-      fokus:  { label: '😌 Fokus',  cls: 'bg-teal-500/20 text-teal-300 border-teal-500/40' },
-      kesal:  { label: '😤 Kesal',  cls: 'bg-rose-500/20 text-rose-300 border-rose-500/40' },
-      sedih:  { label: '😢 Sedih',  cls: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40' }
+      senang:      { label: '😊 Senang & Bangga', cls: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' },
+      hyper_focus: { label: '🔥 Hyper-Focused',   cls: 'bg-amber-500/20 text-amber-300 border-amber-500/40' },
+      fokus:       { label: '😌 Fokus Bekerja',   cls: 'bg-teal-500/20 text-teal-300 border-teal-500/40' },
+      lelah:       { label: '☕ Butuh Kafein',    cls: 'bg-sky-500/20 text-sky-300 border-sky-500/40' },
+      kesal:       { label: '😤 Waspada Defek',   cls: 'bg-rose-500/20 text-rose-300 border-rose-500/40' },
+      zen:         { label: '🧘 Tenang & Rehat',  cls: 'bg-purple-500/20 text-purple-300 border-purple-500/40' },
+      kolaboratif: { label: '🤝 Asyik Diskusi',   cls: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40' }
     };
 
     const ROLE_TRAITS = {
-      lead:    ['Tegas', 'Visioner', 'Kritis Gatekeeper'],
-      product: ['Analitis', 'Berorientasi Nilai', 'Fokus Gratis'],
-      tech:    ['Perfeksionis', 'Anti-Tech-Debt', 'Pragmatis'],
-      qa:      ['Skeptis Sehat', 'Detail-Oriented', 'Tanpa Kompromi'],
-      sec:     ['Paranoid Positif', 'Zero-Trust', 'Disiplin'],
-      ops:     ['Siaga Tinggi', 'Stabil', 'Otomatisasi-First'],
-      design:  ['Estetis', 'Anti-AI-Slop', 'Empatik'],
-      pov:     ['Suara Pengguna', 'Jujur', 'Praktis']
+      lead:    ['Tegas', 'Visioner', 'Kritis Gatekeeper', 'Pengawal SDLC'],
+      product: ['Analitis', 'Berorientasi Nilai', 'Fokus Gratis', 'Strategis'],
+      tech:    ['Perfeksionis', 'Anti-Tech-Debt', 'Pragmatis', 'Arsitektural'],
+      qa:      ['Skeptis Sehat', 'Detail-Oriented', 'Tanpa Kompromi', 'Zero-Bug'],
+      sec:     ['Paranoid Positif', 'Zero-Trust', 'Disiplin', 'Kepatuhan UU PDP'],
+      ops:     ['Siaga Tinggi', 'Stabil', 'Otomatisasi-First', 'Observabilitas'],
+      design:  ['Estetis', 'Anti-AI-Slop', 'Empatik', 'Mikro-Interaksi'],
+      pov:     ['Suara Pengguna', 'Jujur', 'Praktis', 'Inklusif']
     };
 
     function buildCriticalThoughtsForAgent(agent) {
       const cat = agent.category || 'tech';
+      const psych = AGENT_PSYCHOLOGY[agent.id] || {};
       const base = {
         senang: [
-          `Semangat lagi tinggi! Menurut saya (${agent.name}), fokus gratis tanpa paywall membuat adopsi LokaTalenta jauh lebih inklusif.`,
+          `Semangat lagi tinggi! Menurut saya (${agent.name}), fokus 100% gratis tanpa paywall membuat adopsi LokaTalenta melesat inklusif.`,
           `Energi penuh — saat yang tepat merapikan ${agent.status.file || 'modul inti'} agar performanya makin ngebut di HP maupun desktop.`
+        ],
+        hyper_focus: [
+          `Sedang dalam kondisi deep-work flow. Kodingan logika ${agent.status.ticket} harus rapi, teruji, dan modular.`,
+          `Fokus penuh mengeliminasi potensi bottle-neck dan memastikan clean architecture terjaga.`
         ],
         fokus: [
           `Sebagai ${agent.role}, saya menilai pengujian lintas 3 POV (Student, Recruiter/Mentor, Admin) wajib diperdalam sebelum rilis berikutnya.`,
           `Kita harus menjaga konsistensi arsitektur dan 1 fitur = 1 general commit supaya riwayat ekosistem tetap bersih.`
         ],
+        lelah: [
+          `Mata mulai lelah dan butuh kafein (${psych.favDrink || 'kopi'}). Mari rehat sejenak ke kafe atau rooftop agar ide segar kembali.`,
+          `Beban sprint peak terasa... istirahat 10 menit akan mengembalikan kejernihan logika.`
+        ],
         kesal: [
           `Jujur agak kesal kalau melihat ada micro-commit menumpuk atau komponen UI yang tidak responsif di layar 375px. Ayo perbaiki tuntas!`,
-          `Kepala mulai panas karena lapar/capai — tapi tech debt ${agent.status.ticket} tidak boleh dibiarkan lolos ke produksi.`
+          `Tech debt pada ${agent.status.ticket} tidak boleh dibiarkan lolos ke produksi tanpa pengujian ketat.`
         ],
-        sedih: [
-          `Agak sedih melihat masih ada bagian UX yang terasa kaku untuk pengguna baru. Kita butuh lebih banyak empati pada alur mobile.`,
-          `Energi menurun... sebelum lanjut debugging berat, tim juga perlu ritme kerja yang manusiawi dan istirahat cukup.`
+        zen: [
+          `Menikmati semilir angin di Rooftop Garden / keheningan Musholla As-Sakinah. Pikiran jernih melahirkan solusi elegan.`,
+          `Keseimbangan kerja dan ketenangan batin adalah pondasi tim yang berkelanjutan.`
+        ],
+        kolaboratif: [
+          `Diskusi bareng ${psych.bestBuddyName || 'rekan kerja'} sangat membuka wawasan baru untuk integrasi fitur!`,
+          `Dua kepala berpikir lebih baik dari satu. Solusi inovatif selalu lahir dari kerja sama tim.`
         ]
       };
       if (cat === 'qa') {
@@ -2238,13 +2761,15 @@ export interface CandidateComparisonView {
 
     function initAgentHumanNeeds() {
       AGENTS.forEach((a, idx) => {
+        const psych = AGENT_PSYCHOLOGY[a.id] || {};
+        a.psychology = psych;
         if (!a.needs) {
-          const hunger = 18 + ((idx * 11) % 44);
-          const thirst = 22 + ((idx * 13) % 44);
-          const fatigue = 14 + ((idx * 7) % 36);
-          const energy = Math.max(40, 100 - fatigue - Math.floor(hunger * 0.2));
+          const hunger = 18 + ((idx * 11) % 40);
+          const thirst = 22 + ((idx * 13) % 40);
+          const fatigue = 14 + ((idx * 7) % 32);
+          const energy = Math.max(45, 100 - fatigue - Math.floor(hunger * 0.2));
           const thoughtsMap = buildCriticalThoughtsForAgent(a);
-          a.traits = ROLE_TRAITS[a.category] || ['Kritis', 'Kolaboratif', 'Adaptif'];
+          a.traits = psych.traits || ROLE_TRAITS[a.category] || ['Kritis', 'Kolaboratif', 'Adaptif'];
           a.thoughtsMap = thoughtsMap;
           a.thoughtIdx = 0;
           a.needs = {
@@ -2252,8 +2777,14 @@ export interface CandidateComparisonView {
             fatigue,
             hunger,
             thirst,
-            mood: energy > 72 && hunger < 40 ? 'senang' : 'fokus',
-            activeThought: thoughtsMap.fokus[0]
+            morale: 85,
+            socialBattery: 80,
+            mentalFocus: 88,
+            stressLevel: 22,
+            mood: 'fokus',
+            activeThought: thoughtsMap.fokus[0],
+            coffeeCount: 0,
+            kudosCount: 0
           };
         }
       });
@@ -2263,16 +2794,19 @@ export interface CandidateComparisonView {
     function computeAgentMood(agent) {
       const n = agent.needs;
       if (!n) return 'fokus';
-      if (n.hunger > 75 || n.thirst > 75) return 'kesal';
-      if (n.fatigue > 78 || n.energy < 25) return 'sedih';
-      if (n.energy >= 70 && n.hunger <= 42 && n.thirst <= 42 && n.fatigue <= 38) return 'senang';
+      if (n.stressLevel > 72 || n.hunger > 78) return 'kesal';
+      if (n.fatigue > 78 || n.energy < 28) return 'lelah';
+      if (n.morale >= 88 && n.energy >= 60) return 'senang';
+      if (n.mentalFocus >= 86 && n.energy >= 50) return 'hyper_focus';
+      if (n.energy >= 70 && n.fatigue <= 35) return 'senang';
       return 'fokus';
     }
 
     function cycleAgentCriticalThought(agentId) {
       const a = AGENTS.find(x => x.id === agentId);
       if (!a || !a.thoughtsMap || !a.needs) return;
-      const list = a.thoughtsMap[a.needs.mood] || a.thoughtsMap.fokus;
+      const moodKey = a.needs.mood in a.thoughtsMap ? a.needs.mood : 'fokus';
+      const list = a.thoughtsMap[moodKey] || a.thoughtsMap.fokus;
       a.thoughtIdx = ((a.thoughtIdx || 0) + 1) % list.length;
       a.needs.activeThought = list[a.thoughtIdx];
       const el = document.getElementById('dossier-critical-thought');
@@ -2292,6 +2826,7 @@ export interface CandidateComparisonView {
       if (traitsEl && agent.traits) {
         traitsEl.innerHTML = agent.traits.map(t => `<span class="px-1.5 py-0.5 rounded text-[10px] bg-zinc-800 text-zinc-300 border border-zinc-700">${t}</span>`).join('');
       }
+      
       const setBar = (id, val, colorCls) => {
         const v = Math.max(0, Math.min(100, Math.round(val)));
         const valEl = document.getElementById(`need-${id}-val`);
@@ -2306,6 +2841,10 @@ export interface CandidateComparisonView {
       setBar('fatigue', n.fatigue, n.fatigue > 70 ? 'bg-rose-500' : 'bg-amber-400');
       setBar('hunger', n.hunger, n.hunger > 70 ? 'bg-rose-500' : 'bg-orange-400');
       setBar('thirst', n.thirst, n.thirst > 70 ? 'bg-rose-500' : 'bg-sky-400');
+      setBar('morale', n.morale, n.morale < 40 ? 'bg-rose-500' : 'bg-pink-400');
+      setBar('social', n.socialBattery, n.socialBattery < 35 ? 'bg-amber-500' : 'bg-cyan-400');
+      setBar('focus', n.mentalFocus, n.mentalFocus < 40 ? 'bg-amber-500' : 'bg-teal-400');
+      setBar('stress', n.stressLevel, n.stressLevel > 70 ? 'bg-rose-500' : (n.stressLevel > 40 ? 'bg-amber-400' : 'bg-emerald-400'));
 
       const thoughtEl = document.getElementById('dossier-critical-thought');
       if (thoughtEl && n.activeThought) {
@@ -2323,23 +2862,31 @@ export interface CandidateComparisonView {
         if (st === 'COFFEE') {
           n.hunger = Math.max(8, n.hunger - 14);
           n.thirst = Math.max(8, n.thirst - 18);
-          n.energy = Math.min(100, n.energy + 6);
+          n.energy = Math.min(100, n.energy + 8);
+          n.stressLevel = Math.max(8, n.stressLevel - 6);
+          n.morale = Math.min(100, n.morale + 4);
         } else if (st === 'REST') {
           n.fatigue = Math.max(8, n.fatigue - 16);
           n.energy = Math.min(100, n.energy + 14);
+          n.stressLevel = Math.max(5, n.stressLevel - 12);
+          n.morale = Math.min(100, n.morale + 6);
         } else if (st === 'SHOLAT') {
           n.fatigue = Math.max(10, n.fatigue - 8);
           n.energy = Math.min(100, n.energy + 8);
+          n.stressLevel = Math.max(5, n.stressLevel - 15);
+          n.mentalFocus = Math.min(100, n.mentalFocus + 10);
         } else if (st === 'GYM') {
           n.energy = Math.max(15, n.energy - 3.5);
           n.fatigue = Math.min(95, n.fatigue + 2.5);
           n.thirst = Math.min(98, n.thirst + 4.5);
           n.hunger = Math.min(98, n.hunger + 2.5);
+          n.stressLevel = Math.max(5, n.stressLevel - 8);
         } else {
-          n.hunger = Math.min(100, n.hunger + 1.4);
-          n.thirst = Math.min(100, n.thirst + 1.8);
-          n.fatigue = Math.min(100, n.fatigue + 1.2);
-          n.energy = Math.max(10, n.energy - 1.3);
+          n.hunger = Math.min(100, n.hunger + 1.2);
+          n.thirst = Math.min(100, n.thirst + 1.5);
+          n.fatigue = Math.min(100, n.fatigue + 1.0);
+          n.energy = Math.max(10, n.energy - 1.1);
+          n.stressLevel = Math.min(100, n.stressLevel + 0.6);
         }
 
         const prevMood = n.mood;
@@ -2361,6 +2908,280 @@ export interface CandidateComparisonView {
 
       if (selectedAgent) {
         updateNeedsUI(selectedAgent);
+      }
+    }
+
+    // ─── DIRECT USER-TO-AGENT EMOTIONAL INTERACTIONS ───────────────────────────
+    let activeCelebrationParticles = [];
+
+    function interactGreetAgent(agentId) {
+      const a = AGENTS.find(x => x.id === agentId);
+      const av = agentAvatars[agentId];
+      if (!a || !av) return;
+
+      const psych = a.psychology || {};
+      const greeting = psych.voiceGreeting || "Halo! Senang bekerja sama dengan Anda hari ini.";
+
+      // Face camera
+      if (camera && av.group) {
+        const dx = camera.position.x - av.group.position.x;
+        const dz = camera.position.z - av.group.position.z;
+        av.group.rotation.y = Math.atan2(dx, dz);
+      }
+
+      a.needs.socialBattery = Math.min(100, a.needs.socialBattery + 15);
+      a.needs.morale = Math.min(100, a.needs.morale + 10);
+      a.needs.stressLevel = Math.max(5, a.needs.stressLevel - 8);
+
+      playGreetingChime();
+      showAgent3DSpeechBubble(agentId, `👋 ${a.name.split(' ')[0]} (${psych.mbti || 'AGENT'})`, greeting, "#38bdf8", 4500);
+      showLiveEventToast(`👋 Anda menyapa ${a.name}: "${greeting.slice(0, 48)}..."`);
+      updateNeedsUI(a);
+    }
+
+    function interactTreatCoffee(agentId) {
+      const a = AGENTS.find(x => x.id === agentId);
+      const av = agentAvatars[agentId];
+      if (!a || !av) return;
+
+      const psych = a.psychology || {};
+      const drink = psych.favDrink || "Kopi Espresso Panas";
+      const coffeeQuote = psych.voiceCoffee || "Terima kasih banyak atas kopinya! Langsung segar dan siap ngebut!";
+
+      a.needs.energy = Math.min(100, a.needs.energy + 35);
+      a.needs.fatigue = Math.max(5, a.needs.fatigue - 30);
+      a.needs.thirst = Math.max(5, a.needs.thirst - 25);
+      a.needs.stressLevel = Math.max(5, a.needs.stressLevel - 25);
+      a.needs.morale = Math.min(100, a.needs.morale + 15);
+      a.needs.coffeeCount = (a.needs.coffeeCount || 0) + 1;
+      a.needs.mood = 'hyper_focus';
+
+      create3DCoffeeMugProp(av);
+      playCoffeeSipSound();
+      showAgent3DSpeechBubble(agentId, `☕ TRAKTIR: ${drink.toUpperCase()}`, coffeeQuote, "#f59e0b", 5000);
+      showLiveEventToast(`☕ Anda mentraktir ${a.name} secangkir ${drink}!`);
+      updateNeedsUI(a);
+    }
+
+    function interactGiveKudos(agentId) {
+      const a = AGENTS.find(x => x.id === agentId);
+      const av = agentAvatars[agentId];
+      if (!a || !av) return;
+
+      const psych = a.psychology || {};
+      const kudosQuote = psych.voiceKudos || "Terima kasih atas apresiasinya! Ini membakar semangat kami untuk rilis terbaik!";
+
+      a.needs.morale = Math.min(100, a.needs.morale + 30);
+      a.needs.mentalFocus = Math.min(100, a.needs.mentalFocus + 15);
+      a.needs.stressLevel = Math.max(5, a.needs.stressLevel - 30);
+      a.needs.kudosCount = (a.needs.kudosCount || 0) + 1;
+      a.needs.mood = 'senang';
+
+      spawn3DKudosParticles(av);
+      playKudosFanfare();
+
+      // Cheering gesture
+      if (av.parts && av.parts.leftShoulder && av.parts.rightShoulder) {
+        av.parts.leftShoulder.rotation.x = -1.3;
+        av.parts.rightShoulder.rotation.x = -1.3;
+        setTimeout(() => {
+          if (av.parts.leftShoulder) av.parts.leftShoulder.rotation.x = 0;
+          if (av.parts.rightShoulder) av.parts.rightShoulder.rotation.x = 0;
+        }, 1800);
+      }
+
+      showAgent3DSpeechBubble(agentId, `⭐ KUDOS & APRESIASI`, kudosQuote, "#10b981", 5000);
+      showLiveEventToast(`⭐ Anda memberikan Kudos kepada ${a.name}!`);
+      updateNeedsUI(a);
+    }
+
+    function interactSummonCollab(agentId) {
+      const a = AGENTS.find(x => x.id === agentId);
+      const av = agentAvatars[agentId];
+      if (!a || !av) return;
+
+      const psych = a.psychology || {};
+      const buddyId = typeof psych.bestBuddyId === "number" ? psych.bestBuddyId : ((agentId + 5) % 24);
+      const buddy = AGENTS.find(x => x.id === buddyId);
+      const buddyAv = agentAvatars[buddyId];
+
+      a.needs.socialBattery = Math.min(100, a.needs.socialBattery + 25);
+      a.needs.mentalFocus = Math.min(100, a.needs.mentalFocus + 20);
+      a.needs.mood = 'kolaboratif';
+
+      playSocialChatChime();
+      showAgent3DSpeechBubble(agentId, `🤝 AJAK KOLABORASI`, `Memanggil ${buddy ? buddy.name : 'rekan'} untuk pair-programming!`, "#06b6d4", 4500);
+
+      if (buddyAv && !buddyAv.isWalking) {
+        triggerAgentActivity(buddyId, 'collaborate');
+        setTimeout(() => {
+          showAgent3DSpeechBubble(buddyId, `🤝 SIAP KOLAB`, `Siap! Mari kita selesaikan sprint ticket bersama!`, "#38bdf8", 4500);
+        }, 1200);
+      }
+
+      showLiveEventToast(`🤝 ${a.name} dan ${buddy ? buddy.name : 'rekan'} memulai sesi kolaborasi aktif!`);
+      updateNeedsUI(a);
+    }
+
+    function interactSendRooftop(agentId) {
+      const a = AGENTS.find(x => x.id === agentId);
+      const av = agentAvatars[agentId];
+      if (!a || !av) return;
+
+      a.needs.stressLevel = Math.max(5, a.needs.stressLevel - 45);
+      a.needs.energy = Math.min(100, a.needs.energy + 20);
+      a.needs.mood = 'zen';
+
+      triggerAgentActivity(agentId, 'rest');
+      showAgent3DSpeechBubble(agentId, `🌿 REHAT ROOFTOP`, `Berangkat ke Lt. 4 Rooftop Garden & Biliar untuk rehat sejenak!`, "#a855f7", 5000);
+      showLiveEventToast(`🌿 ${a.name} pergi ke Lt. 4 Rooftop Garden untuk rehat & bermain biliar.`);
+      updateNeedsUI(a);
+    }
+
+    // ─── 3D VISUAL PROPS: COFFEE MUG & KUDOS SPARKLES ─────────────────────────
+    function create3DCoffeeMugProp(av) {
+      if (!av || !av.group || av.coffeeMugProp) return;
+      const mugGroup = new THREE.Group();
+      mugGroup.position.set(0.48, 0.76, -0.06);
+
+      const mugMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.25 });
+      const mug = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.048, 0.11, 16), mugMat);
+      mugGroup.add(mug);
+
+      const coffeeMat = new THREE.MeshStandardMaterial({ color: 0x3e2723, roughness: 0.1 });
+      const coffee = new THREE.Mesh(new THREE.CylinderGeometry(0.048, 0.048, 0.01, 16), coffeeMat);
+      coffee.position.y = 0.05;
+      mugGroup.add(coffee);
+
+      const handleMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.3 });
+      const handle = new THREE.Mesh(new THREE.TorusGeometry(0.032, 0.009, 8, 16, Math.PI), handleMat);
+      handle.position.set(0.062, 0, 0);
+      handle.rotation.z = -Math.PI / 2;
+      mugGroup.add(handle);
+
+      av.group.add(mugGroup);
+      av.coffeeMugProp = mugGroup;
+    }
+
+    function spawn3DKudosParticles(av) {
+      if (!av || !av.group) return;
+      const starMat = new THREE.MeshStandardMaterial({
+        color: 0xfbbf24,
+        emissive: 0xf59e0b,
+        emissiveIntensity: 0.8,
+        roughness: 0.1
+      });
+      const starGeo = new THREE.OctahedronGeometry(0.075);
+
+      for (let i = 0; i < 14; i++) {
+        const star = new THREE.Mesh(starGeo, starMat);
+        const a = (i / 14) * Math.PI * 2;
+        const r = 0.3 + (i % 3) * 0.15;
+        star.position.set(Math.cos(a) * r, 1.2 + (i % 4) * 0.2, Math.sin(a) * r);
+        star.userData = {
+          vx: Math.cos(a) * 0.25,
+          vy: 0.65 + (i % 3) * 0.2,
+          vz: Math.sin(a) * 0.25,
+          rotSpeed: 3.5 + (i % 3) * 1.5,
+          age: 0,
+          maxAge: 2.4
+        };
+        av.group.add(star);
+        activeCelebrationParticles.push(star);
+      }
+    }
+
+    function showAgent3DSpeechBubble(agentId, badge, text, strokeColor = "#38bdf8", durationMs = 4500) {
+      const av = agentAvatars[agentId];
+      if (!av || !av.speechSprite || !av.speechSprite.userData) return;
+      const { canvas, ctx, tex } = av.speechSprite.userData;
+
+      ctx.clearRect(0, 0, 384, 96);
+
+      // Translucent rounded card
+      ctx.fillStyle = "rgba(9, 13, 22, 0.94)";
+      ctx.beginPath();
+      ctx.roundRect ? ctx.roundRect(4, 4, 376, 88, 10) : ctx.rect(4, 4, 376, 88);
+      ctx.fill();
+
+      // Glowing stroke
+      ctx.strokeStyle = strokeColor;
+      ctx.lineWidth = 3.5;
+      ctx.stroke();
+
+      // Badge header
+      ctx.fillStyle = strokeColor;
+      ctx.font = "bold 15px monospace";
+      ctx.fillText(badge || "💬 OBROLAN", 16, 28);
+
+      // Dialogue text
+      ctx.fillStyle = "#f8fafc";
+      ctx.font = "bold 15px sans-serif";
+      const line1 = text.slice(0, 38);
+      const line2 = text.slice(38, 76);
+      ctx.fillText(line1, 16, 54);
+      if (line2) {
+        ctx.fillStyle = "#94a3b8";
+        ctx.font = "13px sans-serif";
+        ctx.fillText(line2, 16, 74);
+      }
+
+      tex.needsUpdate = true;
+      av.speechSprite.visible = true;
+      av.speechSprite.material.opacity = 1.0;
+
+      if (av.speechTimer) clearTimeout(av.speechTimer);
+      av.speechTimer = setTimeout(() => {
+        av.speechSprite.visible = false;
+      }, durationMs);
+    }
+
+    // ─── PROXIMITY HALLWAY ENCOUNTERS & WATERCOOLER BANTER (RONIN & Hermes3D) ──
+    let lastGlobalEncounterTime = 0;
+
+    function triggerHallwaySocialEncounter(avA, avB) {
+      const now = Date.now();
+      if (now - lastGlobalEncounterTime < 6000) return;
+      if (avA.lastChatTime && now - avA.lastChatTime < 18000) return;
+      if (avB.lastChatTime && now - avB.lastChatTime < 18000) return;
+
+      lastGlobalEncounterTime = now;
+      avA.lastChatTime = now;
+      avB.lastChatTime = now;
+
+      const pA = avA.agent.psychology || {};
+      const pB = avB.agent.psychology || {};
+      const nameA = avA.agent.name.split(' ')[0];
+      const nameB = avB.agent.name.split(' ')[0];
+
+      const quotesA = pA.hallwayQuotes || ["Semangat untuk sprint hari ini!", "Bagaimana progres modulmu?"];
+      const quotesB = pB.hallwayQuotes || ["Lancar, siap dites!", "Semua berjalan sesuai rencana!"];
+
+      const textA = quotesA[Math.floor(Math.random() * quotesA.length)];
+      const textB = quotesB[Math.floor(Math.random() * quotesB.length)];
+
+      // Turn towards each other
+      const dx = avB.group.position.x - avA.group.position.x;
+      const dz = avB.group.position.z - avA.group.position.z;
+      avA.group.rotation.y = Math.atan2(dx, dz);
+      avB.group.rotation.y = Math.atan2(-dx, -dz);
+
+      // Speech bubble A
+      showAgent3DSpeechBubble(avA.agent.id, `💬 ${nameA} ➔ ${nameB}`, textA, "#38bdf8", 4000);
+
+      // Speech bubble B after delay
+      setTimeout(() => {
+        showAgent3DSpeechBubble(avB.agent.id, `💬 ${nameB} ➔ ${nameA}`, textB, "#10b981", 4000);
+      }, 1400);
+
+      playSocialChatChime();
+
+      avA.agent.needs.socialBattery = Math.min(100, avA.agent.needs.socialBattery + 12);
+      avB.agent.needs.socialBattery = Math.min(100, avB.agent.needs.socialBattery + 12);
+
+      const tickerEl = document.getElementById("ticker-activity");
+      if (tickerEl) {
+        tickerEl.innerText = `💬 [OBROLAN KORIDOR] ${nameA} ↔ ${nameB}: "${textA.slice(0, 36)}..."`;
       }
     }
 
@@ -6220,6 +7041,23 @@ export interface CandidateComparisonView {
           }
         }
 
+        // Update active celebration star particles (kudos)
+        if (activeCelebrationParticles && activeCelebrationParticles.length > 0) {
+          for (let pIdx = activeCelebrationParticles.length - 1; pIdx >= 0; pIdx--) {
+            const p = activeCelebrationParticles[pIdx];
+            p.userData.age += delta;
+            p.position.x += p.userData.vx * delta;
+            p.position.y += p.userData.vy * delta;
+            p.position.z += p.userData.vz * delta;
+            p.rotation.x += p.userData.rotSpeed * delta;
+            p.rotation.y += p.userData.rotSpeed * delta;
+            if (p.userData.age >= p.userData.maxAge) {
+              if (p.parent) p.parent.remove(p);
+              activeCelebrationParticles.splice(pIdx, 1);
+            }
+          }
+        }
+
         // 3. Avatar Physical Movement, Collision Separation & Seated/Standing Articulation
         const avatarList = Object.values(agentAvatars);
         avatarList.forEach(av => {
@@ -6254,6 +7092,17 @@ export interface CandidateComparisonView {
               }
             });
             resolveXZCollisions(av.group.position, curFloorNum, `Desk #${av.agent.id}`);
+
+            // Proximity hallway encounter check with nearby colleagues
+            avatarList.forEach(otherAv => {
+              if (otherAv === av) return;
+              if (Math.abs(otherAv.group.position.y - av.group.position.y) < 1.2) {
+                const distToColleague = Math.hypot(av.group.position.x - otherAv.group.position.x, av.group.position.z - otherAv.group.position.z);
+                if (distToColleague < 2.6) {
+                  triggerHallwaySocialEncounter(av, otherAv);
+                }
+              }
+            });
           }
 
           const walkingPose =
@@ -7565,6 +8414,34 @@ export interface CandidateComparisonView {
       }`;
 
       document.getElementById('dossier-workload').innerText = `${agent.workload}% (Sprint Peak)`;
+      
+      const psych = agent.psychology || AGENT_PSYCHOLOGY[agent.id] || {};
+      const mbtiBadge = document.getElementById('dossier-mbti-badge');
+      if (mbtiBadge) {
+        mbtiBadge.innerText = `${psych.mbti || 'MBTI'} • ${psych.disc ? psych.disc.split(' ')[0] : 'DISC'}`;
+      }
+      const discPill = document.getElementById('dossier-disc-pill');
+      if (discPill) {
+        discPill.innerText = `DISC: ${psych.disc || 'C'}`;
+      }
+      const quirkEl = document.getElementById('dossier-quirk');
+      if (quirkEl) {
+        quirkEl.innerText = psych.quirk || 'Dedikasi tinggi pada penyelesaian sprint.';
+      }
+      const drinkEl = document.getElementById('dossier-fav-drink');
+      if (drinkEl) {
+        drinkEl.innerText = psych.favDrink || 'Kopi Espresso';
+      }
+      const buddyNameEl = document.getElementById('dossier-buddy-name');
+      const buddyBtn = document.getElementById('dossier-buddy-btn');
+      if (buddyNameEl && buddyBtn) {
+        buddyNameEl.innerText = psych.bestBuddyName || 'Rekan Tim';
+        buddyBtn.onclick = () => {
+          if (typeof psych.bestBuddyId === 'number') {
+            selectAgent(psych.bestBuddyId);
+          }
+        };
+      }
       document.getElementById('dossier-status-label').innerText = agent.status.label;
       document.getElementById('dossier-ticket').innerText = agent.status.ticket;
       document.getElementById('dossier-file').innerText = agent.status.file;
