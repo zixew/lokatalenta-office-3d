@@ -236,6 +236,23 @@
         <button onclick="setCameraPOV('orbit')" class="ml-2 px-2 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-[11px] text-zinc-300 font-medium transition">✕ Keluar</button>
       </div>
 
+      <!-- Floating Elevator Control HUD (appears when 1st-person player approaches/enters elevator) -->
+      <div id="elevator-hud" class="hidden absolute top-14 right-3 left-3 sm:left-auto sm:w-72 z-40 glass-card border border-cyan-500/60 p-3 rounded-xl text-xs backdrop-blur-md shadow-2xl transition-all">
+        <div class="flex items-center justify-between gap-2 mb-1.5">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse"></span>
+            <span class="font-bold text-cyan-300 uppercase tracking-wider">🛗 Lift Utama 3 Lantai</span>
+          </div>
+          <span id="elevator-hud-status" class="px-2 py-0.5 rounded font-mono text-[10px] font-bold bg-cyan-950/80 text-cyan-200 border border-cyan-700/70">Lt. 1 • Siap</span>
+        </div>
+        <p id="elevator-hud-sub" class="text-[11px] text-zinc-300 mb-2 font-mono">Klik lantai tujuan atau tekan tombol 1 / 2 / 3:</p>
+        <div class="grid grid-cols-3 gap-1.5">
+          <button onclick="requestPlayerElevator(1)" id="btn-elev-1" class="elev-btn py-2 px-2 rounded-lg font-mono font-bold bg-zinc-800/90 hover:bg-cyan-600/80 text-zinc-100 border border-zinc-700 transition">Lt. 1</button>
+          <button onclick="requestPlayerElevator(2)" id="btn-elev-2" class="elev-btn py-2 px-2 rounded-lg font-mono font-bold bg-zinc-800/90 hover:bg-cyan-600/80 text-zinc-100 border border-zinc-700 transition">Lt. 2</button>
+          <button onclick="requestPlayerElevator(3)" id="btn-elev-3" class="elev-btn py-2 px-2 rounded-lg font-mono font-bold bg-zinc-800/90 hover:bg-cyan-600/80 text-zinc-100 border border-zinc-700 transition">Lt. 3</button>
+        </div>
+      </div>
+
       <!-- In-Canvas Top Status Bar -->
       <div class="absolute top-3 left-3 right-3 z-20 flex flex-wrap items-center gap-2 sm:gap-3 pointer-events-none">
         <span class="glass-card px-3 py-1 rounded-md text-xs font-mono text-zinc-300 border border-zinc-700/60 shadow" id="active-room-indicator">
@@ -1984,8 +2001,36 @@ export interface CandidateComparisonView {
     let floorGroups = { 1: null, 2: null, 3: null };
     let roofGroup = null;
     let STATIC_COLLIDERS = []; // { minX, maxX, minZ, maxZ, floor, label }
+    let DESK_COLLIDER_BY_ID = {}; // { [agentId]: colliderBox }
+    let INTERACTIVE_DOORS = []; // { id, floor, center: {x,y,z}, leafNorth, leafSouth, doorLeafMesh, openAmount, sensorLed, label }
+    let ELEVATOR_LANDING_DOORS = {}; // { 1: { leftDoor, rightDoor, openAmount, ledMat }, 2: ..., 3: ... }
     let elevatorCabin = null;
+    let elevatorCabinDoors = null;
     let elevatorTargetY = 0;
+    const elevatorState = {
+      currentY: 0,
+      targetY: 0,
+      mode: 'IDLE', // 'IDLE' | 'CLOSING' | 'MOVING' | 'DOORS_OPEN'
+      currentFloor: 1,
+      doorsOpenFloor: 1,
+      doorOpenProgress: { 1: 1, 2: 0, 3: 0 },
+      queue: [],
+      holdTimer: 0,
+      nextFloorPending: null,
+      playerPhase: null, // null | 'WAITING_TO_BOARD' | 'AUTO_ENTERING' | 'RIDING'
+      playerTargetFloor: null
+    };
+
+    // 2D Navigation Grid A* Constants & Buffers (0.5m resolution over x:[-25..25], z:[-30..30])
+    const NAV_GRID_MIN_X = -25.0;
+    const NAV_GRID_MAX_X = 25.0;
+    const NAV_GRID_MIN_Z = -30.0;
+    const NAV_GRID_MAX_Z = 30.0;
+    const NAV_GRID_RES = 0.5;
+    const NAV_GRID_COLS = Math.round((NAV_GRID_MAX_X - NAV_GRID_MIN_X) / NAV_GRID_RES) + 1; // 101
+    const NAV_GRID_ROWS = Math.round((NAV_GRID_MAX_Z - NAV_GRID_MIN_Z) / NAV_GRID_RES) + 1; // 121
+    const NAV_AGENT_RADIUS = 0.35;
+    let NAV_GRIDS = { 1: null, 2: null, 3: null };
     let walkKeys = {};
     let isMouseDown = false;
     let lastMousePos = { x: 0, y: 0 };
@@ -2227,6 +2272,7 @@ export interface CandidateComparisonView {
         build3DDivisionSuites();
         build3DCentralAmenities();
         spawn3DAvatars();
+        buildNavGrids();
         initAgentAutonomousSim();
 
         window.addEventListener('resize', on3DResize);
@@ -2381,9 +2427,9 @@ export interface CandidateComparisonView {
         registerCollider(-5.0, -4.0, 2.0, 3.0, floorNum, 'Enterprise Printer');
       }
 
-      // 3. Wall-Mounted Office Clock near Elevator Shaft (x: 0, z: -1.85)
+      // 3. Wall-Mounted Office Clock above Elevator Portal Header (x: 0, z: -1.85)
       const clockGroup = new THREE.Group();
-      clockGroup.position.set(0, yOffset + 2.45, -1.85);
+      clockGroup.position.set(0, yOffset + 2.88, -1.84);
       const clockRim = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 0.05, 24), steelMat);
       clockRim.rotation.x = Math.PI / 2;
       clockGroup.add(clockRim);
@@ -2399,6 +2445,23 @@ export interface CandidateComparisonView {
 
     function build3DEnvironment() {
       STATIC_COLLIDERS = [];
+      DESK_COLLIDER_BY_ID = {};
+      INTERACTIVE_DOORS = [];
+      ELEVATOR_LANDING_DOORS = {};
+      elevatorCabinDoors = null;
+      elevatorState.currentY = 0;
+      elevatorState.targetY = 0;
+      elevatorState.mode = 'IDLE';
+      elevatorState.currentFloor = 1;
+      elevatorState.doorsOpenFloor = 1;
+      elevatorState.doorOpenProgress = { 1: 1, 2: 0, 3: 0 };
+      elevatorState.queue = [];
+      elevatorState.holdTimer = 0;
+      elevatorState.nextFloorPending = null;
+      elevatorState.playerPhase = null;
+      elevatorState.playerTargetFloor = null;
+      elevatorTargetY = 0;
+
       floorGroups = {
         1: new THREE.Group(),
         2: new THREE.Group(),
@@ -2524,8 +2587,15 @@ export interface CandidateComparisonView {
       buildCentralElevatorShaft();
       buildFloorLevelBadges();
 
-      // Register Elevator Shaft Collider on all 3 floors (x: -2.2..2.2, z: -6.2..-1.8)
-      [1, 2, 3].forEach(fl => registerCollider(-2.3, 2.3, -6.3, -1.7, fl, 'Elevator Shaft'));
+      // Register Elevator Shaft Wall Colliders ONLY (Left, Right, Back + Front Sidelights)
+      // Front portal (x: -1.1..1.1, z: -2.1..-1.7) & cabin interior (x: -1.9..1.9, z: -5.9..-2.1) stay enterable!
+      [1, 2, 3].forEach(fl => {
+        registerCollider(-2.3, -1.9, -6.3, -1.7, fl, 'Elevator Wall Left');
+        registerCollider(1.9, 2.3, -6.3, -1.7, fl, 'Elevator Wall Right');
+        registerCollider(-2.3, 2.3, -6.3, -5.9, fl, 'Elevator Wall Back');
+        registerCollider(-2.3, -1.1, -2.1, -1.7, fl, 'Elevator Portal Left');
+        registerCollider(1.1, 2.3, -2.1, -1.7, fl, 'Elevator Portal Right');
+      });
     }
 
     function buildCentralElevatorShaft() {
@@ -2533,6 +2603,11 @@ export interface CandidateComparisonView {
       shaftGroup.position.set(0, 0, -4);
 
       const postMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.15, metalness: 0.9 });
+      const frameDarkMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.25, metalness: 0.85 });
+      const glassMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.18, roughness: 0.05, metalness: 0.25 });
+      const doorGlassMat = new THREE.MeshStandardMaterial({ color: 0xbae6fd, transparent: true, opacity: 0.36, roughness: 0.06, metalness: 0.35 });
+
+      // 4 Corner Steel Posts
       [-2.1, 2.1].forEach(px => {
         [-2.1, 2.1].forEach(pz => {
           const post = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 24, 16), postMat);
@@ -2541,28 +2616,138 @@ export interface CandidateComparisonView {
         });
       });
 
-      const glassMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.18, roughness: 0.05 });
-      const shaftGlass = new THREE.Mesh(new THREE.BoxGeometry(4.2, 24, 4.2), glassMat);
-      shaftGlass.position.y = 12;
-      shaftGroup.add(shaftGlass);
+      // 3 Glass Side/Back Walls (Left x=-2.1, Right x=+2.1, Back z=-2.1 local = -6.1 world)
+      const leftShaftWall = new THREE.Mesh(new THREE.BoxGeometry(0.06, 24, 4.2), glassMat);
+      leftShaftWall.position.set(-2.1, 12, 0);
+      shaftGroup.add(leftShaftWall);
 
+      const rightShaftWall = new THREE.Mesh(new THREE.BoxGeometry(0.06, 24, 4.2), glassMat);
+      rightShaftWall.position.set(2.1, 12, 0);
+      shaftGroup.add(rightShaftWall);
+
+      const backShaftWall = new THREE.Mesh(new THREE.BoxGeometry(4.2, 24, 0.06), glassMat);
+      backShaftWall.position.set(0, 12, -2.1);
+      shaftGroup.add(backShaftWall);
+
+      // Front Shaft Portal (+Z at local z=+2.1 = world z=-1.9) with Landing Doors on Floors 1, 2, 3
+      const createSlidingDoorLeaf = (width, height, xOffset) => {
+        const leafGroup = new THREE.Group();
+        const pane = new THREE.Mesh(new THREE.BoxGeometry(width, height, 0.04), doorGlassMat);
+        pane.position.y = height / 2;
+        leafGroup.add(pane);
+        const stile = new THREE.Mesh(new THREE.BoxGeometry(0.04, height, 0.055), postMat);
+        stile.position.set(xOffset, height / 2, 0);
+        leafGroup.add(stile);
+        return leafGroup;
+      };
+
+      [1, 2, 3].forEach(fl => {
+        const baseY = (fl - 1) * 8;
+
+        // Sidelight glass panels flanking 2.2m open portal (x: -1.1..+1.1)
+        const sideL = new THREE.Mesh(new THREE.BoxGeometry(1.0, 2.4, 0.06), glassMat);
+        sideL.position.set(-1.6, baseY + 1.2, 2.1);
+        shaftGroup.add(sideL);
+
+        const sideR = new THREE.Mesh(new THREE.BoxGeometry(1.0, 2.4, 0.06), glassMat);
+        sideR.position.set(1.6, baseY + 1.2, 2.1);
+        shaftGroup.add(sideR);
+
+        // Portal header frame + floor LED indicator
+        const header = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.24, 0.14), frameDarkMat);
+        header.position.set(0, baseY + 2.4, 2.1);
+        shaftGroup.add(header);
+
+        const ledMat = new THREE.MeshBasicMaterial({ color: fl === 1 ? 0x10b981 : 0x38bdf8 });
+        const led = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.08, 0.04), ledMat);
+        led.position.set(0, baseY + 2.4, 2.18);
+        shaftGroup.add(led);
+
+        // Upper front shaft glass between floors
+        const upperH = 5.48;
+        const upperGlass = new THREE.Mesh(new THREE.BoxGeometry(4.2, upperH, 0.06), glassMat);
+        upperGlass.position.set(0, baseY + 2.52 + upperH / 2, 2.1);
+        shaftGroup.add(upperGlass);
+
+        // Animated Sliding Landing Doors (left & right leaves)
+        const leftDoor = createSlidingDoorLeaf(1.1, 2.28, 0.53);
+        leftDoor.name = `elevatorLandingDoorL_F${fl}`;
+        leftDoor.position.set(fl === 1 ? -1.55 : -0.55, baseY, 2.04);
+        shaftGroup.add(leftDoor);
+
+        const rightDoor = createSlidingDoorLeaf(1.1, 2.28, -0.53);
+        rightDoor.name = `elevatorLandingDoorR_F${fl}`;
+        rightDoor.position.set(fl === 1 ? 1.55 : 0.55, baseY, 2.04);
+        shaftGroup.add(rightDoor);
+
+        ELEVATOR_LANDING_DOORS[fl] = {
+          leftDoor,
+          rightDoor,
+          openAmount: fl === 1 ? 1 : 0,
+          ledMat
+        };
+      });
+
+      // 3-Sided Glass Elevator Cabin with Open Front Portal (+Z)
       const cabinGroup = new THREE.Group();
       cabinGroup.position.set(0, 0, 0);
 
-      const cabinBase = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.2, 3.6), postMat);
-      cabinBase.position.y = 0.1;
+      const cabinBase = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.16, 3.6), postMat);
+      cabinBase.position.y = -0.06; // Top surface at y = +0.02, flush with floor slabs
       cabinGroup.add(cabinBase);
 
-      const cabinCeiling = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.2, 3.6), postMat);
-      cabinCeiling.position.y = 3.1;
+      const cabinCeiling = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.16, 3.6), postMat);
+      cabinCeiling.position.y = 2.95;
       cabinGroup.add(cabinCeiling);
 
-      const cabinGlass = new THREE.Mesh(
-        new THREE.BoxGeometry(3.5, 2.8, 3.5),
-        new THREE.MeshStandardMaterial({ color: 0x06b6d4, transparent: true, opacity: 0.35, roughness: 0.1 })
-      );
-      cabinGlass.position.y = 1.6;
-      cabinGroup.add(cabinGlass);
+      const cabinSideMat = new THREE.MeshStandardMaterial({ color: 0x06b6d4, transparent: true, opacity: 0.30, roughness: 0.08, metalness: 0.2 });
+      const cabinLeft = new THREE.Mesh(new THREE.BoxGeometry(0.05, 2.85, 3.5), cabinSideMat);
+      cabinLeft.position.set(-1.75, 1.45, 0);
+      cabinGroup.add(cabinLeft);
+
+      const cabinRight = new THREE.Mesh(new THREE.BoxGeometry(0.05, 2.85, 3.5), cabinSideMat);
+      cabinRight.position.set(1.75, 1.45, 0);
+      cabinGroup.add(cabinRight);
+
+      const cabinBack = new THREE.Mesh(new THREE.BoxGeometry(3.5, 2.85, 0.05), cabinSideMat);
+      cabinBack.position.set(0, 1.45, -1.75);
+      cabinGroup.add(cabinBack);
+
+      // Cabin front jambs leaving 2.2m open portal
+      [-1.425, 1.425].forEach(jx => {
+        const jamb = new THREE.Mesh(new THREE.BoxGeometry(0.65, 2.85, 0.05), cabinSideMat);
+        jamb.position.set(jx, 1.45, 1.75);
+        cabinGroup.add(jamb);
+      });
+      [-1.1, 1.1].forEach(px => {
+        const rail = new THREE.Mesh(new THREE.BoxGeometry(0.06, 2.85, 0.08), postMat);
+        rail.position.set(px, 1.45, 1.75);
+        cabinGroup.add(rail);
+      });
+
+      // Interior Floor Button Panel [1][2][3]
+      const panelBack = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.55, 0.04), frameDarkMat);
+      panelBack.position.set(1.36, 1.35, 1.70);
+      cabinGroup.add(panelBack);
+      [0, 1, 2].forEach(idx => {
+        const btn = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.025, 0.025, 0.02, 12),
+          new THREE.MeshBasicMaterial({ color: idx === 0 ? 0x10b981 : 0x38bdf8 })
+        );
+        btn.rotation.x = Math.PI / 2;
+        btn.position.set(1.36, 1.18 + idx * 0.16, 1.67);
+        cabinGroup.add(btn);
+      });
+
+      // Cabin Inner Sliding Doors (synced with docked landing doors)
+      const cabinLeftDoor = createSlidingDoorLeaf(1.1, 2.28, 0.53);
+      cabinLeftDoor.position.set(-1.55, 0.02, 1.71);
+      cabinGroup.add(cabinLeftDoor);
+
+      const cabinRightDoor = createSlidingDoorLeaf(1.1, 2.28, -0.53);
+      cabinRightDoor.position.set(1.55, 0.02, 1.71);
+      cabinGroup.add(cabinRightDoor);
+      elevatorCabinDoors = { leftDoor: cabinLeftDoor, rightDoor: cabinRightDoor };
 
       const cabinLight = new THREE.PointLight(0xf59e0b, 1.2, 8, 2);
       cabinLight.position.set(0, 2.4, 0);
@@ -2631,14 +2816,24 @@ export interface CandidateComparisonView {
         border.position.set(cx, cy + 0.028, cz);
         targetGroup.add(border);
 
-        // Glass Perimeter Walls
-        create3DGlassWall(cx, cz - d/2, w, 2.4, true, glassMat, frameMat, targetGroup, cy);
-        create3DGlassWall(cx, cz + d/2, w, 2.4, true, glassMat, frameMat, targetGroup, cy);
-        
-        // Doorway Wall
+        // Glass Perimeter Walls (North, South, Outer) with colliders
         const isLeft = cx < 0;
         const wallX = isLeft ? cx + w/2 : cx - w/2;
-        create3DGlassDoorway(wallX, cz, d, 2.4, glassMat, frameMat, targetGroup, cy);
+        const outerWallX = isLeft ? cx - w/2 : cx + w/2;
+        create3DGlassWall(cx, cz - d/2, w, 2.4, true, glassMat, frameMat, targetGroup, cy, { floor: div.floor, label: `${div.id} Wall N`, worldX: cx, worldZ: cz - d/2 });
+        create3DGlassWall(cx, cz + d/2, w, 2.4, true, glassMat, frameMat, targetGroup, cy, { floor: div.floor, label: `${div.id} Wall S`, worldX: cx, worldZ: cz + d/2 });
+        create3DGlassWall(outerWallX, cz, d, 2.4, false, glassMat, frameMat, targetGroup, cy, { floor: div.floor, label: `${div.id} Wall Outer`, worldX: outerWallX, worldZ: cz });
+
+        // Interactive Sliding Glass Doorway Wall (2.2m opening at z = cz +/- 1.1)
+        create3DGlassDoorway(wallX, cz, d, 2.4, glassMat, frameMat, targetGroup, cy, {
+          id: div.id,
+          floor: div.floor,
+          label: div.id,
+          worldX: wallX,
+          worldY: cy,
+          worldZ: cz,
+          slideSide: isLeft ? 1 : -1
+        });
 
         // Wall Display (Motto & Sprint Targets Screen) on Primary Wall
         create3DDivisionWallDisplay(cx, cz, div, targetGroup, cy);
@@ -2655,7 +2850,7 @@ export interface CandidateComparisonView {
       build3DGymFacility(floorGroups[3], 16);
     }
 
-    function create3DGlassWall(x, z, length, height, isHorizontal, glassMat, frameMat, parent = scene, yOffset = 0) {
+    function create3DGlassWall(x, z, length, height, isHorizontal, glassMat, frameMat, parent = scene, yOffset = 0, colliderInfo = null) {
       const gMat = glassMat || new THREE.MeshStandardMaterial({ color: 0xe0f2fe, transparent: true, opacity: 0.22, roughness: 0.05, metalness: 0.35 });
       const fMat = frameMat || new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.2, metalness: 0.85 });
       const group = new THREE.Group();
@@ -2672,17 +2867,31 @@ export interface CandidateComparisonView {
       group.add(topFrame);
 
       parent.add(group);
+
+      if (colliderInfo && colliderInfo.floor) {
+        const wx = colliderInfo.worldX !== undefined ? colliderInfo.worldX : x;
+        const wz = colliderInfo.worldZ !== undefined ? colliderInfo.worldZ : z;
+        const label = colliderInfo.label || 'Glass Wall';
+        if (isHorizontal) {
+          registerCollider(wx - length / 2, wx + length / 2, wz - 0.12, wz + 0.12, colliderInfo.floor, label);
+        } else {
+          registerCollider(wx - 0.12, wx + 0.12, wz - length / 2, wz + length / 2, colliderInfo.floor, label);
+        }
+      }
       return group;
     }
 
-    function create3DGlassDoorway(x, z, length, height, glassMat, frameMat, parent = scene, yOffset = 0) {
+    function create3DGlassDoorway(x, z, length, height, glassMat, frameMat, parent = scene, yOffset = 0, doorInfo = null) {
       const group = new THREE.Group();
       group.position.set(x, yOffset, z);
 
-      const sideLen = (length - 2.0) / 2;
+      const doorWidth = 2.2;
+      const sideLen = Math.max(0.4, (length - doorWidth) / 2);
       const glassGeo = new THREE.BoxGeometry(0.06, height, sideLen);
       const fMat = frameMat || new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.2, metalness: 0.85 });
       const gMat = glassMat || new THREE.MeshStandardMaterial({ color: 0xe0f2fe, transparent: true, opacity: 0.22, roughness: 0.05, metalness: 0.35 });
+      const leafGlassMat = new THREE.MeshStandardMaterial({ color: 0xbae6fd, transparent: true, opacity: 0.38, roughness: 0.05, metalness: 0.4 });
+      const railMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.2, metalness: 0.9 });
 
       const w1 = new THREE.Mesh(glassGeo, gMat);
       w1.position.set(0, height / 2, -length / 2 + sideLen / 2);
@@ -2692,12 +2901,95 @@ export interface CandidateComparisonView {
       w2.position.set(0, height / 2, length / 2 - sideLen / 2);
       group.add(w2);
 
-      const headerGeo = new THREE.BoxGeometry(0.06, 0.35, 2.0);
+      // Top frames over fixed side walls
+      const sideTopGeo = new THREE.BoxGeometry(0.08, 0.06, sideLen);
+      const top1 = new THREE.Mesh(sideTopGeo, fMat);
+      top1.position.set(0, height, -length / 2 + sideLen / 2);
+      group.add(top1);
+      const top2 = new THREE.Mesh(sideTopGeo, fMat);
+      top2.position.set(0, height, length / 2 - sideLen / 2);
+      group.add(top2);
+
+      // Door Header Beam & Vertical Jamb Posts around the 2.2m Portal
+      const headerGeo = new THREE.BoxGeometry(0.10, 0.32, doorWidth + 0.12);
       const header = new THREE.Mesh(headerGeo, fMat);
-      header.position.set(0, height - 0.175, 0);
+      header.position.set(0, height - 0.16, 0);
       group.add(header);
 
+      const jambGeo = new THREE.BoxGeometry(0.09, height, 0.06);
+      [-doorWidth / 2, doorWidth / 2].forEach(jz => {
+        const jamb = new THREE.Mesh(jambGeo, fMat);
+        jamb.position.set(0, height / 2, jz);
+        group.add(jamb);
+      });
+
+      // Overhead Motion Sensor & Status LED
+      const slideSide = doorInfo && doorInfo.slideSide ? doorInfo.slideSide : 1;
+      const sensorBox = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.07, 0.34), new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.4 }));
+      sensorBox.position.set(slideSide * 0.06, height - 0.06, 0);
+      group.add(sensorBox);
+      const sensorLed = new THREE.Mesh(
+        new THREE.BoxGeometry(0.03, 0.03, 0.08),
+        new THREE.MeshBasicMaterial({ color: 0x38bdf8 })
+      );
+      sensorLed.position.set(slideSide * 0.13, height - 0.06, 0);
+      group.add(sensorLed);
+
+      // Bi-Parting Animated Sliding Glass Door Leaves (doorLeafMesh)
+      const leafWidth = doorWidth / 2; // 1.1m each
+      const leafHeight = height - 0.32; // 2.08m
+      const makeDoorLeaf = (isNorth) => {
+        const leafGroup = new THREE.Group();
+        leafGroup.name = 'doorLeafMesh';
+        const pane = new THREE.Mesh(new THREE.BoxGeometry(0.04, leafHeight, leafWidth), leafGlassMat);
+        pane.position.y = leafHeight / 2;
+        leafGroup.add(pane);
+
+        const edgeStile = new THREE.Mesh(new THREE.BoxGeometry(0.055, leafHeight, 0.04), railMat);
+        edgeStile.position.set(0, leafHeight / 2, isNorth ? leafWidth / 2 - 0.02 : -leafWidth / 2 + 0.02);
+        leafGroup.add(edgeStile);
+
+        const handle = new THREE.Mesh(new THREE.BoxGeometry(0.085, 0.44, 0.03), railMat);
+        handle.position.set(0, 1.05, isNorth ? leafWidth / 2 - 0.11 : -leafWidth / 2 + 0.11);
+        leafGroup.add(handle);
+
+        return leafGroup;
+      };
+
+      const leafNorth = makeDoorLeaf(true);
+      leafNorth.position.set(slideSide * 0.05, 0, -leafWidth / 2); // closed: z = -0.55
+      group.add(leafNorth);
+
+      const leafSouth = makeDoorLeaf(false);
+      leafSouth.position.set(slideSide * 0.05, 0, leafWidth / 2); // closed: z = +0.55
+      group.add(leafSouth);
+
       parent.add(group);
+
+      // Register wall colliders ONLY for solid glass wall segments (excluding 2.2m doorway opening!)
+      if (doorInfo && doorInfo.floor) {
+        const wx = doorInfo.worldX !== undefined ? doorInfo.worldX : x;
+        const wy = doorInfo.worldY !== undefined ? doorInfo.worldY : yOffset;
+        const wz = doorInfo.worldZ !== undefined ? doorInfo.worldZ : z;
+        const label = doorInfo.label || 'Room';
+        registerCollider(wx - 0.12, wx + 0.12, wz - length / 2, wz - doorWidth / 2, doorInfo.floor, `${label} DoorWall N`);
+        registerCollider(wx - 0.12, wx + 0.12, wz + doorWidth / 2, wz + length / 2, doorInfo.floor, `${label} DoorWall S`);
+
+        INTERACTIVE_DOORS.push({
+          id: doorInfo.id || label,
+          floor: doorInfo.floor,
+          label,
+          center: { x: wx, y: wy, z: wz },
+          leafNorth,
+          leafSouth,
+          doorLeafMesh: leafNorth,
+          openAmount: 0,
+          closedZOffset: leafWidth / 2,
+          slideDistance: Math.min(1.05, Math.max(0.85, sideLen - 0.15)),
+          sensorLed
+        });
+      }
+
       return group;
     }
 
@@ -2804,9 +3096,18 @@ export interface CandidateComparisonView {
 
       const glassMat = new THREE.MeshStandardMaterial({ color: 0x93c5fd, transparent: true, opacity: 0.25, roughness: 0.05 });
       const frameMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.2, metalness: 0.85 });
-      create3DGlassWall(0, -6, 14, 2.4, true, glassMat, frameMat, meetingGroup, 0);
-      create3DGlassWall(0, 6, 14, 2.4, true, glassMat, frameMat, meetingGroup, 0);
-      create3DGlassDoorway(-7, 0, 12, 2.4, glassMat, frameMat, meetingGroup, 0);
+      create3DGlassWall(0, -6, 14, 2.4, true, glassMat, frameMat, meetingGroup, 0, { floor: 2, label: 'Meeting Room Wall N', worldX: cx, worldZ: cz - 6 });
+      create3DGlassWall(0, 6, 14, 2.4, true, glassMat, frameMat, meetingGroup, 0, { floor: 2, label: 'Meeting Room Wall S', worldX: cx, worldZ: cz + 6 });
+      create3DGlassWall(7, 0, 12, 2.4, false, glassMat, frameMat, meetingGroup, 0, { floor: 2, label: 'Meeting Room Wall E', worldX: cx + 7, worldZ: cz });
+      create3DGlassDoorway(-7, 0, 12, 2.4, glassMat, frameMat, meetingGroup, 0, {
+        id: 'meeting',
+        floor: 2,
+        label: 'Meeting Room',
+        worldX: cx - 7,
+        worldY: cy,
+        worldZ: cz,
+        slideSide: -1
+      });
 
       // Large Oval Boardroom Table
       const tableGeo = new THREE.CylinderGeometry(3.2, 3.2, 0.1, 32);
@@ -2893,6 +3194,22 @@ export interface CandidateComparisonView {
       gymFloor.rotation.x = -Math.PI / 2;
       gymFloor.position.y = 0.024;
       gymGroup.add(gymFloor);
+
+      // Glass Walls & Sliding Glass Doorway for Wellness Gym (x: 14.5..21.5, z: 8.5..15.5)
+      const gymGlassMat = new THREE.MeshStandardMaterial({ color: 0xa5f3fc, transparent: true, opacity: 0.22, roughness: 0.05, metalness: 0.35 });
+      const gymFrameMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.2, metalness: 0.85 });
+      create3DGlassWall(0, -3.5, 7, 2.4, true, gymGlassMat, gymFrameMat, gymGroup, 0, { floor: 3, label: 'Gym Wall N', worldX: cx, worldZ: cz - 3.5 });
+      create3DGlassWall(0, 3.5, 7, 2.4, true, gymGlassMat, gymFrameMat, gymGroup, 0, { floor: 3, label: 'Gym Wall S', worldX: cx, worldZ: cz + 3.5 });
+      create3DGlassWall(3.5, 0, 7, 2.4, false, gymGlassMat, gymFrameMat, gymGroup, 0, { floor: 3, label: 'Gym Wall E', worldX: cx + 3.5, worldZ: cz });
+      create3DGlassDoorway(-3.5, 0, 7, 2.4, gymGlassMat, gymFrameMat, gymGroup, 0, {
+        id: 'gym',
+        floor: 3,
+        label: 'Gym',
+        worldX: cx - 3.5,
+        worldY: cy,
+        worldZ: cz,
+        slideSide: -1
+      });
 
       [-1.3, 1.3].forEach((tmX, tmIdx) => {
         const tm = new THREE.Group();
@@ -2986,6 +3303,22 @@ export interface CandidateComparisonView {
       cafeFloor.position.y = 0.025;
       cafeGroup.add(cafeFloor);
 
+      // Cafeteria Glass Enclosure + Sliding Glass Doorway at (x: -7, z: -4)
+      const f1GlassMat = new THREE.MeshStandardMaterial({ color: 0xe0f2fe, transparent: true, opacity: 0.22, roughness: 0.05, metalness: 0.35 });
+      const f1FrameMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.2, metalness: 0.85 });
+      create3DGlassWall(0, -6, 14, 2.4, true, f1GlassMat, f1FrameMat, cafeGroup, 0, { floor: 1, label: 'Cafeteria Wall N', worldX: -14, worldZ: -10 });
+      create3DGlassWall(0, 6, 14, 2.4, true, f1GlassMat, f1FrameMat, cafeGroup, 0, { floor: 1, label: 'Cafeteria Wall S', worldX: -14, worldZ: 2 });
+      create3DGlassWall(-7, 0, 12, 2.4, false, f1GlassMat, f1FrameMat, cafeGroup, 0, { floor: 1, label: 'Cafeteria Wall W', worldX: -21, worldZ: -4 });
+      create3DGlassDoorway(7, 0, 12, 2.4, f1GlassMat, f1FrameMat, cafeGroup, 0, {
+        id: 'cafeteria',
+        floor: 1,
+        label: 'Cafeteria',
+        worldX: -7,
+        worldY: 0,
+        worldZ: -4,
+        slideSide: 1
+      });
+
       const islandBase = new THREE.Mesh(new THREE.BoxGeometry(4.8, 0.95, 1.4), woodMat);
       islandBase.position.set(0, 0.475, 0);
       cafeGroup.add(islandBase);
@@ -3054,6 +3387,20 @@ export interface CandidateComparisonView {
       rug.position.y = 0.025;
       mushollaGroup.add(rug);
 
+      // Musholla Glass Enclosure + Sliding Glass Doorway at (x: 7, z: -4)
+      create3DGlassWall(0, -6, 14, 2.4, true, f1GlassMat, f1FrameMat, mushollaGroup, 0, { floor: 1, label: 'Musholla Wall N', worldX: 14, worldZ: -10 });
+      create3DGlassWall(0, 6, 14, 2.4, true, f1GlassMat, f1FrameMat, mushollaGroup, 0, { floor: 1, label: 'Musholla Wall S', worldX: 14, worldZ: 2 });
+      create3DGlassWall(7, 0, 12, 2.4, false, f1GlassMat, f1FrameMat, mushollaGroup, 0, { floor: 1, label: 'Musholla Wall E', worldX: 21, worldZ: -4 });
+      create3DGlassDoorway(-7, 0, 12, 2.4, f1GlassMat, f1FrameMat, mushollaGroup, 0, {
+        id: 'musholla',
+        floor: 1,
+        label: 'Musholla',
+        worldX: 7,
+        worldY: 0,
+        worldZ: -4,
+        slideSide: -1
+      });
+
       [-3.5, -1.0, 1.5, 4.0].forEach(sz => {
         const shaf = new THREE.Mesh(new THREE.PlaneGeometry(13.2, 0.08), new THREE.MeshBasicMaterial({ color: 0xfbbf24 }));
         shaf.rotation.x = -Math.PI / 2;
@@ -3115,7 +3462,16 @@ export interface CandidateComparisonView {
         avatarGroups.push(deskGroup);
 
         // Register Desk Collider
-        registerCollider(agent.pos.x - 1.0, agent.pos.x + 1.0, agent.pos.z - 0.55, agent.pos.z + 0.65, floor, `Desk #${agent.id}`);
+        const deskCollider = {
+          minX: agent.pos.x - 1.0,
+          maxX: agent.pos.x + 1.0,
+          minZ: agent.pos.z - 0.55,
+          maxZ: agent.pos.z + 0.65,
+          floor,
+          label: `Desk #${agent.id}`
+        };
+        STATIC_COLLIDERS.push(deskCollider);
+        DESK_COLLIDER_BY_ID[agent.id] = deskCollider;
 
         // 2. Mobile Living Humanoid Avatar Group (seated cleanly on ergonomic chair at z + 0.42!)
         const avatarGroup = new THREE.Group();
@@ -3140,12 +3496,21 @@ export interface CandidateComparisonView {
           progress: Math.floor(Math.random() * 45) + 40,
           currentTask: agent.status.action,
           homePos: { x: agent.pos.x, y: floorY, z: agent.pos.z + 0.42 },
+          homeFloor: floor,
           targetPos: null,
           partnerId: null,
           speechTimer: null,
           isWalking: false,
           floor: floor,
-          floorY: floorY
+          floorY: floorY,
+          elevPhase: null,
+          pendingDestFloor: null,
+          pendingDestPos: null,
+          pendingState: 'WORKING',
+          pendingTask: null,
+          stuckAnchor: { x: agent.pos.x, z: agent.pos.z + 0.42 },
+          stuckTimer: 0,
+          stuckRetries: 0
         };
       });
     }
@@ -3487,75 +3852,576 @@ export interface CandidateComparisonView {
       return sprite;
     }
 
-    // ─── 8. AUTONOMOUS AGENT SIMULATION, MULTI-FLOOR PATHFINDING & EVENT GATEWAY ──
+    // ─── 8. 2D GRID A* PATHFINDING, ELEVATOR STATE MACHINE & AUTONOMOUS AGENTS ──
     const EVENT_GATEWAY_URL = 'https://lokatalenta-event-gateway.vercel.app';
+
+    function worldToGrid(x, z) {
+      const gx = Math.max(0, Math.min(NAV_GRID_COLS - 1, Math.round((x - NAV_GRID_MIN_X) / NAV_GRID_RES)));
+      const gz = Math.max(0, Math.min(NAV_GRID_ROWS - 1, Math.round((z - NAV_GRID_MIN_Z) / NAV_GRID_RES)));
+      return { gx, gz };
+    }
+
+    function gridToWorld(gx, gz) {
+      return {
+        x: NAV_GRID_MIN_X + gx * NAV_GRID_RES,
+        z: NAV_GRID_MIN_Z + gz * NAV_GRID_RES
+      };
+    }
+
+    function isPointWalkableForAgent(x, z, floor, exactExemptLabel = null, radius = NAV_AGENT_RADIUS, allowElevatorInterior = false) {
+      if (x < NAV_GRID_MIN_X || x > NAV_GRID_MAX_X || z < NAV_GRID_MIN_Z || z > NAV_GRID_MAX_Z) {
+        return false;
+      }
+      // Keep elevator shaft & landing portal off-limits to general same-floor A* shortcuts
+      if (!allowElevatorInterior && x >= -2.35 && x <= 2.35 && z >= -6.35 && z <= -1.65) {
+        return false;
+      }
+      for (let i = 0; i < STATIC_COLLIDERS.length; i++) {
+        const box = STATIC_COLLIDERS[i];
+        if (box.floor !== floor) continue;
+        if (exactExemptLabel && box.label === exactExemptLabel) continue;
+        if (
+          x >= box.minX - radius &&
+          x <= box.maxX + radius &&
+          z >= box.minZ - radius &&
+          z <= box.maxZ + radius
+        ) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    function buildNavGrids() {
+      [1, 2, 3].forEach(fl => {
+        const grid = new Uint8Array(NAV_GRID_COLS * NAV_GRID_ROWS);
+        grid.fill(1);
+
+        // Mark all STATIC_COLLIDERS with NAV_AGENT_RADIUS padding as blocked
+        STATIC_COLLIDERS.forEach(box => {
+          if (box.floor !== fl) return;
+          const minX = box.minX - NAV_AGENT_RADIUS;
+          const maxX = box.maxX + NAV_AGENT_RADIUS;
+          const minZ = box.minZ - NAV_AGENT_RADIUS;
+          const maxZ = box.maxZ + NAV_AGENT_RADIUS;
+          const gx0 = Math.max(0, Math.ceil((minX - NAV_GRID_MIN_X) / NAV_GRID_RES - 1e-6));
+          const gx1 = Math.min(NAV_GRID_COLS - 1, Math.floor((maxX - NAV_GRID_MIN_X) / NAV_GRID_RES + 1e-6));
+          const gz0 = Math.max(0, Math.ceil((minZ - NAV_GRID_MIN_Z) / NAV_GRID_RES - 1e-6));
+          const gz1 = Math.min(NAV_GRID_ROWS - 1, Math.floor((maxZ - NAV_GRID_MIN_Z) / NAV_GRID_RES + 1e-6));
+          for (let gz = gz0; gz <= gz1; gz++) {
+            const rowOffset = gz * NAV_GRID_COLS;
+            for (let gx = gx0; gx <= gx1; gx++) {
+              grid[rowOffset + gx] = 0;
+            }
+          }
+        });
+
+        // Reserve elevator shaft footprint (-2.3..2.3, -6.3..-1.7) so floor A* uses lobby (z >= -1.6)
+        const sx0 = Math.max(0, Math.ceil((-2.35 - NAV_GRID_MIN_X) / NAV_GRID_RES));
+        const sx1 = Math.min(NAV_GRID_COLS - 1, Math.floor((2.35 - NAV_GRID_MIN_X) / NAV_GRID_RES));
+        const sz0 = Math.max(0, Math.ceil((-6.35 - NAV_GRID_MIN_Z) / NAV_GRID_RES));
+        const sz1 = Math.min(NAV_GRID_ROWS - 1, Math.floor((-1.65 - NAV_GRID_MIN_Z) / NAV_GRID_RES));
+        for (let gz = sz0; gz <= sz1; gz++) {
+          const rowOffset = gz * NAV_GRID_COLS;
+          for (let gx = sx0; gx <= sx1; gx++) {
+            grid[rowOffset + gx] = 0;
+          }
+        }
+
+        // Guarantee elevator lobby (x: -1.5..1.5, z: -1.5..1.0) & main corridor spine stay walkable
+        const lx0 = Math.max(0, Math.round((-1.5 - NAV_GRID_MIN_X) / NAV_GRID_RES));
+        const lx1 = Math.min(NAV_GRID_COLS - 1, Math.round((1.5 - NAV_GRID_MIN_X) / NAV_GRID_RES));
+        const lz0 = Math.max(0, Math.round((-1.5 - NAV_GRID_MIN_Z) / NAV_GRID_RES));
+        const lz1 = Math.min(NAV_GRID_ROWS - 1, Math.round((1.0 - NAV_GRID_MIN_Z) / NAV_GRID_RES));
+        for (let gz = lz0; gz <= lz1; gz++) {
+          const rowOffset = gz * NAV_GRID_COLS;
+          for (let gx = lx0; gx <= lx1; gx++) {
+            grid[rowOffset + gx] = 1;
+          }
+        }
+
+        NAV_GRIDS[fl] = grid;
+      });
+
+      verifyNavGridsConnectivity();
+    }
+
+    function isCellWalkableForAgent(gx, gz, floor, exemptBox = null) {
+      if (gx < 0 || gx >= NAV_GRID_COLS || gz < 0 || gz >= NAV_GRID_ROWS) return false;
+      const grid = NAV_GRIDS[floor];
+      if (!grid) return true;
+      const idx = gz * NAV_GRID_COLS + gx;
+      if (grid[idx] === 1) return true;
+      if (!exemptBox || exemptBox.floor !== floor) return false;
+      const w = gridToWorld(gx, gz);
+      if (
+        w.x >= exemptBox.minX - NAV_AGENT_RADIUS &&
+        w.x <= exemptBox.maxX + NAV_AGENT_RADIUS &&
+        w.z >= exemptBox.minZ - NAV_AGENT_RADIUS &&
+        w.z <= exemptBox.maxZ + NAV_AGENT_RADIUS
+      ) {
+        return isPointWalkableForAgent(w.x, w.z, floor, exemptBox.label, NAV_AGENT_RADIUS, false);
+      }
+      return false;
+    }
+
+    function findNearestWalkableCell(gx, gz, floor, exemptBox = null, maxRadius = 10) {
+      if (isCellWalkableForAgent(gx, gz, floor, exemptBox)) return { gx, gz };
+      let best = null;
+      let bestDistSq = Infinity;
+      for (let r = 1; r <= maxRadius; r++) {
+        for (let dz = -r; dz <= r; dz++) {
+          for (let dx = -r; dx <= r; dx++) {
+            if (Math.abs(dx) !== r && Math.abs(dz) !== r) continue;
+            const nx = gx + dx;
+            const nz = gz + dz;
+            if (isCellWalkableForAgent(nx, nz, floor, exemptBox)) {
+              const dSq = dx * dx + dz * dz;
+              if (dSq < bestDistSq) {
+                bestDistSq = dSq;
+                best = { gx: nx, gz: nz };
+              }
+            }
+          }
+        }
+        if (best) return best;
+      }
+      return { gx, gz };
+    }
+
+    function findNearestWalkablePoint(x, z, floor, exactExemptLabel = null) {
+      if (isPointWalkableForAgent(x, z, floor, exactExemptLabel, NAV_AGENT_RADIUS, false)) {
+        return { x, z };
+      }
+      const exemptBox = exactExemptLabel
+        ? Object.values(DESK_COLLIDER_BY_ID).find(b => b.label === exactExemptLabel) || null
+        : null;
+      const g = worldToGrid(x, z);
+      const cell = findNearestWalkableCell(g.gx, g.gz, floor, exemptBox, 12);
+      return gridToWorld(cell.gx, cell.gz);
+    }
+
+    function segmentHasLineOfSight(ax, az, bx, bz, floor, exactExemptLabel = null) {
+      const dist = Math.hypot(bx - ax, bz - az);
+      if (dist < 1e-4) return true;
+      const steps = Math.max(2, Math.ceil(dist / 0.18));
+      for (let s = 1; s < steps; s++) {
+        const t = s / steps;
+        const px = ax + (bx - ax) * t;
+        const pz = az + (bz - az) * t;
+        if (!isPointWalkableForAgent(px, pz, floor, exactExemptLabel, NAV_AGENT_RADIUS + 0.02, false)) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    function smoothGridPath(rawPts, floor, exactExemptLabel = null) {
+      if (rawPts.length <= 2) return rawPts;
+      const smoothed = [rawPts[0]];
+      let anchorIdx = 0;
+      while (anchorIdx < rawPts.length - 1) {
+        let furthest = anchorIdx + 1;
+        for (let testIdx = rawPts.length - 1; testIdx > anchorIdx + 1; testIdx--) {
+          if (segmentHasLineOfSight(
+            rawPts[anchorIdx].x, rawPts[anchorIdx].z,
+            rawPts[testIdx].x, rawPts[testIdx].z,
+            floor, exactExemptLabel
+          )) {
+            furthest = testIdx;
+            break;
+          }
+        }
+        smoothed.push(rawPts[furthest]);
+        anchorIdx = furthest;
+      }
+      return smoothed;
+    }
+
+    function findGridPathAStar(startX, startZ, goalX, goalZ, floor, exemptAgentId = null) {
+      const exemptBox = (exemptAgentId !== null && exemptAgentId !== undefined)
+        ? DESK_COLLIDER_BY_ID[exemptAgentId] || null
+        : null;
+      const exemptLabel = exemptBox ? exemptBox.label : null;
+
+      const sRaw = worldToGrid(startX, startZ);
+      const gRaw = worldToGrid(goalX, goalZ);
+      const sCell = findNearestWalkableCell(sRaw.gx, sRaw.gz, floor, exemptBox, 12);
+      const gCell = findNearestWalkableCell(gRaw.gx, gRaw.gz, floor, exemptBox, 12);
+
+      const startIdx = sCell.gz * NAV_GRID_COLS + sCell.gx;
+      const goalIdx = gCell.gz * NAV_GRID_COLS + gCell.gx;
+
+      if (startIdx === goalIdx) {
+        const finalPos = isPointWalkableForAgent(goalX, goalZ, floor, exemptLabel, 0.22, false)
+          ? { x: goalX, z: goalZ }
+          : gridToWorld(gCell.gx, gCell.gz);
+        return [finalPos];
+      }
+
+      const total = NAV_GRID_COLS * NAV_GRID_ROWS;
+      const gScore = new Float32Array(total);
+      gScore.fill(1e9);
+      const parent = new Int32Array(total);
+      parent.fill(-1);
+      const closed = new Uint8Array(total);
+      const inOpen = new Uint8Array(total);
+
+      // Binary Min-Heap storing { idx, f } packed in parallel arrays
+      const heapIdx = [];
+      const heapF = [];
+      const heapPush = (idx, f) => {
+        let i = heapIdx.length;
+        heapIdx.push(idx);
+        heapF.push(f);
+        while (i > 0) {
+          const p = (i - 1) >> 1;
+          if (heapF[p] <= heapF[i]) break;
+          [heapIdx[p], heapIdx[i]] = [heapIdx[i], heapIdx[p]];
+          [heapF[p], heapF[i]] = [heapF[i], heapF[p]];
+          i = p;
+        }
+      };
+      const heapPop = () => {
+        const top = heapIdx[0];
+        const lastIdx = heapIdx.pop();
+        const lastF = heapF.pop();
+        if (heapIdx.length > 0) {
+          heapIdx[0] = lastIdx;
+          heapF[0] = lastF;
+          let i = 0;
+          const n = heapIdx.length;
+          while (true) {
+            let best = i;
+            const l = 2 * i + 1;
+            const r = 2 * i + 2;
+            if (l < n && heapF[l] < heapF[best]) best = l;
+            if (r < n && heapF[r] < heapF[best]) best = r;
+            if (best === i) break;
+            [heapIdx[i], heapIdx[best]] = [heapIdx[best], heapIdx[i]];
+            [heapF[i], heapF[best]] = [heapF[best], heapF[i]];
+            i = best;
+          }
+        }
+        return top;
+      };
+
+      const octile = (ax, az, bx, bz) => {
+        const dx = Math.abs(bx - ax);
+        const dz = Math.abs(bz - az);
+        return ((dx + dz) + (Math.SQRT2 - 2) * Math.min(dx, dz)) * NAV_GRID_RES;
+      };
+
+      gScore[startIdx] = 0;
+      heapPush(startIdx, octile(sCell.gx, sCell.gz, gCell.gx, gCell.gz));
+      inOpen[startIdx] = 1;
+
+      const dirs = [
+        [1, 0, NAV_GRID_RES], [-1, 0, NAV_GRID_RES],
+        [0, 1, NAV_GRID_RES], [0, -1, NAV_GRID_RES],
+        [1, 1, NAV_GRID_RES * Math.SQRT2], [1, -1, NAV_GRID_RES * Math.SQRT2],
+        [-1, 1, NAV_GRID_RES * Math.SQRT2], [-1, -1, NAV_GRID_RES * Math.SQRT2]
+      ];
+
+      let found = false;
+      while (heapIdx.length > 0) {
+        const cur = heapPop();
+        if (closed[cur]) continue;
+        if (cur === goalIdx) {
+          found = true;
+          break;
+        }
+        closed[cur] = 1;
+
+        const cx = cur % NAV_GRID_COLS;
+        const cz = (cur - cx) / NAV_GRID_COLS;
+        const curG = gScore[cur];
+
+        for (let d = 0; d < 8; d++) {
+          const dx = dirs[d][0];
+          const dz = dirs[d][1];
+          const nx = cx + dx;
+          const nz = cz + dz;
+          if (!isCellWalkableForAgent(nx, nz, floor, exemptBox)) continue;
+          // Prevent diagonal corner cutting across walls/desks
+          if (dx !== 0 && dz !== 0) {
+            if (!isCellWalkableForAgent(cx + dx, cz, floor, exemptBox) ||
+                !isCellWalkableForAgent(cx, cz + dz, floor, exemptBox)) {
+              continue;
+            }
+          }
+          const nIdx = nz * NAV_GRID_COLS + nx;
+          if (closed[nIdx]) continue;
+          const ng = curG + dirs[d][2];
+          if (ng < gScore[nIdx]) {
+            gScore[nIdx] = ng;
+            parent[nIdx] = cur;
+            const f = ng + octile(nx, nz, gCell.gx, gCell.gz);
+            heapPush(nIdx, f);
+            inOpen[nIdx] = 1;
+          }
+        }
+      }
+
+      if (!found) {
+        const fallback = gridToWorld(gCell.gx, gCell.gz);
+        return [fallback];
+      }
+
+      const raw = [];
+      let trace = goalIdx;
+      while (trace !== -1) {
+        const gx = trace % NAV_GRID_COLS;
+        const gz = (trace - gx) / NAV_GRID_COLS;
+        raw.push(gridToWorld(gx, gz));
+        trace = parent[trace];
+      }
+      raw.reverse();
+
+      // Anchor start/end smoothly while preserving obstacle safety
+      if (isPointWalkableForAgent(startX, startZ, floor, exemptLabel, 0.20, false)) {
+        raw[0] = { x: startX, z: startZ };
+      }
+      if (isPointWalkableForAgent(goalX, goalZ, floor, exemptLabel, 0.22, false)) {
+        raw[raw.length - 1] = { x: goalX, z: goalZ };
+      }
+
+      const smoothed = smoothGridPath(raw, floor, exemptLabel);
+      // Skip initial point if agent is already standing right on it
+      if (smoothed.length > 1 && Math.hypot(smoothed[0].x - startX, smoothed[0].z - startZ) < 0.25) {
+        smoothed.shift();
+      }
+      return smoothed;
+    }
+
+    function verifyNavGridsConnectivity() {
+      const checks = [
+        { floor: 1, label: 'Cafeteria', x: -14, z: -1.5 },
+        { floor: 1, label: 'Musholla', x: 10.8, z: -4.0 },
+        { floor: 1, label: 'Lobby', x: 0, z: 12.0 },
+        { floor: 2, label: 'Engineering', x: -14, z: -10.5 },
+        { floor: 2, label: 'QA Lab', x: 14, z: -10.0 },
+        { floor: 2, label: 'Lounge', x: -14, z: 12.0 },
+        { floor: 2, label: 'Meeting Room', x: 9.0, z: 12.0 },
+        { floor: 3, label: 'Executive', x: -14, z: -10.0 },
+        { floor: 3, label: 'Architecture', x: 14, z: -10.0 },
+        { floor: 3, label: 'DevOps', x: -14, z: 10.5 },
+        { floor: 3, label: 'Relaxation', x: 8.0, z: 10.6 },
+        { floor: 3, label: 'Gym', x: 16.7, z: 12.0 }
+      ];
+      const unreachable = [];
+      checks.forEach(c => {
+        const path = findGridPathAStar(0, -0.6, c.x, c.z, c.floor, null);
+        const end = path[path.length - 1];
+        if (!end || Math.hypot(end.x - c.x, end.z - c.z) > 1.5) {
+          unreachable.push(`${c.label}@F${c.floor}`);
+        }
+      });
+      AGENTS.forEach(a => {
+        const path = findGridPathAStar(a.pos.x, a.pos.z + 0.42, 0, -0.6, a.floor, a.id);
+        const end = path[path.length - 1];
+        if (!end || Math.hypot(end.x - 0, end.z - (-0.6)) > 1.5) {
+          unreachable.push(`Agent#${a.id}@F${a.floor}`);
+        }
+      });
+      if (unreachable.length > 0) {
+        console.warn('NavGrid connectivity warnings:', unreachable);
+      }
+      window.__NAV_DEBUG__ = {
+        gridCols: NAV_GRID_COLS,
+        gridRows: NAV_GRID_ROWS,
+        gridRes: NAV_GRID_RES,
+        doorsCount: INTERACTIVE_DOORS.length,
+        unreachable,
+        findPath: findGridPathAStar,
+        elevatorState,
+        doors: INTERACTIVE_DOORS,
+        colliders: STATIC_COLLIDERS
+      };
+    }
+
+    // ─── ELEVATOR DISPATCHER & MULTI-FLOOR AGENT PATHFINDING ─────────────────
+    function requestElevatorFloor(floorNum) {
+      if (floorNum < 1 || floorNum > 3) return;
+      if (elevatorState.mode === 'DOORS_OPEN' && elevatorState.doorsOpenFloor === floorNum) {
+        elevatorState.holdTimer = Math.max(elevatorState.holdTimer, 1.4);
+        return;
+      }
+      if (!elevatorState.queue.includes(floorNum)) {
+        elevatorState.queue.push(floorNum);
+      }
+    }
+
+    function pickNextElevatorFloor(fromFloor) {
+      const f = fromFloor || Math.round(elevatorState.currentY / 8) + 1;
+      for (let i = 0; i < elevatorState.queue.length; i++) {
+        if (elevatorState.queue[i] !== f) return elevatorState.queue[i];
+      }
+      const list = Object.values(agentAvatars);
+      let bestFloor = null;
+      let bestDist = Infinity;
+      list.forEach(av => {
+        if (av.elevPhase === 'RIDING' && av.pendingDestFloor && av.pendingDestFloor !== f) {
+          const d = Math.abs(av.pendingDestFloor - f);
+          if (d < bestDist) { bestDist = d; bestFloor = av.pendingDestFloor; }
+        }
+      });
+      if (bestFloor !== null) return bestFloor;
+      list.forEach(av => {
+        if (av.elevPhase === 'WAIT_CABIN_BOARD' && av.floor && av.floor !== f) {
+          const d = Math.abs(av.floor - f);
+          if (d < bestDist) { bestDist = d; bestFloor = av.floor; }
+        }
+      });
+      if (bestFloor !== null) return bestFloor;
+      if (elevatorState.playerTargetFloor && elevatorState.playerTargetFloor !== f) {
+        return elevatorState.playerTargetFloor;
+      }
+      return null;
+    }
+
+    function getAgentElevatorSlot(agentId, isLobby) {
+      const col = (agentId % 3) - 1;
+      const row = Math.floor((agentId % 6) / 3);
+      if (isLobby) {
+        return { x: col * 0.52, z: -0.65 + row * 0.45 };
+      }
+      return { x: col * 0.58, z: -3.7 - row * 0.72 };
+    }
+
+    function attachAvatarToFloor(av, floorNum) {
+      if (!av || !av.group) return;
+      const grp = floorNum ? (floorGroups[floorNum] || scene) : scene;
+      if (av.group.parent !== grp) {
+        grp.add(av.group);
+      }
+    }
 
     function enqueueAgentPath(av, destPos, destState, destTaskText) {
       if (!av || !av.group) return;
       const cur = av.group.position;
-      const queue = [];
+      const curFloor = Math.max(1, Math.min(3, Math.round(cur.y / 8) + 1));
+      const destFloor = Math.max(1, Math.min(3, Math.round(destPos.y / 8) + 1));
+      const destFloorY = (destFloor - 1) * 8;
+      const curFloorY = (curFloor - 1) * 8;
 
-      // Floor-to-floor traversal via central elevator at (x: 0, z: -1.2)
-      if (Math.abs(cur.y - destPos.y) > 1.0) {
-        queue.push({ x: 0, y: cur.y, z: cur.z, isElevator: false });
-        queue.push({ x: 0, y: cur.y, z: -1.2, isElevator: false });
-        queue.push({ x: 0, y: destPos.y, z: -1.2, isElevator: true });
-        queue.push({ x: 0, y: destPos.y, z: destPos.z, isElevator: false });
-      } else if (Math.abs(cur.x - destPos.x) > 6 || Math.abs(cur.z - destPos.z) > 6) {
-        // Walk cleanly via central corridor on same floor
-        queue.push({ x: 0, y: destPos.y, z: cur.z, isElevator: false });
-        queue.push({ x: 0, y: destPos.y, z: destPos.z, isElevator: false });
-      }
-      queue.push({ x: destPos.x, y: destPos.y, z: destPos.z, isElevator: false });
-
-      av.moveQueue = queue;
       av.pendingState = destState;
       av.pendingTask = destTaskText;
+      av.pendingDestFloor = destFloor;
+      av.pendingDestPos = { x: destPos.x, y: destFloorY, z: destPos.z };
+      av.stuckAnchor = { x: cur.x, z: cur.z };
+      av.stuckTimer = 0;
+      av.stuckRetries = 0;
+
+      // Handle interruption safely if currently inside or boarding/exiting elevator
+      if (av.elevPhase === 'RIDING') {
+        requestElevatorFloor(destFloor);
+        av.isWalking = true;
+        av.state = 'WALKING';
+        return;
+      }
+      if (av.elevPhase === 'BOARDING' || av.elevPhase === 'EXITING') {
+        // Keep active portal step and update post-elevator destination
+        av.isWalking = true;
+        av.state = 'WALKING';
+        return;
+      }
+
+      if (curFloor === destFloor) {
+        av.elevPhase = null;
+        av.floor = curFloor;
+        av.floorY = curFloorY;
+        attachAvatarToFloor(av, curFloor);
+        const pts = findGridPathAStar(cur.x, cur.z, destPos.x, destPos.z, curFloor, av.agent.id);
+        av.moveQueue = pts.map(p => ({ x: p.x, y: destFloorY, z: p.z, isElevator: false }));
+      } else {
+        // Cross-floor navigation: A* to elevator lobby -> wait/board -> ride cabin -> exit -> A* to dest
+        const lobbySlot = getAgentElevatorSlot(av.agent.id, true);
+        if (av.elevPhase === 'WAIT_CABIN_BOARD') {
+          requestElevatorFloor(curFloor);
+        } else {
+          av.elevPhase = 'TO_LOBBY';
+          const ptsToLobby = findGridPathAStar(cur.x, cur.z, lobbySlot.x, lobbySlot.z, curFloor, av.agent.id);
+          av.moveQueue = ptsToLobby.map(p => ({ x: p.x, y: curFloorY, z: p.z, isElevator: false }));
+          if (av.moveQueue.length === 0) {
+            av.moveQueue.push({ x: lobbySlot.x, y: curFloorY, z: lobbySlot.z, isElevator: false });
+          }
+        }
+      }
+
       av.isWalking = true;
       av.state = 'WALKING';
+    }
+
+    function pickCollaborateSpot(peerAv) {
+      const peerFloor = peerAv.homeFloor || Math.round(peerAv.homePos.y / 8) + 1;
+      const candidates = [
+        { x: peerAv.homePos.x + 1.55, z: peerAv.homePos.z + 0.85 },
+        { x: peerAv.homePos.x - 1.55, z: peerAv.homePos.z + 0.85 },
+        { x: peerAv.homePos.x, z: peerAv.homePos.z + 1.35 },
+        { x: peerAv.homePos.x + 1.65, z: peerAv.homePos.z }
+      ];
+      for (const c of candidates) {
+        if (isPointWalkableForAgent(c.x, c.z, peerFloor, null, NAV_AGENT_RADIUS, false)) {
+          return { x: c.x, y: peerAv.homePos.y, z: c.z };
+        }
+      }
+      const fallback = findNearestWalkablePoint(peerAv.homePos.x + 1.4, peerAv.homePos.z + 0.9, peerFloor, null);
+      return { x: fallback.x, y: peerAv.homePos.y, z: fallback.z };
     }
 
     function triggerAgentActivity(agentId, activityType) {
       const av = agentAvatars[agentId];
       if (!av) return;
 
-      const jitter = () => (Math.random() - 0.5) * 2.2;
+      const jitter = () => (Math.random() - 0.5) * 1.8;
       let targetPos = { ...av.homePos };
       let targetState = 'WORKING';
       let label = '';
 
       if (activityType === 'coffee') {
-        targetPos = { x: -14 + jitter(), y: 0, z: -2.0 + jitter() };
+        targetPos = { x: -14.0 + jitter() * 0.8, y: 0, z: -1.5 + jitter() * 0.4 };
         targetState = 'COFFEE';
         label = `${av.agent.name} berjalan ke Espresso Bar Kafetaria Lt. 1`;
       } else if (activityType === 'sholat') {
-        targetPos = { x: 14 + jitter(), y: 0, z: -4.0 + jitter() };
+        targetPos = { x: 10.8 + jitter() * 0.7, y: 0, z: -4.0 + jitter() * 1.1 };
         targetState = 'SHOLAT';
         label = `${av.agent.name} menuju Musholla As-Sakinah Lt. 1`;
       } else if (activityType === 'meeting') {
-        targetPos = { x: 14 + jitter(), y: 8, z: 12.0 + jitter() };
+        const meetingSpots = [
+          { x: 9.0, z: 12.0 },
+          { x: 10.5, z: 8.6 },
+          { x: 14.0, z: 8.4 },
+          { x: 17.5, z: 8.6 },
+          { x: 19.1, z: 12.0 },
+          { x: 17.5, z: 15.4 },
+          { x: 14.0, z: 15.6 },
+          { x: 10.5, z: 15.4 }
+        ];
+        const spot = meetingSpots[av.agent.id % meetingSpots.length];
+        targetPos = { x: spot.x, y: 8, z: spot.z };
         targetState = 'MEETING';
         label = `${av.agent.name} menghadiri rapat sinkronisasi di Boardroom Lt. 2`;
       } else if (activityType === 'rest') {
-        targetPos = { x: 8 + jitter(), y: 16, z: 12.0 + jitter() };
+        targetPos = { x: 8.0 + jitter() * 0.6, y: 16, z: 10.6 + jitter() * 0.5 };
         targetState = 'REST';
         label = `${av.agent.name} beristirahat memulihkan energi di Lounge Relaksasi Lt. 3`;
       } else if (activityType === 'gym') {
-        targetPos = { x: 18 + (Math.random() > 0.5 ? 1.3 : -1.3), y: 16, z: 12.0 };
+        targetPos = { x: 18 + (av.agent.id % 2 === 0 ? 1.3 : -1.3), y: 16, z: 12.0 };
         targetState = 'GYM';
         label = `${av.agent.name} berolahraga di Wellness Gym Lt. 3`;
       } else if (activityType === 'collaborate') {
         const peer = AGENTS[(av.agent.id + 3) % AGENTS.length];
         const peerAv = agentAvatars[peer.id];
         if (peerAv) {
-          targetPos = { x: peerAv.homePos.x + 1.4, y: peerAv.homePos.y, z: peerAv.homePos.z + 0.6 };
+          targetPos = pickCollaborateSpot(peerAv);
           targetState = 'COLLABORATING';
           label = `${av.agent.name} berkolaborasi langsung di meja ${peer.name}`;
         }
       } else {
         targetPos = { ...av.homePos };
         targetState = 'WORKING';
-        label = `${av.agent.name} kembali fokus bekerja di meja Lt. ${av.floor}`;
+        label = `${av.agent.name} kembali fokus bekerja di meja Lt. ${av.homeFloor || av.floor}`;
       }
 
       enqueueAgentPath(av, targetPos, targetState, label);
@@ -3632,28 +4498,498 @@ export interface CandidateComparisonView {
       }, 5500);
     }
 
-    // ─── 9. ANIMATION LOOP, COLLISION AVOIDANCE, 1ST & 3RD PERSON POV ───────────
-    function resolveXZCollisions(pos, floorNum, ignoreLabelPrefix = null) {
+    // ─── 9. ANIMATION LOOP, DOORS, ELEVATOR FSM, COLLISION & POV ────────────────
+    function resolveXZCollisions(pos, floorNum, exactExemptLabel = null) {
       const margin = 0.42;
-      STATIC_COLLIDERS.forEach(box => {
-        if (box.floor !== floorNum) return;
-        if (ignoreLabelPrefix && box.label.startsWith(ignoreLabelPrefix)) return;
-        const minX = box.minX - margin;
-        const maxX = box.maxX + margin;
-        const minZ = box.minZ - margin;
-        const maxZ = box.maxZ + margin;
-        if (pos.x > minX && pos.x < maxX && pos.z > minZ && pos.z < maxZ) {
-          const dLeft = pos.x - minX;
-          const dRight = maxX - pos.x;
-          const dTop = pos.z - minZ;
-          const dBot = maxZ - pos.z;
-          const m = Math.min(dLeft, dRight, dTop, dBot);
-          if (m === dLeft) pos.x = minX;
-          else if (m === dRight) pos.x = maxX;
-          else if (m === dTop) pos.z = minZ;
-          else pos.z = maxZ;
+      for (let iter = 0; iter < 2; iter++) {
+        let pushed = false;
+        for (let i = 0; i < STATIC_COLLIDERS.length; i++) {
+          const box = STATIC_COLLIDERS[i];
+          if (box.floor !== floorNum) continue;
+          if (exactExemptLabel && box.label === exactExemptLabel) continue;
+          const minX = box.minX - margin;
+          const maxX = box.maxX + margin;
+          const minZ = box.minZ - margin;
+          const maxZ = box.maxZ + margin;
+          if (pos.x > minX && pos.x < maxX && pos.z > minZ && pos.z < maxZ) {
+            const dLeft = pos.x - minX;
+            const dRight = maxX - pos.x;
+            const dTop = pos.z - minZ;
+            const dBot = maxZ - pos.z;
+            const m = Math.min(dLeft, dRight, dTop, dBot);
+            if (m === dLeft) pos.x = minX;
+            else if (m === dRight) pos.x = maxX;
+            else if (m === dTop) pos.z = minZ;
+            else pos.z = maxZ;
+            pushed = true;
+          }
+        }
+        if (!pushed) break;
+      }
+    }
+
+    function isPlayerNearOrInElevator() {
+      if (!camera) return false;
+      const x = camera.position.x;
+      const z = camera.position.z;
+      return Math.abs(x) < 2.2 && z > -6.0 && z < 1.2;
+    }
+
+    function isPlayerInsideElevatorCabin() {
+      if (!camera) return false;
+      return Math.abs(camera.position.x) < 1.8 && camera.position.z > -5.9 && camera.position.z < -1.95;
+    }
+
+    function updateInteractiveDoors(delta) {
+      if (!INTERACTIVE_DOORS || INTERACTIVE_DOORS.length === 0) return;
+      const avatarList = Object.values(agentAvatars);
+      const camInWalkthrough = currentPOV === 'walkthrough' && camera;
+      const camFloor = currentFloor > 0 ? currentFloor : 1;
+
+      for (let i = 0; i < INTERACTIVE_DOORS.length; i++) {
+        const door = INTERACTIVE_DOORS[i];
+        let shouldOpen = false;
+
+        for (let j = 0; j < avatarList.length; j++) {
+          const av = avatarList[j];
+          if (!av || !av.group) continue;
+          if (Math.abs(av.group.position.y - door.center.y) > 1.5) continue;
+          const d = Math.hypot(av.group.position.x - door.center.x, av.group.position.z - door.center.z);
+          if (d <= 2.8) {
+            shouldOpen = true;
+            break;
+          }
+        }
+
+        if (!shouldOpen && camInWalkthrough) {
+          if (Math.abs((camera.position.y - 1.62) - door.center.y) < 1.8 || camFloor === door.floor) {
+            const camDist = Math.hypot(camera.position.x - door.center.x, camera.position.z - door.center.z);
+            if (camDist <= 2.8) {
+              shouldOpen = true;
+            }
+          }
+        }
+
+        const targetOpen = shouldOpen ? 1 : 0;
+        door.openAmount += (targetOpen - door.openAmount) * Math.min(1, delta * 8.0);
+        const offset = door.closedZOffset + door.openAmount * door.slideDistance;
+        if (door.leafNorth) door.leafNorth.position.z = -offset;
+        if (door.leafSouth) door.leafSouth.position.z = offset;
+        if (door.sensorLed && door.sensorLed.material) {
+          door.sensorLed.material.color.setHex(door.openAmount > 0.15 ? 0x10b981 : 0x38bdf8);
+        }
+      }
+    }
+
+    function updateElevatorSystem(delta) {
+      if (!elevatorCabin) return;
+      const avatarList = Object.values(agentAvatars);
+      const activeFloor = Math.round(elevatorState.currentY / 8) + 1;
+      const isThresholdBusy = (fl) => {
+        if (elevatorState.playerPhase === 'AUTO_ENTERING') return true;
+        if (
+          currentPOV === 'walkthrough' &&
+          camera &&
+          (currentFloor || 1) === fl &&
+          Math.abs(camera.position.x) < 1.8 &&
+          camera.position.z >= -2.5 &&
+          camera.position.z <= 0.6
+        ) {
+          return true;
+        }
+        return avatarList.some(av =>
+          (av.elevPhase === 'BOARDING' || av.elevPhase === 'EXITING') &&
+          Math.round(av.group.position.y / 8) + 1 === fl
+        );
+      };
+
+      if (elevatorState.mode === 'IDLE') {
+        elevatorState.currentFloor = activeFloor;
+        const playerNearOnSameFloor =
+          currentPOV === 'walkthrough' &&
+          isPlayerNearOrInElevator() &&
+          (currentFloor || 1) === activeFloor;
+        const someoneWaitingHere = avatarList.some(
+          av => av.elevPhase === 'WAIT_CABIN_BOARD' && av.floor === activeFloor
+        );
+        const someoneExitingHere = avatarList.some(
+          av => av.elevPhase === 'RIDING' && av.pendingDestFloor === activeFloor
+        );
+
+        if (someoneWaitingHere || someoneExitingHere || playerNearOnSameFloor) {
+          elevatorState.doorsOpenFloor = activeFloor;
+          elevatorState.mode = 'DOORS_OPEN';
+          elevatorState.holdTimer = 0.75;
+        } else {
+          const nextF = pickNextElevatorFloor(activeFloor);
+          if (nextF !== null && nextF !== activeFloor) {
+            elevatorState.nextFloorPending = nextF;
+            elevatorState.doorsOpenFloor = null;
+            elevatorState.mode = 'CLOSING';
+          } else if (elevatorState.queue.includes(activeFloor)) {
+            elevatorState.queue = elevatorState.queue.filter(q => q !== activeFloor);
+            elevatorState.doorsOpenFloor = activeFloor;
+            elevatorState.mode = 'DOORS_OPEN';
+            elevatorState.holdTimer = 0.75;
+          } else {
+            elevatorState.doorsOpenFloor = null;
+          }
+        }
+      } else if (elevatorState.mode === 'DOORS_OPEN') {
+        const f = elevatorState.doorsOpenFloor || activeFloor;
+        if (isThresholdBusy(f)) {
+          elevatorState.holdTimer = Math.max(elevatorState.holdTimer, 0.35);
+        } else {
+          elevatorState.holdTimer -= delta;
+        }
+
+        if (elevatorState.holdTimer <= 0) {
+          elevatorState.queue = elevatorState.queue.filter(q => q !== f);
+          const nextF = pickNextElevatorFloor(f);
+          if (nextF !== null && nextF !== f) {
+            elevatorState.nextFloorPending = nextF;
+            elevatorState.doorsOpenFloor = null;
+            elevatorState.mode = 'CLOSING';
+          } else {
+            const playerNear =
+              currentPOV === 'walkthrough' &&
+              isPlayerNearOrInElevator() &&
+              (currentFloor || 1) === f;
+            if (!playerNear) {
+              elevatorState.doorsOpenFloor = null;
+              elevatorState.mode = 'IDLE';
+            } else {
+              elevatorState.holdTimer = 0.4;
+            }
+          }
+        }
+      } else if (elevatorState.mode === 'CLOSING') {
+        elevatorState.doorsOpenFloor = null;
+        const allClosed = [1, 2, 3].every(fl => elevatorState.doorOpenProgress[fl] <= 0.08);
+        if (allClosed) {
+          const nf = elevatorState.nextFloorPending !== null
+            ? elevatorState.nextFloorPending
+            : pickNextElevatorFloor(activeFloor);
+          if (nf !== null && nf !== activeFloor) {
+            elevatorState.targetY = (nf - 1) * 8;
+            elevatorTargetY = elevatorState.targetY;
+            elevatorState.currentFloor = null;
+            elevatorState.mode = 'MOVING';
+          } else {
+            elevatorState.mode = 'IDLE';
+          }
+        }
+      } else if (elevatorState.mode === 'MOVING') {
+        const dy = elevatorState.targetY - elevatorState.currentY;
+        const speed = 6.8;
+        if (Math.abs(dy) <= speed * delta + 0.02) {
+          elevatorState.currentY = elevatorState.targetY;
+          const arrivedFloor = Math.round(elevatorState.currentY / 8) + 1;
+          elevatorState.currentFloor = arrivedFloor;
+          elevatorState.queue = elevatorState.queue.filter(q => q !== arrivedFloor);
+          elevatorState.nextFloorPending = null;
+          elevatorState.doorsOpenFloor = arrivedFloor;
+          elevatorState.mode = 'DOORS_OPEN';
+          elevatorState.holdTimer = 0.75;
+        } else {
+          elevatorState.currentY += Math.sign(dy) * speed * delta;
+        }
+      }
+
+      // Apply cabin position & animate landing/cabin sliding doors
+      elevatorCabin.position.y = elevatorState.currentY;
+      [1, 2, 3].forEach(fl => {
+        const wantOpen = elevatorState.doorsOpenFloor === fl ? 1 : 0;
+        elevatorState.doorOpenProgress[fl] +=
+          (wantOpen - elevatorState.doorOpenProgress[fl]) * Math.min(1, delta * 10.0);
+        const p = elevatorState.doorOpenProgress[fl];
+        const ld = ELEVATOR_LANDING_DOORS[fl];
+        if (ld) {
+          ld.leftDoor.position.x = -0.55 - p * 1.0;
+          ld.rightDoor.position.x = 0.55 + p * 1.0;
+          if (ld.ledMat) {
+            ld.ledMat.color.setHex(
+              wantOpen ? 0x10b981 : (elevatorState.mode === 'MOVING' ? 0xf59e0b : 0x38bdf8)
+            );
+          }
         }
       });
+
+      if (elevatorCabinDoors) {
+        const cabinDoorP = elevatorState.doorsOpenFloor
+          ? elevatorState.doorOpenProgress[elevatorState.doorsOpenFloor]
+          : 0;
+        elevatorCabinDoors.leftDoor.position.x = -0.55 - cabinDoorP * 1.0;
+        elevatorCabinDoors.rightDoor.position.x = 0.55 + cabinDoorP * 1.0;
+      }
+
+      updateWalkthroughElevatorHUD();
+    }
+
+    function updateWalkthroughElevatorHUD() {
+      const hud = document.getElementById('elevator-hud');
+      if (!hud) return;
+      const shouldShow =
+        currentPOV === 'walkthrough' &&
+        (isPlayerNearOrInElevator() || elevatorState.playerPhase !== null);
+
+      if (!shouldShow) {
+        hud.classList.add('hidden');
+        return;
+      }
+      hud.classList.remove('hidden');
+
+      const playerFloor = currentFloor > 0 ? currentFloor : 1;
+      const cabinFloor = elevatorState.currentFloor || (Math.round(elevatorState.currentY / 8) + 1);
+      const statusEl = document.getElementById('elevator-hud-status');
+      const subEl = document.getElementById('elevator-hud-sub');
+
+      if (statusEl) {
+        if (elevatorState.mode === 'MOVING') {
+          const destFl = Math.round(elevatorState.targetY / 8) + 1;
+          statusEl.innerText = `Bergerak → Lt. ${destFl}`;
+        } else {
+          statusEl.innerText = `Kabin Lt. ${cabinFloor} • Anda Lt. ${playerFloor}`;
+        }
+      }
+      if (subEl) {
+        if (elevatorState.playerPhase === 'WAITING_TO_BOARD') {
+          subEl.innerText = `Memanggil lift ke Lt. ${playerFloor} sebelum menuju Lt. ${elevatorState.playerTargetFloor}...`;
+        } else if (elevatorState.playerPhase === 'AUTO_ENTERING') {
+          subEl.innerText = 'Pintu terbuka — melangkah masuk ke kabin...';
+        } else if (elevatorState.playerPhase === 'RIDING') {
+          subEl.innerText = `Naik/turun di dalam kabin menuju Lt. ${elevatorState.playerTargetFloor}...`;
+        } else if (isPlayerInsideElevatorCabin()) {
+          subEl.innerText = 'Di dalam kabin: klik Lt. 1 / 2 / 3 atau tekan tombol 1-3';
+        } else {
+          subEl.innerText = 'Klik lantai tujuan atau tekan 1 / 2 / 3 untuk naik lift:';
+        }
+      }
+
+      [1, 2, 3].forEach(fl => {
+        const btn = document.getElementById(`btn-elev-${fl}`);
+        if (!btn) return;
+        const isTarget = elevatorState.playerTargetFloor === fl;
+        const isCurrent = playerFloor === fl && elevatorState.playerPhase === null;
+        if (isTarget) {
+          btn.className = 'elev-btn py-2 px-2 rounded-lg font-mono font-bold bg-amber-500 text-zinc-950 border border-amber-300 shadow transition';
+        } else if (isCurrent) {
+          btn.className = 'elev-btn py-2 px-2 rounded-lg font-mono font-bold bg-cyan-600 text-white border border-cyan-400 shadow transition';
+        } else {
+          btn.className = 'elev-btn py-2 px-2 rounded-lg font-mono font-bold bg-zinc-800/90 hover:bg-cyan-600/80 text-zinc-100 border border-zinc-700 transition';
+        }
+      });
+    }
+
+    function requestPlayerElevator(targetFloor) {
+      if (currentPOV !== 'walkthrough') return;
+      const playerFloor = currentFloor > 0 ? currentFloor : 1;
+      const inCabin = isPlayerInsideElevatorCabin();
+
+      if (inCabin) {
+        if (
+          targetFloor === playerFloor &&
+          Math.abs(elevatorState.currentY - (playerFloor - 1) * 8) < 0.25
+        ) {
+          elevatorState.playerPhase = null;
+          elevatorState.playerTargetFloor = null;
+          requestElevatorFloor(playerFloor);
+          return;
+        }
+        elevatorState.playerTargetFloor = targetFloor;
+        elevatorState.playerPhase = 'RIDING';
+        requestElevatorFloor(targetFloor);
+      } else {
+        elevatorState.playerTargetFloor = targetFloor;
+        elevatorState.playerPhase = targetFloor === playerFloor ? 'SUMMONING' : 'WAITING_TO_BOARD';
+        requestElevatorFloor(playerFloor);
+      }
+      updateWalkthroughElevatorHUD();
+    }
+
+    function syncFloorUIAndCutaway(floorNum, keepAllFloorsVisible = false) {
+      currentFloor = floorNum;
+      document.querySelectorAll('.floor-btn').forEach(b => {
+        b.className = 'floor-btn px-2.5 py-1 rounded font-medium text-zinc-400 hover:text-white transition';
+      });
+      const activeBtn = document.getElementById(`btn-floor-${floorNum}`);
+      if (activeBtn) {
+        activeBtn.className = 'floor-btn px-2.5 py-1 rounded font-semibold bg-teal-600 text-white transition shadow';
+      }
+
+      if (keepAllFloorsVisible) {
+        if (floorGroups[1]) floorGroups[1].visible = true;
+        if (floorGroups[2]) floorGroups[2].visible = true;
+        if (floorGroups[3]) floorGroups[3].visible = true;
+      } else {
+        if (floorGroups[1]) floorGroups[1].visible = true;
+        if (floorGroups[2]) floorGroups[2].visible = (floorNum === 0 || floorNum >= 2);
+        if (floorGroups[3]) floorGroups[3].visible = (floorNum === 0 || floorNum === 3);
+      }
+      if (roofGroup) roofGroup.visible = (floorNum === 0);
+
+      const indicator = document.getElementById('active-room-indicator');
+      if (indicator) {
+        if (floorNum === 0) indicator.innerText = '🏢 Seluruh Gedung 3 Lantai • 24 Agen Aktif';
+        else if (floorNum === 1) indicator.innerText = '1️⃣ Lantai 1: Lobi Utama, Kafetaria & Musholla As-Sakinah';
+        else if (floorNum === 2) indicator.innerText = '2️⃣ Lantai 2: Core Engineering, QA Lab & Ruang Meeting Boardroom';
+        else if (floorNum === 3) indicator.innerText = '3️⃣ Lantai 3: Suite Eksekutif, Pusat Riset AI, DevOps & Gym';
+      }
+    }
+
+    function finishAgentArrival(av, parts) {
+      av.isWalking = false;
+      av.elevPhase = null;
+      av.state = av.pendingState || 'WORKING';
+      parts.leftThigh.rotation.x = 0;
+      parts.rightThigh.rotation.x = 0;
+      parts.leftShoulder.rotation.x = 0;
+      parts.rightShoulder.rotation.x = 0;
+      if (av.state === 'WORKING' || av.state === 'GYM' || av.state === 'SHOLAT' || av.state === 'COFFEE') {
+        av.group.rotation.y = Math.PI;
+      } else if (av.state === 'MEETING') {
+        av.group.rotation.y = Math.atan2(14 - av.group.position.x, 12 - av.group.position.z);
+      }
+      updateLiveCensus();
+    }
+
+    function updateAgentElevatorAndPath(av, delta) {
+      const pos = av.group.position;
+      const parts = av.parts;
+
+      // 1. Handle Elevator Boarding / Riding / Exiting State Transitions
+      if (av.elevPhase === 'WAIT_CABIN_BOARD') {
+        const curFloor = av.floor;
+        const curFloorY = (curFloor - 1) * 8;
+        av.group.rotation.y = Math.PI; // Face elevator doors (-Z)
+        if (
+          elevatorState.mode === 'DOORS_OPEN' &&
+          elevatorState.doorsOpenFloor === curFloor &&
+          Math.abs(elevatorState.currentY - curFloorY) < 0.15 &&
+          elevatorState.doorOpenProgress[curFloor] >= 0.72
+        ) {
+          const cabinSlot = getAgentElevatorSlot(av.agent.id, false);
+          av.elevPhase = 'BOARDING';
+          av.moveQueue = [
+            { x: 0, y: curFloorY, z: -1.9, isElevator: true },
+            { x: cabinSlot.x, y: curFloorY, z: cabinSlot.z, isElevator: true }
+          ];
+          av.stuckAnchor = { x: pos.x, z: pos.z };
+          av.stuckTimer = 0;
+        }
+        return;
+      }
+
+      if (av.elevPhase === 'RIDING') {
+        pos.y = elevatorCabin ? elevatorCabin.position.y : elevatorState.currentY;
+        av.group.rotation.y = 0; // Face +Z portal doors
+        const destF = av.pendingDestFloor;
+        const destFloorY = (destF - 1) * 8;
+        if (
+          elevatorState.mode === 'DOORS_OPEN' &&
+          elevatorState.doorsOpenFloor === destF &&
+          Math.abs(elevatorState.currentY - destFloorY) < 0.15 &&
+          elevatorState.doorOpenProgress[destF] >= 0.72
+        ) {
+          const lobbySlot = getAgentElevatorSlot(av.agent.id, true);
+          av.elevPhase = 'EXITING';
+          av.moveQueue = [
+            { x: 0, y: destFloorY, z: -1.9, isElevator: true },
+            { x: lobbySlot.x, y: destFloorY, z: lobbySlot.z, isElevator: true }
+          ];
+          av.stuckAnchor = { x: pos.x, z: pos.z };
+          av.stuckTimer = 0;
+        }
+        return;
+      }
+
+      // 2. Normal Waypoint Movement + Anti-Stuck Watchdog
+      if (av.moveQueue && av.moveQueue.length > 0) {
+        const wp = av.moveQueue[0];
+        const dx = wp.x - pos.x;
+        const dy = wp.y - pos.y;
+        const dz = wp.z - pos.z;
+        const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+        if (dist < 0.16) {
+          pos.set(wp.x, wp.y, wp.z);
+          av.moveQueue.shift();
+
+          if (av.moveQueue.length === 0) {
+            if (av.elevPhase === 'TO_LOBBY') {
+              av.elevPhase = 'WAIT_CABIN_BOARD';
+              requestElevatorFloor(av.floor);
+            } else if (av.elevPhase === 'BOARDING') {
+              av.elevPhase = 'RIDING';
+              attachAvatarToFloor(av, null); // Stay visible inside glass shaft across all floors
+              requestElevatorFloor(av.pendingDestFloor);
+            } else if (av.elevPhase === 'EXITING') {
+              const destF = av.pendingDestFloor;
+              const destY = (destF - 1) * 8;
+              av.floor = destF;
+              av.floorY = destY;
+              attachAvatarToFloor(av, destF);
+              if (currentPOV === 'follow' && selectedAgent && selectedAgent.id === av.agent.id) {
+                syncFloorUIAndCutaway(destF);
+              }
+              av.elevPhase = null;
+              const dest = av.pendingDestPos || av.homePos;
+              const finalPts = findGridPathAStar(pos.x, pos.z, dest.x, dest.z, destF, av.agent.id);
+              av.moveQueue = finalPts.map(p => ({ x: p.x, y: destY, z: p.z, isElevator: false }));
+              if (av.moveQueue.length === 0) {
+                finishAgentArrival(av, parts);
+              }
+            } else {
+              finishAgentArrival(av, parts);
+            }
+          }
+        } else {
+          const speed = wp.isElevator ? 4.0 : 3.6;
+          const step = Math.min(dist, speed * delta);
+          pos.x += (dx / dist) * step;
+          pos.y += (dy / dist) * step;
+          pos.z += (dz / dist) * step;
+
+          if (!wp.isElevator) {
+            const curFloorNum = Math.max(1, Math.min(3, Math.round(pos.y / 8) + 1));
+            resolveXZCollisions(pos, curFloorNum, `Desk #${av.agent.id}`);
+          }
+          if (Math.abs(dx) > 0.02 || Math.abs(dz) > 0.02) {
+            av.group.rotation.y = Math.atan2(dx, dz);
+          }
+
+          // Anti-Stuck Watchdog: < 0.08m progress over 1.5s -> nudge into nearest walkable cell & recompute A*
+          if (!wp.isElevator) {
+            av.stuckTimer = (av.stuckTimer || 0) + delta;
+            if (av.stuckTimer >= 1.5) {
+              const anchor = av.stuckAnchor || { x: pos.x, z: pos.z };
+              const progress = Math.hypot(pos.x - anchor.x, pos.z - anchor.z);
+              av.stuckAnchor = { x: pos.x, z: pos.z };
+              av.stuckTimer = 0;
+
+              if (progress < 0.08) {
+                const curFloorNum = Math.max(1, Math.min(3, Math.round(pos.y / 8) + 1));
+                const curFloorY = (curFloorNum - 1) * 8;
+                const safe = findNearestWalkablePoint(pos.x, pos.z, curFloorNum, `Desk #${av.agent.id}`);
+                pos.x = safe.x;
+                pos.z = safe.z;
+                av.stuckAnchor = { x: pos.x, z: pos.z };
+                av.stuckRetries = (av.stuckRetries || 0) + 1;
+
+                if (av.elevPhase === 'TO_LOBBY') {
+                  const lobbySlot = getAgentElevatorSlot(av.agent.id, true);
+                  const pts = findGridPathAStar(pos.x, pos.z, lobbySlot.x, lobbySlot.z, curFloorNum, av.agent.id);
+                  av.moveQueue = pts.map(p => ({ x: p.x, y: curFloorY, z: p.z, isElevator: false }));
+                } else {
+                  const dest = av.pendingDestPos || av.homePos;
+                  const pts = findGridPathAStar(pos.x, pos.z, dest.x, dest.z, curFloorNum, av.agent.id);
+                  av.moveQueue = pts.map(p => ({ x: p.x, y: curFloorY, z: p.z, isElevator: false }));
+                }
+              }
+            }
+          }
+        }
+      }
     }
 
     function animateWebGL() {
@@ -3661,17 +4997,13 @@ export interface CandidateComparisonView {
       requestAnimationFrame(animateWebGL);
 
       if (clock) {
-        const delta = Math.min(clock.getDelta(), 0.05);
+        const delta = Math.min(clock.getDelta(), 0.08);
         const elapsedTime = clock.getElapsedTime();
         if (typeof TWEEN !== 'undefined') TWEEN.update();
 
-        // 1. Elevator Cabin Smooth Tracking
-        if (elevatorCabin) {
-          elevatorCabin.position.y += (elevatorTargetY - elevatorCabin.position.y) * Math.min(1, delta * 3.5);
-          if (!Object.values(agentAvatars).some(a => a.moveQueue && a.moveQueue[0] && a.moveQueue[0].isElevator)) {
-            elevatorTargetY = 8 + Math.sin(elapsedTime * 0.35) * 8;
-          }
-        }
+        // 1. Multi-Floor Elevator Controller & Interactive Sliding Glass Doors
+        updateElevatorSystem(delta);
+        updateInteractiveDoors(delta);
 
         // 2. Treadmill & Office Clocks
         animatedMeshes.forEach(item => {
@@ -3689,65 +5021,41 @@ export interface CandidateComparisonView {
           if (!parts) return;
           const seed = parts.seed;
 
-          if (av.moveQueue && av.moveQueue.length > 0) {
-            const wp = av.moveQueue[0];
-            const pos = av.group.position;
-            const dx = wp.x - pos.x;
-            const dy = wp.y - pos.y;
-            const dz = wp.z - pos.z;
-            const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
-
-            if (wp.isElevator) {
-              elevatorTargetY = wp.y;
-            }
-
-            if (dist < 0.16) {
-              pos.set(wp.x, wp.y, wp.z);
-              av.moveQueue.shift();
-              if (av.moveQueue.length === 0) {
-                av.isWalking = false;
-                av.state = av.pendingState || 'WORKING';
-                parts.leftThigh.rotation.x = 0;
-                parts.rightThigh.rotation.x = 0;
-                parts.leftShoulder.rotation.x = 0;
-                parts.rightShoulder.rotation.x = 0;
-                if (av.state === 'WORKING') {
-                  av.group.rotation.y = Math.PI; // Face desk monitors (-Z)
-                }
-                updateLiveCensus();
-              }
-            } else {
-              const speed = wp.isElevator ? 4.5 : 3.6;
-              const step = Math.min(dist, speed * delta);
-              pos.x += (dx / dist) * step;
-              pos.y += (dy / dist) * step;
-              pos.z += (dz / dist) * step;
-
-              if (!wp.isElevator) {
-                const curFloorNum = Math.round(pos.y / 8) + 1;
-                resolveXZCollisions(pos, curFloorNum, `Desk #${av.agent.id}`);
-                if (Math.abs(dx) > 0.02 || Math.abs(dz) > 0.02) {
-                  av.group.rotation.y = Math.atan2(dx, dz);
-                }
-              }
-            }
+          if (av.isWalking) {
+            updateAgentElevatorAndPath(av, delta);
           }
 
-          // Agent-to-agent collision separation while walking
-          if (av.isWalking) {
+          // Agent-to-agent collision separation while walking (skip inside narrow elevator/waiting slots)
+          const activelyStepping =
+            av.isWalking &&
+            av.elevPhase !== 'WAIT_CABIN_BOARD' &&
+            av.elevPhase !== 'BOARDING' &&
+            av.elevPhase !== 'RIDING' &&
+            av.elevPhase !== 'EXITING';
+
+          if (activelyStepping) {
+            const curFloorNum = Math.max(1, Math.min(3, Math.round(av.group.position.y / 8) + 1));
             avatarList.forEach(other => {
               if (other === av) return;
               if (Math.abs(other.group.position.y - av.group.position.y) > 1.5) return;
               const ox = av.group.position.x - other.group.position.x;
               const oz = av.group.position.z - other.group.position.z;
               const d = Math.sqrt(ox * ox + oz * oz);
-              if (d > 0.01 && d < 0.85) {
-                const push = (0.85 - d) * 0.15;
+              if (d > 0.01 && d < 0.78) {
+                const push = (0.78 - d) * 0.12;
                 av.group.position.x += (ox / d) * push;
                 av.group.position.z += (oz / d) * push;
               }
             });
+            resolveXZCollisions(av.group.position, curFloorNum, `Desk #${av.agent.id}`);
+          }
 
+          const walkingPose =
+            av.isWalking &&
+            av.elevPhase !== 'WAIT_CABIN_BOARD' &&
+            av.elevPhase !== 'RIDING';
+
+          if (walkingPose) {
             // Natural walking gait
             parts.humanoid.position.y = 0;
             const walkSpeed = 8.5;
@@ -3760,7 +5068,7 @@ export interface CandidateComparisonView {
             parts.rightShoulder.rotation.x = legSwing * 0.5;
             parts.upperBody.position.y = 0.58 + Math.abs(Math.sin(elapsedTime * walkSpeed + seed)) * 0.025;
             parts.upperBody.rotation.x = 0.04;
-          } else if (av.state === 'WORKING') {
+          } else if (!av.isWalking && av.state === 'WORKING') {
             // Seated cleanly on ergonomic chair at z + 0.42
             parts.humanoid.position.y = -0.18;
             parts.leftThigh.rotation.x = -Math.PI / 2;
@@ -3776,10 +5084,12 @@ export interface CandidateComparisonView {
             parts.leftHand.position.y = 0.08 + typeKey;
             parts.rightHand.position.y = 0.08 - typeKey;
           } else {
-            // Standing pose for GYM / SHOLAT / COFFEE / REST / MEETING
+            // Standing pose for GYM / SHOLAT / COFFEE / REST / MEETING / ELEVATOR WAIT
             parts.humanoid.position.y = 0;
             parts.leftCalf.rotation.x = 0;
             parts.rightCalf.rotation.x = 0;
+            parts.leftShoulder.rotation.x = 0;
+            parts.rightShoulder.rotation.x = 0;
             if (av.state === 'GYM') {
               parts.upperBody.rotation.x = 0.08;
               const runSpeed = 12.0;
@@ -3811,7 +5121,7 @@ export interface CandidateComparisonView {
 
         // 4. Camera POV Handling (1st-Person, 3rd-Person, Orbit)
         if (currentPOV === 'walkthrough') {
-          handleWalkthroughControls();
+          handleWalkthroughControls(delta);
         } else if (currentPOV === 'follow' && selectedAgent) {
           const av = agentAvatars[selectedAgent.id];
           if (av && av.group) {
@@ -3839,8 +5149,93 @@ export interface CandidateComparisonView {
       }
     }
 
-    function handleWalkthroughControls() {
-      const moveSpeed = 0.18;
+    function handleWalkthroughControls(delta = 0.016) {
+      const floorNum = currentFloor > 0 ? currentFloor : 1;
+      const baseFloorY = (floorNum - 1) * 8;
+
+      // 1. Handle active elevator auto-boarding / riding state for 1st-person player
+      if (elevatorState.playerPhase === 'SUMMONING') {
+        if (
+          elevatorState.mode === 'DOORS_OPEN' &&
+          elevatorState.doorsOpenFloor === floorNum &&
+          elevatorState.doorOpenProgress[floorNum] >= 0.72
+        ) {
+          elevatorState.playerPhase = null;
+          elevatorState.playerTargetFloor = null;
+        }
+      } else if (elevatorState.playerPhase === 'WAITING_TO_BOARD') {
+        if (
+          elevatorState.mode === 'DOORS_OPEN' &&
+          elevatorState.doorsOpenFloor === floorNum &&
+          Math.abs(elevatorState.currentY - baseFloorY) < 0.15 &&
+          elevatorState.doorOpenProgress[floorNum] >= 0.72
+        ) {
+          elevatorState.playerPhase = 'AUTO_ENTERING';
+        }
+      } else if (elevatorState.playerPhase === 'AUTO_ENTERING') {
+        const dx = 0 - camera.position.x;
+        const dz = -4.0 - camera.position.z;
+        const dist = Math.hypot(dx, dz);
+        const enterSpeed = 4.2 * Math.max(delta, 0.016);
+        if (dist <= enterSpeed + 0.12) {
+          camera.position.x = 0;
+          camera.position.z = -4.0;
+          camera.position.y = (elevatorCabin ? elevatorCabin.position.y : elevatorState.currentY) + 1.62;
+          if (elevatorState.playerTargetFloor && elevatorState.playerTargetFloor !== floorNum) {
+            elevatorState.playerPhase = 'RIDING';
+            requestElevatorFloor(elevatorState.playerTargetFloor);
+          } else {
+            elevatorState.playerPhase = null;
+          }
+        } else {
+          camera.position.x += (dx / dist) * enterSpeed;
+          camera.position.z += (dz / dist) * enterSpeed;
+          camera.position.y = (elevatorCabin ? elevatorCabin.position.y : elevatorState.currentY) + 1.62;
+        }
+        return;
+      } else if (elevatorState.playerPhase === 'RIDING') {
+        const cabinY = elevatorCabin ? elevatorCabin.position.y : elevatorState.currentY;
+        camera.position.y = cabinY + 1.62;
+        // Show all floors while looking out through glass shaft during ride
+        if (floorGroups[1]) floorGroups[1].visible = true;
+        if (floorGroups[2]) floorGroups[2].visible = true;
+        if (floorGroups[3]) floorGroups[3].visible = true;
+
+        // Allow looking & stepping gently inside the cabin
+        const moveSpeed = 3.2 * Math.max(delta, 0.016);
+        const forward = new THREE.Vector3();
+        camera.getWorldDirection(forward);
+        forward.y = 0;
+        forward.normalize();
+        const right = new THREE.Vector3();
+        right.crossVectors(camera.up, forward).normalize();
+        if (walkKeys['KeyW'] || walkKeys['ArrowUp']) camera.position.addScaledVector(forward, moveSpeed);
+        if (walkKeys['KeyS'] || walkKeys['ArrowDown']) camera.position.addScaledVector(forward, -moveSpeed);
+        if (walkKeys['KeyA'] || walkKeys['ArrowLeft']) camera.position.addScaledVector(right, moveSpeed);
+        if (walkKeys['KeyD'] || walkKeys['ArrowRight']) camera.position.addScaledVector(right, -moveSpeed);
+        camera.position.x = Math.max(-1.35, Math.min(1.35, camera.position.x));
+        camera.position.z = Math.max(-5.35, Math.min(-2.45, camera.position.z));
+
+        const targetFl = elevatorState.playerTargetFloor;
+        const targetFlY = (targetFl - 1) * 8;
+        if (
+          elevatorState.mode === 'DOORS_OPEN' &&
+          elevatorState.doorsOpenFloor === targetFl &&
+          Math.abs(elevatorState.currentY - targetFlY) < 0.15 &&
+          elevatorState.doorOpenProgress[targetFl] >= 0.72
+        ) {
+          elevatorState.playerPhase = null;
+          elevatorState.playerTargetFloor = null;
+          syncFloorUIAndCutaway(targetFl);
+          camera.position.y = targetFlY + 1.62;
+        }
+        return;
+      }
+
+      // 2. Standard 1st-Person Walking on Active Floor
+      const prevX = camera.position.x;
+      const prevZ = camera.position.z;
+      const moveSpeed = Math.min(0.24, 5.2 * Math.max(delta, 0.016));
       const forward = new THREE.Vector3();
       camera.getWorldDirection(forward);
       forward.y = 0;
@@ -3854,55 +5249,57 @@ export interface CandidateComparisonView {
       if (walkKeys['KeyA'] || walkKeys['ArrowLeft']) camera.position.addScaledVector(right, moveSpeed);
       if (walkKeys['KeyD'] || walkKeys['ArrowRight']) camera.position.addScaledVector(right, -moveSpeed);
 
-      const floorNum = currentFloor > 0 ? currentFloor : 1;
-      const baseFloorY = (floorNum - 1) * 8;
-      camera.position.y = baseFloorY + 1.62;
       camera.position.x = Math.max(-25.0, Math.min(25.0, camera.position.x));
       camera.position.z = Math.max(-30.0, Math.min(30.0, camera.position.z));
       resolveXZCollisions(camera.position, floorNum, null);
+
+      // Guard elevator landing doors if cabin is absent or doors closed
+      const portalDoorsOpen =
+        elevatorState.doorsOpenFloor === floorNum &&
+        elevatorState.doorOpenProgress[floorNum] >= 0.55 &&
+        Math.abs(elevatorState.currentY - baseFloorY) < 0.25;
+
+      if (!portalDoorsOpen && Math.abs(camera.position.x) < 1.55) {
+        if (prevZ >= -1.6 && camera.position.z < -1.52) {
+          camera.position.z = -1.52;
+        } else if (prevZ <= -2.2 && camera.position.z > -2.35) {
+          camera.position.z = -2.35;
+        }
+      }
+
+      if (isPlayerInsideElevatorCabin() && Math.abs(elevatorState.currentY - baseFloorY) < 0.25) {
+        camera.position.y = (elevatorCabin ? elevatorCabin.position.y : baseFloorY) + 1.62;
+      } else {
+        camera.position.y = baseFloorY + 1.62;
+      }
     }
 
     // ─── 10. FLOOR SWITCHER & POV CONTROLLER FUNCTIONS ──────────────────────────
     function switchFloor(floorNum) {
-      currentFloor = floorNum;
-
-      document.querySelectorAll('.floor-btn').forEach(b => {
-        b.className = 'floor-btn px-2.5 py-1 rounded font-medium text-zinc-400 hover:text-white transition';
-      });
-      const activeBtn = document.getElementById(`btn-floor-${floorNum}`);
-      if (activeBtn) {
-        activeBtn.className = 'floor-btn px-2.5 py-1 rounded font-semibold bg-teal-600 text-white transition shadow';
-      }
-
-      // Auto-hide upper floor slabs so camera has unobstructed sightline into selected floor
-      if (floorGroups[1]) floorGroups[1].visible = true;
-      if (floorGroups[2]) floorGroups[2].visible = (floorNum === 0 || floorNum >= 2);
-      if (floorGroups[3]) floorGroups[3].visible = (floorNum === 0 || floorNum === 3);
-      if (roofGroup) roofGroup.visible = (floorNum === 0);
-
-      const indicator = document.getElementById('active-room-indicator');
+      elevatorState.playerPhase = null;
+      elevatorState.playerTargetFloor = null;
+      syncFloorUIAndCutaway(floorNum, false);
 
       if (currentPOV === 'walkthrough') {
         const baseFloorY = floorNum > 0 ? (floorNum - 1) * 8 : 0;
+        camera.rotation.order = 'YXZ';
         camera.position.set(0, baseFloorY + 1.62, 10);
         camera.lookAt(0, baseFloorY + 1.62, -4);
       } else if (floorNum === 0) {
         smoothCameraTo({ x: 34, y: 38, z: 50 }, { x: 0, y: 9, z: 2 });
-        if (indicator) indicator.innerText = '🏢 Seluruh Gedung 3 Lantai • 24 Agen Aktif';
       } else if (floorNum === 1) {
         smoothCameraTo({ x: 24, y: 16, z: 32 }, { x: 0, y: 1.5, z: 4 });
-        if (indicator) indicator.innerText = '1️⃣ Lantai 1: Lobi Utama, Kafetaria & Musholla As-Sakinah';
       } else if (floorNum === 2) {
         smoothCameraTo({ x: 24, y: 24, z: 32 }, { x: 0, y: 9.5, z: 2 });
-        if (indicator) indicator.innerText = '2️⃣ Lantai 2: Core Engineering, QA Lab & Ruang Meeting Boardroom';
       } else if (floorNum === 3) {
         smoothCameraTo({ x: 24, y: 32, z: 32 }, { x: 0, y: 17.5, z: 2 });
-        if (indicator) indicator.innerText = '3️⃣ Lantai 3: Suite Eksekutif, Pusat Riset AI, DevOps & Gym';
       }
     }
 
     function setCameraPOV(povMode) {
       currentPOV = povMode;
+      elevatorState.playerPhase = null;
+      elevatorState.playerTargetFloor = null;
 
       document.querySelectorAll('.pov-btn').forEach(b => {
         b.className = 'pov-btn px-2 py-1 rounded font-medium text-zinc-400 hover:text-white transition';
@@ -3913,12 +5310,16 @@ export interface CandidateComparisonView {
       }
 
       const walkthroughHud = document.getElementById('walkthrough-hud');
+      const elevatorHud = document.getElementById('elevator-hud');
 
       if (povMode === 'orbit') {
         if (controls) controls.enabled = true;
+        if (camera) camera.rotation.order = 'XYZ';
         if (walkthroughHud) walkthroughHud.classList.add('hidden');
+        if (elevatorHud) elevatorHud.classList.add('hidden');
       } else if (povMode === 'walkthrough') {
         if (controls) controls.enabled = false;
+        if (camera) camera.rotation.order = 'YXZ';
         if (walkthroughHud) walkthroughHud.classList.remove('hidden');
         const floorNum = currentFloor > 0 ? currentFloor : 1;
         switchFloor(floorNum);
@@ -3927,29 +5328,51 @@ export interface CandidateComparisonView {
         camera.lookAt(0, baseFloorY + 1.62, -4);
       } else if (povMode === 'follow') {
         if (controls) controls.enabled = false;
+        if (camera) camera.rotation.order = 'XYZ';
         if (walkthroughHud) walkthroughHud.classList.add('hidden');
+        if (elevatorHud) elevatorHud.classList.add('hidden');
         if (selectedAgent) {
-          switchFloor(selectedAgent.floor || 2);
+          const av = agentAvatars[selectedAgent.id];
+          switchFloor((av && av.floor) || selectedAgent.floor || 2);
           focusAgentCamera(selectedAgent);
         }
       } else if (povMode === 'topdown') {
         if (controls) controls.enabled = true;
+        if (camera) camera.rotation.order = 'XYZ';
         if (walkthroughHud) walkthroughHud.classList.add('hidden');
+        if (elevatorHud) elevatorHud.classList.add('hidden');
         const floorNum = currentFloor > 0 ? currentFloor : 1;
         const baseFloorY = (floorNum - 1) * 8;
         smoothCameraTo({ x: 0, y: baseFloorY + 42, z: 0.1 }, { x: 0, y: baseFloorY, z: 0 });
       }
     }
 
-    window.addEventListener('keydown', e => { walkKeys[e.code] = true; });
+    window.addEventListener('keydown', e => {
+      walkKeys[e.code] = true;
+      if (currentPOV === 'walkthrough') {
+        const activeTag = document.activeElement && document.activeElement.tagName;
+        if (activeTag !== 'INPUT' && activeTag !== 'TEXTAREA') {
+          if (isPlayerNearOrInElevator() || elevatorState.playerPhase !== null) {
+            if (e.key === '1' || e.code === 'Digit1' || e.code === 'Numpad1') requestPlayerElevator(1);
+            else if (e.key === '2' || e.code === 'Digit2' || e.code === 'Numpad2') requestPlayerElevator(2);
+            else if (e.key === '3' || e.code === 'Digit3' || e.code === 'Numpad3') requestPlayerElevator(3);
+          }
+        }
+      }
+    });
     window.addEventListener('keyup', e => { walkKeys[e.code] = false; });
-    window.addEventListener('mousedown', e => { isMouseDown = true; lastMousePos = { x: e.clientX, y: e.clientY }; });
+    window.addEventListener('mousedown', e => {
+      if (e.target && e.target.closest && e.target.closest('button, a, input, #elevator-hud, #walkthrough-hud')) return;
+      isMouseDown = true;
+      lastMousePos = { x: e.clientX, y: e.clientY };
+    });
     window.addEventListener('mouseup', () => { isMouseDown = false; });
     window.addEventListener('mousemove', e => {
       if (currentPOV === 'walkthrough' && isMouseDown && camera) {
         const deltaX = e.clientX - lastMousePos.x;
         const deltaY = e.clientY - lastMousePos.y;
         lastMousePos = { x: e.clientX, y: e.clientY };
+        camera.rotation.order = 'YXZ';
         camera.rotation.y -= deltaX * 0.003;
         camera.rotation.x -= deltaY * 0.003;
         camera.rotation.x = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, camera.rotation.x));
