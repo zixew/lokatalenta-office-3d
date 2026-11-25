@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>LokaTalenta Office — Living 3D Multi-Agent Headquarter</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏢</text></svg>" />
   <!-- Tailwind CSS & Fonts -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -161,7 +162,7 @@
         <!-- Camera POV Mode Controls -->
         <div class="flex flex-wrap items-center max-w-full bg-zinc-900 border border-zinc-800 rounded-lg p-0.5 text-xs shadow-inner">
           <button onclick="setCameraPOV('orbit')" id="btn-pov-orbit" class="pov-btn px-2 py-1 rounded font-semibold bg-teal-600 text-white transition" title="Orbit Bebas 3D">🌐 Orbit</button>
-          <button onclick="setCameraPOV('walkthrough')" id="btn-pov-walkthrough" class="pov-btn px-2 py-1 rounded font-medium text-zinc-400 hover:text-white transition" title="1st-Person View — Jalan Orang Pertama (WASD / Panah)">🚶 1st-Person</button>
+          <button onclick="setCameraPOV('walkthrough')" id="btn-pov-walkthrough" class="pov-btn px-2 py-1 rounded font-medium text-zinc-400 hover:text-white transition" title="1st-Person Agent POV — Lihat Langsung dari Mata Agen Aktif">🚶 1st-Person</button>
           <button onclick="setCameraPOV('follow')" id="btn-pov-follow" class="pov-btn px-2 py-1 rounded font-medium text-zinc-400 hover:text-white transition" title="3rd-Person View — Ikuti Agen Aktif">👤 3rd-Person</button>
           <button onclick="setCameraPOV('topdown')" id="btn-pov-topdown" class="pov-btn px-2 py-1 rounded font-medium text-zinc-400 hover:text-white transition" title="Denah Atas 2D">🗺️ Denah</button>
         </div>
@@ -225,15 +226,17 @@
   <!-- 3D Viewport Area -->
   <main class="relative w-full">
     <div id="canvas-container" class="h-[460px] sm:h-[720px]">
-      <!-- Floating First-Person Walkthrough HUD Overlay -->
-      <div id="walkthrough-hud" class="hidden absolute bottom-14 left-4 z-40 glass-card border border-teal-500/60 px-4 py-2 rounded-xl text-xs flex items-center gap-3 backdrop-blur-md shadow-2xl animate-fade-in">
-        <div class="flex items-center gap-2">
-          <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
-          <span class="font-bold text-emerald-400 uppercase tracking-wider">Mode Walkthrough POV</span>
+      <!-- Floating First-Person Agent Eyes POV HUD Overlay -->
+      <div id="walkthrough-hud" class="hidden absolute bottom-14 left-4 right-4 sm:right-auto max-w-[calc(100vw-2rem)] z-40 glass-card border border-teal-500/60 px-3.5 py-2 rounded-xl text-xs flex flex-wrap items-center gap-2.5 backdrop-blur-md shadow-2xl animate-fade-in">
+        <div class="flex items-center gap-2 min-w-0">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping shrink-0"></span>
+          <span id="walkthrough-hud-text" class="text-zinc-100 font-medium">👁️ 1st-Person POV Agen: Rizco Renova (WORKING) • Drag Mouse untuk menoleh</span>
         </div>
-        <div class="h-4 w-px bg-zinc-700"></div>
-        <span class="text-zinc-300 font-mono">Gunakan <strong class="text-white bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">W A S D</strong> atau <strong class="text-white bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">Panah</strong> untuk jalan, <strong class="text-white bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">Drag Mouse</strong> untuk menoleh</span>
-        <button onclick="setCameraPOV('orbit')" class="ml-2 px-2 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-[11px] text-zinc-300 font-medium transition">✕ Keluar</button>
+        <div class="flex items-center gap-1.5 ml-auto shrink-0">
+          <button onclick="prevAgent()" id="btn-pov-prev-agent" class="px-2 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-[11px] text-zinc-200 font-medium border border-zinc-700 transition">◀ Prev</button>
+          <button onclick="nextAgent()" id="btn-pov-next-agent" class="px-2 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-[11px] text-zinc-200 font-medium border border-zinc-700 transition">Next ▶</button>
+          <button onclick="setCameraPOV('orbit')" class="px-2 py-0.5 rounded bg-rose-950/70 hover:bg-rose-800/80 text-[11px] text-rose-200 font-medium border border-rose-800/60 transition">✕ Keluar</button>
+        </div>
       </div>
 
       <!-- Floating Elevator Control HUD (appears when 1st-person player approaches/enters elevator) -->
@@ -2036,6 +2039,14 @@ export interface CandidateComparisonView {
     let lastMousePos = { x: 0, y: 0 };
     let camYaw = 0;
     let camPitch = 0;
+    let povHeadYaw = 0;
+    let povHeadPitch = 0;
+    let povTrackedAgentFloor = null;
+    let povEyeOffset = 1.52;
+    let povSwitchBlend = 1;
+    let povSwitchStartTime = 0;
+    let povSwitchStartPos = null;
+    let povSwitchStartLook = null;
 
     let scene, camera, renderer, controls, raycaster, mouse;
     let animatedMeshes = [];
@@ -2389,6 +2400,105 @@ export interface CandidateComparisonView {
       STATIC_COLLIDERS.push({ minX, maxX, minZ, maxZ, floor, label });
     }
 
+    function buildAcousticPhoneBooth(parent, x, z, floorNum, yOffset, facingSign = 1, label = 'Acoustic Phone Booth') {
+      const booth = new THREE.Group();
+      booth.position.set(x, yOffset, z);
+
+      const frameMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.35, metalness: 0.7 });
+      const feltMat = new THREE.MeshStandardMaterial({ color: 0x0f766e, roughness: 0.92 });
+      const glassMat = new THREE.MeshStandardMaterial({ color: 0xbae6fd, transparent: true, opacity: 0.28, roughness: 0.08, metalness: 0.25 });
+      const oakMat = new THREE.MeshStandardMaterial({ color: 0x5c3d28, roughness: 0.55 });
+      const stoolMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.65 });
+
+      // Floor pad & ceiling roof
+      const floorBase = new THREE.Mesh(new THREE.BoxGeometry(1.42, 0.06, 1.42), frameMat);
+      floorBase.position.y = 0.03;
+      booth.add(floorBase);
+      const roof = new THREE.Mesh(new THREE.BoxGeometry(1.44, 0.08, 1.44), frameMat);
+      roof.position.y = 2.26;
+      booth.add(roof);
+
+      // Acoustic felt back & side walls (open facing central spine: x = facingSign * 0.70)
+      const backWall = new THREE.Mesh(new THREE.BoxGeometry(0.08, 2.2, 1.42), feltMat);
+      backWall.position.set(-facingSign * 0.67, 1.12, 0);
+      booth.add(backWall);
+
+      [-0.67, 0.67].forEach(sz => {
+        const sideWall = new THREE.Mesh(new THREE.BoxGeometry(1.36, 2.2, 0.08), feltMat);
+        sideWall.position.set(0, 1.12, sz);
+        booth.add(sideWall);
+      });
+
+      // Glass Front with sleek aluminum handle & occupancy LED
+      const frontGlass = new THREE.Mesh(new THREE.BoxGeometry(0.04, 2.16, 1.26), glassMat);
+      frontGlass.position.set(facingSign * 0.68, 1.12, 0);
+      booth.add(frontGlass);
+      const handle = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.42, 0.03), new THREE.MeshStandardMaterial({ color: 0xcbd5e1, metalness: 0.9 }));
+      handle.position.set(facingSign * 0.70, 1.05, 0.44);
+      booth.add(handle);
+      const occLed = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.05, 0.26), new THREE.MeshBasicMaterial({ color: 0x10b981 }));
+      occLed.position.set(facingSign * 0.70, 2.26, 0);
+      booth.add(occLed);
+
+      // Interior floating desk, laptop dock & bar stool
+      const miniDesk = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.05, 1.1), oakMat);
+      miniDesk.position.set(-facingSign * 0.36, 0.88, 0);
+      booth.add(miniDesk);
+      const stoolSeat = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.19, 0.06, 16), stoolMat);
+      stoolSeat.position.set(facingSign * 0.16, 0.64, 0);
+      booth.add(stoolSeat);
+      const stoolLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.60, 10), frameMat);
+      stoolLeg.position.set(facingSign * 0.16, 0.32, 0);
+      booth.add(stoolLeg);
+
+      // Warm ceiling light strip
+      const ledStrip = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.02, 0.6), new THREE.MeshBasicMaterial({ color: 0xfef3c7 }));
+      ledStrip.position.set(0, 2.21, 0);
+      booth.add(ledStrip);
+
+      parent.add(booth);
+      registerCollider(x - 0.82, x + 0.82, z - 0.82, z + 0.82, floorNum, label);
+    }
+
+    function buildStaffLockersAndRecycling(parent, x, z, floorNum, yOffset) {
+      const station = new THREE.Group();
+      station.position.set(x, yOffset, z);
+
+      const frameMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.35, metalness: 0.75 });
+      const doorMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.45, metalness: 0.5 });
+      const accentMat = new THREE.MeshStandardMaterial({ color: 0x14b8a6, roughness: 0.35 });
+
+      // 4-Door Staff Locker Cabinet (z: -0.75..+0.45 local)
+      const lockerBody = new THREE.Mesh(new THREE.BoxGeometry(0.62, 1.85, 1.4), frameMat);
+      lockerBody.position.set(0, 0.925, -0.35);
+      station.add(lockerBody);
+
+      [-0.86, -0.52, -0.18, 0.16].forEach((lz, idx) => {
+        const door = new THREE.Mesh(new THREE.BoxGeometry(0.03, 1.72, 0.30), doorMat);
+        door.position.set(0.32, 0.92, lz);
+        station.add(door);
+        const strip = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.10, 0.22), accentMat);
+        strip.position.set(0.325, 1.56 - (idx % 2) * 0.04, lz);
+        station.add(strip);
+      });
+
+      // Dual Recycling Bins right next to Lockers (z: +0.75 local)
+      [
+        { dz: 0.62, lidColor: 0x10b981 }, // Organic
+        { dz: 1.04, lidColor: 0x3b82f6 }  // Recyclable
+      ].forEach(b => {
+        const binBody = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.78, 0.36), frameMat);
+        binBody.position.set(0, 0.39, b.dz);
+        station.add(binBody);
+        const lid = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.08, 0.38), new THREE.MeshStandardMaterial({ color: b.lidColor, roughness: 0.4 }));
+        lid.position.set(0, 0.81, b.dz);
+        station.add(lid);
+      });
+
+      parent.add(station);
+      registerCollider(x - 0.45, x + 0.45, z - 1.15, z + 1.35, floorNum, 'Staff Lockers & Recycling');
+    }
+
     function buildCorridorOfficeEquipment(parent, floorNum, yOffset) {
       const steelMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.3, metalness: 0.8 });
       const darkMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.4 });
@@ -2407,7 +2517,7 @@ export interface CandidateComparisonView {
       parent.add(cooler);
       registerCollider(4.1, 4.9, 2.1, 2.9, floorNum, 'Water Cooler');
 
-      // 2. Enterprise Multi-Function Printer/Copier on Floors 2 & 3 at (x: -4.5, z: 2.5)
+      // 2. Enterprise Multi-Function Printer, Acoustic Phone Booths & Staff Lockers on Floors 2 & 3
       if (floorNum >= 2) {
         const printer = new THREE.Group();
         printer.position.set(-4.5, yOffset, 2.5);
@@ -2425,6 +2535,13 @@ export interface CandidateComparisonView {
         printer.add(pLed);
         parent.add(printer);
         registerCollider(-5.0, -4.0, 2.0, 3.0, floorNum, 'Enterprise Printer');
+
+        // Acoustic Phone Booths / Solo Call Pods placed cleanly away from z=12 doorways
+        buildAcousticPhoneBooth(parent, -5.0, 17.5, floorNum, yOffset, 1, 'Acoustic Phone Booth W');
+        buildAcousticPhoneBooth(parent, 5.0, 17.5, floorNum, yOffset, -1, 'Acoustic Phone Booth E');
+
+        // Staff Lockers & Recycling Station placed cleanly away from z=-10 doorways
+        buildStaffLockersAndRecycling(parent, -5.0, -16.5, floorNum, yOffset);
       }
 
       // 3. Wall-Mounted Office Clock above Elevator Portal Header (x: 0, z: -1.85)
@@ -2441,6 +2558,82 @@ export interface CandidateComparisonView {
       clockGroup.add(hand);
       animatedMeshes.push({ type: 'clock-hand', mesh: hand });
       parent.add(clockGroup);
+    }
+
+    function buildFloorSlabWithShaftCutout(parent, yTop, slabMat, floorMat, includeRailings = true, options = {}) {
+      const slabThickness = options.slabThickness || 0.4;
+      const padInset = options.padInset !== undefined ? options.padInset : 0.2;
+      const padYOffset = options.padYOffset !== undefined ? options.padYOffset : 0.01;
+      const minX = -27.0;
+      const maxX = 27.0;
+      const minZ = -32.0;
+      const maxZ = 32.0;
+      const holeMinX = -2.2;
+      const holeMaxX = 2.2;
+      const holeMinZ = -6.2;
+      const holeMaxZ = -1.8;
+
+      // 4 non-overlapping rectangular sections around the exact shaft hole (x: -2.2..2.2, z: -6.2..-1.8)
+      const sections = [
+        { name: 'North', x0: minX, x1: maxX, z0: minZ, z1: holeMinZ, padX0: minX + padInset, padX1: maxX - padInset, padZ0: minZ + padInset, padZ1: holeMinZ },
+        { name: 'South', x0: minX, x1: maxX, z0: holeMaxZ, z1: maxZ, padX0: minX + padInset, padX1: maxX - padInset, padZ0: holeMaxZ, padZ1: maxZ - padInset },
+        { name: 'West', x0: minX, x1: holeMinX, z0: holeMinZ, z1: holeMaxZ, padX0: minX + padInset, padX1: holeMinX, padZ0: holeMinZ, padZ1: holeMaxZ },
+        { name: 'East', x0: holeMaxX, x1: maxX, z0: holeMinZ, z1: holeMaxZ, padX0: holeMaxX, padX1: maxX - padInset, padZ0: holeMinZ, padZ1: holeMaxZ }
+      ];
+
+      sections.forEach(sec => {
+        const w = sec.x1 - sec.x0;
+        const d = sec.z1 - sec.z0;
+        const cx = (sec.x0 + sec.x1) / 2;
+        const cz = (sec.z0 + sec.z1) / 2;
+
+        if (slabMat) {
+          const slabMesh = new THREE.Mesh(new THREE.BoxGeometry(w, slabThickness, d), slabMat);
+          slabMesh.name = `shaftCutoutSlab_Y${yTop}_${sec.name}`;
+          slabMesh.position.set(cx, yTop - slabThickness / 2, cz);
+          slabMesh.receiveShadow = true;
+          parent.add(slabMesh);
+        }
+
+        if (floorMat) {
+          const pw = sec.padX1 - sec.padX0;
+          const pd = sec.padZ1 - sec.padZ0;
+          if (pw > 0.1 && pd > 0.1) {
+            const pcx = (sec.padX0 + sec.padX1) / 2;
+            const pcz = (sec.padZ0 + sec.padZ1) / 2;
+            const padMesh = new THREE.Mesh(new THREE.PlaneGeometry(pw, pd), floorMat);
+            padMesh.name = `shaftCutoutPad_Y${yTop}_${sec.name}`;
+            padMesh.rotation.x = -Math.PI / 2;
+            padMesh.position.set(pcx, yTop + padYOffset, pcz);
+            padMesh.receiveShadow = true;
+            parent.add(padMesh);
+          }
+        }
+      });
+
+      // Brushed steel trim beams framing the shaft opening cleanly on Floor 2, Floor 3 & Roof
+      const trimMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.22, metalness: 0.9 });
+      const trimH = slabThickness + 0.03;
+      const trimY = yTop - slabThickness / 2 + 0.005;
+      const trimSpecs = [
+        { name: 'TrimN', w: 4.56, d: 0.08, x: 0, z: -6.24 },
+        { name: 'TrimS', w: 4.56, d: 0.08, x: 0, z: -1.76 },
+        { name: 'TrimW', w: 0.08, d: 4.40, x: -2.24, z: -4.0 },
+        { name: 'TrimE', w: 0.08, d: 4.40, x: 2.24, z: -4.0 }
+      ];
+      trimSpecs.forEach(t => {
+        const beam = new THREE.Mesh(new THREE.BoxGeometry(t.w, trimH, t.d), trimMat);
+        beam.name = `shaft${t.name}_Y${yTop}`;
+        beam.position.set(t.x, trimY, t.z);
+        parent.add(beam);
+      });
+
+      if (includeRailings) {
+        create3DGlassWall(0, -31.8, 53.6, 1.1, true, null, null, parent, yTop);
+        create3DGlassWall(0, 31.8, 53.6, 1.1, true, null, null, parent, yTop);
+        create3DGlassWall(-26.8, 0, 63.6, 1.1, false, null, null, parent, yTop);
+        create3DGlassWall(26.8, 0, 63.6, 1.1, false, null, null, parent, yTop);
+      }
     }
 
     function build3DEnvironment() {
@@ -2485,83 +2678,48 @@ export interface CandidateComparisonView {
       groundSlab.receiveShadow = true;
       scene.add(groundSlab);
 
-      // ── FLOOR 1 SLAB (y = 0): LOBI, KAFETARIA & MUSHOLLA ──
-      const f1Floor = new THREE.Mesh(
-        new THREE.PlaneGeometry(54, 64),
-        new THREE.MeshStandardMaterial({ map: marbleTex, roughness: 0.35, metalness: 0.25 })
-      );
-      f1Floor.rotation.x = -Math.PI / 2;
-      f1Floor.position.y = 0.01;
-      f1Floor.receiveShadow = true;
-      floorGroups[1].add(f1Floor);
+      // ── FLOOR 1 SLAB (y = 0): LOBI, KAFETARIA & MUSHOLLA (with clean shaft cutout) ──
+      const f1FloorMat = new THREE.MeshStandardMaterial({ map: marbleTex, roughness: 0.35, metalness: 0.25 });
+      [
+        { w: 54, d: 25.8, cx: 0, cz: -19.1 },
+        { w: 54, d: 33.8, cx: 0, cz: 15.1 },
+        { w: 24.8, d: 4.4, cx: -14.6, cz: -4.0 },
+        { w: 24.8, d: 4.4, cx: 14.6, cz: -4.0 }
+      ].forEach(sec => {
+        const f1Seg = new THREE.Mesh(new THREE.PlaneGeometry(sec.w, sec.d), f1FloorMat);
+        f1Seg.rotation.x = -Math.PI / 2;
+        f1Seg.position.set(sec.cx, 0.01, sec.cz);
+        f1Seg.receiveShadow = true;
+        floorGroups[1].add(f1Seg);
+      });
 
-      const f1Corridor = new THREE.Mesh(
-        new THREE.PlaneGeometry(6.6, 64),
-        new THREE.MeshStandardMaterial({ color: 0x162236, roughness: 0.2, metalness: 0.45 })
-      );
-      f1Corridor.rotation.x = -Math.PI / 2;
-      f1Corridor.position.set(0, 0.02, 0);
-      floorGroups[1].add(f1Corridor);
+      const f1CorrMat = new THREE.MeshStandardMaterial({ color: 0x162236, roughness: 0.2, metalness: 0.45 });
+      [
+        { w: 6.6, d: 25.8, cx: 0, cz: -19.1 },
+        { w: 6.6, d: 33.8, cx: 0, cz: 15.1 },
+        { w: 1.1, d: 4.4, cx: -2.75, cz: -4.0 },
+        { w: 1.1, d: 4.4, cx: 2.75, cz: -4.0 }
+      ].forEach(sec => {
+        const corrSeg = new THREE.Mesh(new THREE.PlaneGeometry(sec.w, sec.d), f1CorrMat);
+        corrSeg.rotation.x = -Math.PI / 2;
+        corrSeg.position.set(sec.cx, 0.02, sec.cz);
+        floorGroups[1].add(corrSeg);
+      });
 
-      // ── FLOOR 2 SLAB (y = 8): CORE ENGINEERING, QA & RUANG MEETING ──
-      const f2Slab = new THREE.Mesh(
-        new THREE.BoxGeometry(54, 0.4, 64),
-        new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.4, metalness: 0.35 })
-      );
-      f2Slab.position.set(0, 7.8, 0);
-      f2Slab.receiveShadow = true;
-      floorGroups[2].add(f2Slab);
+      // ── FLOOR 2 SLAB (y = 8): CORE ENGINEERING, QA & RUANG MEETING (True Shaft Cutout) ──
+      const f2SlabMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.4, metalness: 0.35 });
+      const f2FloorMat = new THREE.MeshStandardMaterial({ map: carpetTex, roughness: 0.55, metalness: 0.2 });
+      buildFloorSlabWithShaftCutout(floorGroups[2], 8.0, f2SlabMat, f2FloorMat, true, { slabThickness: 0.4, padInset: 0.2, padYOffset: 0.01 });
 
-      const f2FloorPad = new THREE.Mesh(
-        new THREE.PlaneGeometry(53.6, 63.6),
-        new THREE.MeshStandardMaterial({ map: carpetTex, roughness: 0.55, metalness: 0.2 })
-      );
-      f2FloorPad.rotation.x = -Math.PI / 2;
-      f2FloorPad.position.set(0, 8.01, 0);
-      floorGroups[2].add(f2FloorPad);
+      // ── FLOOR 3 SLAB (y = 16): EKSEKUTIF, RISET AI, DEVOPS & GYM (True Shaft Cutout) ──
+      const f3SlabMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.4, metalness: 0.35 });
+      const f3FloorMat = new THREE.MeshStandardMaterial({ map: oakTex, roughness: 0.5, metalness: 0.2 });
+      buildFloorSlabWithShaftCutout(floorGroups[3], 16.0, f3SlabMat, f3FloorMat, true, { slabThickness: 0.4, padInset: 0.2, padYOffset: 0.01 });
 
-      create3DGlassWall(0, -31.8, 53.6, 1.1, true, null, null, floorGroups[2], 8.0);
-      create3DGlassWall(0, 31.8, 53.6, 1.1, true, null, null, floorGroups[2], 8.0);
-      create3DGlassWall(-26.8, 0, 63.6, 1.1, false, null, null, floorGroups[2], 8.0);
-      create3DGlassWall(26.8, 0, 63.6, 1.1, false, null, null, floorGroups[2], 8.0);
-
-      // ── FLOOR 3 SLAB (y = 16): EKSEKUTIF, RISET AI, DEVOPS & GYM ──
-      const f3Slab = new THREE.Mesh(
-        new THREE.BoxGeometry(54, 0.4, 64),
-        new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.4, metalness: 0.35 })
-      );
-      f3Slab.position.set(0, 15.8, 0);
-      f3Slab.receiveShadow = true;
-      floorGroups[3].add(f3Slab);
-
-      const f3FloorPad = new THREE.Mesh(
-        new THREE.PlaneGeometry(53.6, 63.6),
-        new THREE.MeshStandardMaterial({ map: oakTex, roughness: 0.5, metalness: 0.2 })
-      );
-      f3FloorPad.rotation.x = -Math.PI / 2;
-      f3FloorPad.position.set(0, 16.01, 0);
-      floorGroups[3].add(f3FloorPad);
-
-      create3DGlassWall(0, -31.8, 53.6, 1.1, true, null, null, floorGroups[3], 16.0);
-      create3DGlassWall(0, 31.8, 53.6, 1.1, true, null, null, floorGroups[3], 16.0);
-      create3DGlassWall(-26.8, 0, 63.6, 1.1, false, null, null, floorGroups[3], 16.0);
-      create3DGlassWall(26.8, 0, 63.6, 1.1, false, null, null, floorGroups[3], 16.0);
-
-      // ── ROOFTOP & SKYLIGHT ATRIUM (y = 24) ──
-      const roofFrame = new THREE.Mesh(
-        new THREE.BoxGeometry(54.4, 0.35, 64.4),
-        new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.3, metalness: 0.7 })
-      );
-      roofFrame.position.set(0, 23.85, 0);
-      roofGroup.add(roofFrame);
-
-      const skylight = new THREE.Mesh(
-        new THREE.PlaneGeometry(48, 58),
-        new THREE.MeshStandardMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.25, roughness: 0.1 })
-      );
-      skylight.rotation.x = -Math.PI / 2;
-      skylight.position.set(0, 24.05, 0);
-      roofGroup.add(skylight);
+      // ── ROOFTOP & SKYLIGHT ATRIUM (y = 24, True Shaft Cutout) ──
+      const roofSlabMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.3, metalness: 0.7 });
+      const skylightMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.25, roughness: 0.1 });
+      buildFloorSlabWithShaftCutout(roofGroup, 24.0, roofSlabMat, skylightMat, false, { slabThickness: 0.35, padInset: 3.0, padYOffset: 0.03 });
 
       // ── 4 HEAVY STEEL CORNER PILLARS (y = 0 to 24) ──
       const pillarGeo = new THREE.BoxGeometry(1.2, 24, 1.2);
@@ -2935,6 +3093,33 @@ export interface CandidateComparisonView {
       sensorLed.position.set(slideSide * 0.13, height - 0.06, 0);
       group.add(sensorLed);
 
+      // Digital Room-Booking Tablet mounted on corridor-facing door jamb
+      const tabletRoomLabel = (doorInfo && doorInfo.label) ? doorInfo.label : 'Room';
+      const tabletCanvas = document.createElement('canvas');
+      tabletCanvas.width = 256; tabletCanvas.height = 160;
+      const tCtx = tabletCanvas.getContext('2d');
+      tCtx.fillStyle = '#090d16'; tCtx.fillRect(0, 0, 256, 160);
+      tCtx.fillStyle = '#059669'; tCtx.fillRect(0, 0, 256, 36);
+      tCtx.fillStyle = '#ecfdf5'; tCtx.font = 'bold 18px monospace';
+      tCtx.fillText('● AVAILABLE', 12, 24);
+      tCtx.fillStyle = '#f8fafc'; tCtx.font = 'bold 22px sans-serif';
+      tCtx.fillText(tabletRoomLabel.toUpperCase().slice(0, 16), 12, 74);
+      tCtx.fillStyle = '#94a3b8'; tCtx.font = '15px monospace';
+      tCtx.fillText('Tap to Book • Sync 24/7', 12, 108);
+      tCtx.fillStyle = '#38bdf8'; tCtx.fillText('NEXT: 14:00 SPRINT SYNC', 12, 136);
+      const tabletMount = new THREE.Group();
+      tabletMount.position.set(slideSide * 0.06, 1.38, doorWidth / 2 + 0.28);
+      const tabletBezel = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.26, 0.36), new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.85, roughness: 0.2 }));
+      tabletMount.add(tabletBezel);
+      const tabletScreen = new THREE.Mesh(new THREE.PlaneGeometry(0.32, 0.21), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(tabletCanvas), side: THREE.DoubleSide }));
+      tabletScreen.rotation.y = slideSide * (Math.PI / 2);
+      tabletScreen.position.x = slideSide * 0.024;
+      tabletMount.add(tabletScreen);
+      const tabletLed = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.26, 0.02), new THREE.MeshBasicMaterial({ color: 0x10b981 }));
+      tabletLed.position.set(slideSide * 0.015, 0, -0.185);
+      tabletMount.add(tabletLed);
+      group.add(tabletMount);
+
       // Bi-Parting Animated Sliding Glass Door Leaves (doorLeafMesh)
       const leafWidth = doorWidth / 2; // 1.1m each
       const leafHeight = height - 0.32; // 2.08m
@@ -3048,6 +3233,78 @@ export interface CandidateComparisonView {
       parent.add(screenMesh);
     }
 
+    function buildMobileWhiteboard(parent, x, yOffset, z, rotY, floorNum, titleText, label) {
+      const wb = new THREE.Group();
+      wb.position.set(x, yOffset, z);
+      wb.rotation.y = rotY;
+
+      const frameMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.3, metalness: 0.8 });
+      const boardMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.25, metalness: 0.05 });
+
+      // Wheeled legs & crossbars
+      [-0.78, 0.78].forEach(lx => {
+        const upright = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 1.85, 10), frameMat);
+        upright.position.set(lx, 0.94, 0);
+        wb.add(upright);
+        const foot = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.05, 0.56), frameMat);
+        foot.position.set(lx, 0.05, 0);
+        wb.add(foot);
+      });
+
+      // Whiteboard canvas with diagrams & header
+      const wbCanvas = document.createElement('canvas');
+      wbCanvas.width = 512; wbCanvas.height = 320;
+      const wCtx = wbCanvas.getContext('2d');
+      wCtx.fillStyle = '#f8fafc'; wCtx.fillRect(0, 0, 512, 320);
+      wCtx.fillStyle = '#0f172a'; wCtx.font = 'bold 26px sans-serif';
+      wCtx.fillText(titleText, 24, 42);
+      wCtx.strokeStyle = '#0284c7'; wCtx.lineWidth = 4;
+      wCtx.strokeRect(28, 72, 130, 74);
+      wCtx.strokeStyle = '#059669';
+      wCtx.strokeRect(198, 72, 130, 74);
+      wCtx.strokeStyle = '#d97706';
+      wCtx.strokeRect(368, 72, 116, 74);
+      wCtx.strokeStyle = '#475569'; wCtx.lineWidth = 3;
+      wCtx.beginPath();
+      wCtx.moveTo(158, 109); wCtx.lineTo(198, 109);
+      wCtx.moveTo(328, 109); wCtx.lineTo(368, 109);
+      wCtx.stroke();
+      wCtx.fillStyle = '#334155'; wCtx.font = '18px monospace';
+      wCtx.fillText('• Clean Arch + 100% Free Access', 28, 195);
+      wCtx.fillText('• Zero Tech Debt / 0 Errors', 28, 230);
+      wCtx.fillText('• Mobile 375px + WebGL Verified', 28, 265);
+
+      const boardBacking = new THREE.Mesh(new THREE.BoxGeometry(1.52, 1.02, 0.05), frameMat);
+      boardBacking.position.set(0, 1.36, 0);
+      wb.add(boardBacking);
+      const boardFace = new THREE.Mesh(new THREE.PlaneGeometry(1.44, 0.94), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(wbCanvas), side: THREE.DoubleSide }));
+      boardFace.position.set(0, 1.36, 0.03);
+      wb.add(boardFace);
+
+      // Colorful Sticky Notes on the Whiteboard
+      const noteColors = [0xfef08a, 0xfda4af, 0x93c5fd, 0x86efac];
+      noteColors.forEach((col, i) => {
+        const note = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.14, 0.01), new THREE.MeshStandardMaterial({ color: col, roughness: 0.7 }));
+        note.position.set(-0.5 + i * 0.19, 1.04 + (i % 2) * 0.06, 0.036);
+        note.rotation.z = (i % 2 === 0 ? 0.08 : -0.07);
+        wb.add(note);
+      });
+
+      // Marker Tray & Markers
+      const tray = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.03, 0.10), frameMat);
+      tray.position.set(0, 0.85, 0.06);
+      wb.add(tray);
+      [0x0284c7, 0xdc2626, 0x059669].forEach((mc, idx) => {
+        const marker = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.13, 8), new THREE.MeshStandardMaterial({ color: mc }));
+        marker.rotation.z = Math.PI / 2;
+        marker.position.set(-0.2 + idx * 0.2, 0.875, 0.07);
+        wb.add(marker);
+      });
+
+      parent.add(wb);
+      registerCollider(x - 0.85, x + 0.85, z - 0.55, z + 0.55, floorNum, label);
+    }
+
     function build3DRoomProps(div, parent = scene, yOffset = 0) {
       const cx = div.center.x;
       const cz = div.center.z;
@@ -3067,6 +3324,15 @@ export interface CandidateComparisonView {
         plant.position.set(cx + px, cy + 1.05, cz + div.bounds.depth / 2 - 1.0);
         parent.add(plant);
       });
+
+      // Mobile Whiteboards with Sticky Notes & Marker Trays inside Engineering (2F), UX Lounge (2F) & Executive (3F)
+      if (div.id === 'engineering') {
+        buildMobileWhiteboard(parent, -8.6, cy, -14.6, -0.45, 2, 'SPRINT 15 ARCHITECTURE', 'Engineering Whiteboard');
+      } else if (div.id === 'lounge') {
+        buildMobileWhiteboard(parent, -19.5, cy, 7.4, 0.55, 2, 'UX RESEARCH & FLOWS', 'UX Lounge Whiteboard');
+      } else if (div.id === 'executive') {
+        buildMobileWhiteboard(parent, -8.6, cy, -14.6, -0.45, 3, 'OKR & RELEASE SIGN-OFF', 'Executive Whiteboard');
+      }
 
       // Filing Cabinet / Server Rack along outer edge of room
       const outerX = cx < 0 ? cx - div.bounds.width / 2 + 0.55 : cx + div.bounds.width / 2 - 0.55;
@@ -3240,6 +3506,111 @@ export interface CandidateComparisonView {
     }
 
     // ─── 6. BUILD FLOOR 1 CENTRAL AMENITIES (LOBBY, CAFE & MUSHOLLA) ────────────
+    function buildMonsteraPlanter(parent, x, z, floorNum, scale = 1.0) {
+      const tree = new THREE.Group();
+      tree.position.set(x, 0, z);
+      const potMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.45, metalness: 0.3 });
+      const soilMat = new THREE.MeshStandardMaterial({ color: 0x3b2416, roughness: 0.95 });
+      const stemMat = new THREE.MeshStandardMaterial({ color: 0x14532d, roughness: 0.7 });
+      const leafMat = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.55, side: THREE.DoubleSide });
+      const leafHiMat = new THREE.MeshStandardMaterial({ color: 0x22c55e, roughness: 0.5, side: THREE.DoubleSide });
+
+      const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.42 * scale, 0.32 * scale, 0.68 * scale, 18), potMat);
+      pot.position.y = 0.34 * scale;
+      tree.add(pot);
+      const soil = new THREE.Mesh(new THREE.CylinderGeometry(0.39 * scale, 0.39 * scale, 0.04, 16), soilMat);
+      soil.position.y = 0.67 * scale;
+      tree.add(soil);
+
+      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.04 * scale, 0.06 * scale, 1.35 * scale, 10), stemMat);
+      trunk.position.y = 1.25 * scale;
+      tree.add(trunk);
+
+      for (let i = 0; i < 9; i++) {
+        const angle = (i / 9) * Math.PI * 2 + (i % 2) * 0.25;
+        const heightY = (1.15 + (i % 3) * 0.36) * scale;
+        const reach = (0.36 + (i % 2) * 0.16) * scale;
+        const leafGeo = new THREE.CircleGeometry(0.28 * scale, 10);
+        leafGeo.scale(0.85, 1.35, 1.0);
+        const leaf = new THREE.Mesh(leafGeo, i % 3 === 0 ? leafHiMat : leafMat);
+        leaf.position.set(Math.cos(angle) * reach, heightY, Math.sin(angle) * reach);
+        leaf.rotation.x = -Math.PI / 2 + 0.48;
+        leaf.rotation.z = angle;
+        tree.add(leaf);
+      }
+
+      parent.add(tree);
+      registerCollider(x - 0.52 * scale, x + 0.52 * scale, z - 0.52 * scale, z + 0.52 * scale, floorNum, 'Indoor Monstera Tree');
+    }
+
+    function buildLobbyLoungeSet(parent, cx, cz, sideSign) {
+      const lounge = new THREE.Group();
+      lounge.position.set(cx, 0, cz);
+
+      const rugMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.95 });
+      const sofaMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.78 });
+      const cushionMat = new THREE.MeshStandardMaterial({ color: 0x0d9488, roughness: 0.7 });
+      const metalMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.2, metalness: 0.85 });
+      const glassTopMat = new THREE.MeshStandardMaterial({ color: 0xbae6fd, transparent: true, opacity: 0.38, roughness: 0.08, metalness: 0.2 });
+
+      const rug = new THREE.Mesh(new THREE.PlaneGeometry(5.2, 4.4), rugMat);
+      rug.rotation.x = -Math.PI / 2;
+      rug.position.y = 0.025;
+      lounge.add(rug);
+
+      // L-shaped Sofa: Main South Wing (local z = +1.7) + Side Outer Wing (local x = sideSign * 1.75)
+      const mainSeat = new THREE.Mesh(new THREE.BoxGeometry(4.4, 0.42, 1.05), sofaMat);
+      mainSeat.position.set(0, 0.24, 1.7);
+      lounge.add(mainSeat);
+      const mainBack = new THREE.Mesh(new THREE.BoxGeometry(4.4, 0.52, 0.22), sofaMat);
+      mainBack.position.set(0, 0.56, 2.12);
+      lounge.add(mainBack);
+
+      const sideSeat = new THREE.Mesh(new THREE.BoxGeometry(1.05, 0.42, 2.6), sofaMat);
+      sideSeat.position.set(sideSign * 1.68, 0.24, 0.1);
+      lounge.add(sideSeat);
+      const sideBack = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.52, 2.6), sofaMat);
+      sideBack.position.set(sideSign * 2.10, 0.56, 0.1);
+      lounge.add(sideBack);
+
+      // Accent throw pillows
+      [-1.1, 0, 1.1].forEach((px, idx) => {
+        const pillow = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.30, 0.12), idx === 1 ? cushionMat : new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.7 }));
+        pillow.position.set(px, 0.54, 1.88);
+        pillow.rotation.x = -0.2;
+        lounge.add(pillow);
+      });
+
+      // Glass Coffee Table + Magazines
+      const coffeeTableLegs = new THREE.Mesh(new THREE.BoxGeometry(1.25, 0.38, 0.85), metalMat);
+      coffeeTableLegs.position.set(-sideSign * 0.2, 0.19, -0.3);
+      lounge.add(coffeeTableLegs);
+      const coffeeTableTop = new THREE.Mesh(new THREE.BoxGeometry(1.45, 0.05, 1.0), glassTopMat);
+      coffeeTableTop.position.set(-sideSign * 0.2, 0.41, -0.3);
+      lounge.add(coffeeTableTop);
+
+      // Colorful Tech Magazines on Coffee Table
+      [
+        { dx: -0.22, dz: -0.08, rot: 0.18, color: 0x38bdf8 },
+        { dx: 0.18, dz: 0.12, rot: -0.25, color: 0xf43f5e },
+        { dx: 0.02, dz: -0.24, rot: 0.05, color: 0x10b981 }
+      ].forEach(m => {
+        const mag = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.02, 0.36), new THREE.MeshStandardMaterial({ color: m.color, roughness: 0.4 }));
+        mag.position.set(-sideSign * 0.2 + m.dx, 0.445, -0.3 + m.dz);
+        mag.rotation.y = m.rot;
+        lounge.add(mag);
+      });
+
+      parent.add(lounge);
+      registerCollider(cx - 2.35, cx + 2.35, cz + 1.1, cz + 2.35, 1, 'Lobby L-Sofa Main');
+      if (sideSign < 0) {
+        registerCollider(cx - 2.35, cx - 1.05, cz - 1.35, cz + 1.3, 1, 'Lobby L-Sofa Side');
+      } else {
+        registerCollider(cx + 1.05, cx + 2.35, cz - 1.35, cz + 1.3, 1, 'Lobby L-Sofa Side');
+      }
+      registerCollider(cx - sideSign * 0.2 - 0.8, cx - sideSign * 0.2 + 0.8, cz - 0.85, cz + 0.25, 1, 'Lobby Coffee Table');
+    }
+
     function build3DCentralAmenities() {
       const f1 = floorGroups[1] || scene;
 
@@ -3263,7 +3634,7 @@ export interface CandidateComparisonView {
       deskTop.position.set(0, 1.1, 0);
       deskTop.rotation.y = Math.PI / 2;
       lobbyGroup.add(deskTop);
-      registerCollider(-2.8, 2.8, 17.5, 20.8, 1, 'Lobby Reception Desk');
+      registerCollider(-2.8, 2.8, 15.3, 18.4, 1, 'Lobby Reception Desk');
 
       const signCanvas = document.createElement('canvas');
       signCanvas.width = 512; signCanvas.height = 128;
@@ -3290,6 +3661,88 @@ export interface CandidateComparisonView {
         lobbyGroup.add(led);
       });
       f1.add(lobbyGroup);
+
+      // Living Biophilic Green Moss Accent Wall behind Reception (x: 0, z: 14.5)
+      const mossWall = new THREE.Group();
+      mossWall.position.set(0, 0, 14.5);
+      const wallBackdrop = new THREE.Mesh(new THREE.BoxGeometry(6.0, 3.1, 0.28), new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.6 }));
+      wallBackdrop.position.y = 1.55;
+      mossWall.add(wallBackdrop);
+      const mossBase = new THREE.Mesh(new THREE.BoxGeometry(5.6, 2.7, 0.34), new THREE.MeshStandardMaterial({ color: 0x166534, roughness: 0.95 }));
+      mossBase.position.y = 1.55;
+      mossWall.add(mossBase);
+      const mossColors = [0x15803d, 0x22c55e, 0x16a34a, 0x065f46];
+      for (let mx = -2.4; mx <= 2.4; mx += 0.48) {
+        for (let my = 0.45; my <= 2.65; my += 0.44) {
+          const idx = Math.abs(Math.round(mx * 10 + my * 7)) % mossColors.length;
+          const tuft = new THREE.Mesh(
+            new THREE.DodecahedronGeometry(0.24, 0),
+            new THREE.MeshStandardMaterial({ color: mossColors[idx], roughness: 0.92 })
+          );
+          tuft.position.set(mx, my, 0.18);
+          tuft.scale.set(1.1, 0.9, 0.45);
+          mossWall.add(tuft);
+        }
+      }
+      // Illuminated Brand Plaque on Moss Wall
+      const plaqueCanvas = document.createElement('canvas');
+      plaqueCanvas.width = 512; plaqueCanvas.height = 128;
+      const pCtx = plaqueCanvas.getContext('2d');
+      pCtx.fillStyle = '#052e16'; pCtx.fillRect(0, 0, 512, 128);
+      pCtx.strokeStyle = '#34d399'; pCtx.lineWidth = 4; pCtx.strokeRect(4, 4, 504, 120);
+      pCtx.fillStyle = '#ecfdf5'; pCtx.font = 'bold 42px sans-serif'; pCtx.textAlign = 'center';
+      pCtx.fillText('LOKATALENTA', 256, 62);
+      pCtx.fillStyle = '#34d399'; pCtx.font = 'bold 18px monospace';
+      pCtx.fillText('BIOPHILIC TECH CAMPUS • 100% FREE', 256, 100);
+      const mossPlaqueFrame = new THREE.Mesh(new THREE.BoxGeometry(3.02, 0.82, 0.04), new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.7, roughness: 0.3 }));
+      mossPlaqueFrame.position.set(0, 1.72, 0.32);
+      mossWall.add(mossPlaqueFrame);
+      const mossPlaque = new THREE.Mesh(new THREE.PlaneGeometry(2.9, 0.72), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(plaqueCanvas) }));
+      mossPlaque.position.set(0, 1.72, 0.35);
+      mossWall.add(mossPlaque);
+      f1.add(mossWall);
+      registerCollider(-3.15, 3.15, 14.25, 14.8, 1, 'Biophilic Moss Wall');
+
+      // L-Shaped Visitor Waiting Sofas + Glass Coffee Tables + Magazines at (-11, 18) & (11, 18)
+      buildLobbyLoungeSet(f1, -11, 18, -1);
+      buildLobbyLoungeSet(f1, 11, 18, 1);
+
+      // Digital Directory Kiosk at (x: 5.5, z: 15)
+      const kiosk = new THREE.Group();
+      kiosk.position.set(5.5, 0, 15);
+      const kBase = new THREE.Mesh(new THREE.BoxGeometry(0.68, 0.12, 0.54), chromeMat);
+      kBase.position.y = 0.06;
+      kiosk.add(kBase);
+      const kStand = new THREE.Mesh(new THREE.BoxGeometry(0.24, 1.15, 0.16), new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.75, roughness: 0.3 }));
+      kStand.position.y = 0.65;
+      kiosk.add(kStand);
+      const kCanvas = document.createElement('canvas');
+      kCanvas.width = 256; kCanvas.height = 384;
+      const kCtx = kCanvas.getContext('2d');
+      kCtx.fillStyle = '#090d16'; kCtx.fillRect(0, 0, 256, 384);
+      kCtx.fillStyle = '#0d9488'; kCtx.fillRect(0, 0, 256, 54);
+      kCtx.fillStyle = '#ffffff'; kCtx.font = 'bold 20px sans-serif'; kCtx.fillText('DIREKTORI GEDUNG', 22, 34);
+      kCtx.fillStyle = '#38bdf8'; kCtx.font = 'bold 16px monospace';
+      kCtx.fillText('3F • Exec, AI, DevOps, Gym', 14, 105);
+      kCtx.fillStyle = '#34d399'; kCtx.fillText('2F • Eng, QA, Meeting, UX', 14, 165);
+      kCtx.fillStyle = '#fbbf24'; kCtx.fillText('1F • Lobby, Kafe, Musholla', 14, 225);
+      kCtx.fillStyle = '#94a3b8'; kCtx.font = '14px sans-serif';
+      kCtx.fillText('Tap untuk navigasi ruangan', 14, 320);
+      const kFrame = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.92, 0.08), new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.8 }));
+      kFrame.position.set(0, 1.42, 0.05);
+      kFrame.rotation.x = -0.25;
+      const kScreen = new THREE.Mesh(new THREE.PlaneGeometry(0.54, 0.82), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(kCanvas) }));
+      kScreen.position.set(0, 0, 0.045);
+      kFrame.add(kScreen);
+      kiosk.add(kFrame);
+      f1.add(kiosk);
+      registerCollider(5.05, 5.95, 14.55, 15.45, 1, 'Digital Directory Kiosk');
+
+      // Lush Indoor Monstera / Fiddle-Leaf Trees
+      buildMonsteraPlanter(f1, -6.2, 22.5, 1, 1.15);
+      buildMonsteraPlanter(f1, 6.2, 22.5, 1, 1.15);
+      buildMonsteraPlanter(f1, -16.5, 14.0, 1, 1.05);
+      buildMonsteraPlanter(f1, 16.5, 14.0, 1, 1.05);
 
       // ── B. MODERN CAFETERIA & ESPRESSO BAR (x: -14, z: -4) ──
       const cafeGroup = new THREE.Group();
@@ -3349,19 +3802,92 @@ export interface CandidateComparisonView {
         cafeGroup.add(stem);
       });
 
+      // Dining Tables with 4 Ergonomic Dining Chairs Around Each Table
+      const diningChairMat = new THREE.MeshStandardMaterial({ color: 0x92400e, roughness: 0.6 });
       [-3.5, 3.5].forEach(dx => {
         const table = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.75, 1.2), woodMat);
         table.position.set(dx, 0.375, -3.2);
         cafeGroup.add(table);
-        registerCollider(-14 + dx - 0.9, -14 + dx + 0.9, -7.9, -6.5, 1, 'Cafe Table');
+
+        // 4 chairs around each table (N, S, W, E)
+        const chairOffsets = [
+          { cx: 0, cz: -0.88, backDz: -0.18, backRot: 0 },
+          { cx: 0, cz: 0.88, backDz: 0.18, backRot: 0 },
+          { cx: -1.08, cz: 0, backDx: -0.18, sideBack: true },
+          { cx: 1.08, cz: 0, backDx: 0.18, sideBack: true }
+        ];
+        chairOffsets.forEach(ch => {
+          const seat = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.06, 0.42), diningChairMat);
+          seat.position.set(dx + ch.cx, 0.46, -3.2 + ch.cz);
+          cafeGroup.add(seat);
+          const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.04, 0.44, 10), chromeMat);
+          leg.position.set(dx + ch.cx, 0.22, -3.2 + ch.cz);
+          cafeGroup.add(leg);
+          const back = new THREE.Mesh(
+            ch.sideBack ? new THREE.BoxGeometry(0.05, 0.40, 0.40) : new THREE.BoxGeometry(0.40, 0.40, 0.05),
+            diningChairMat
+          );
+          back.position.set(dx + ch.cx + (ch.backDx || 0), 0.68, -3.2 + ch.cz + (ch.backDz || 0));
+          cafeGroup.add(back);
+        });
+
+        registerCollider(-14 + dx - 1.35, -14 + dx + 1.35, -8.35, -6.05, 1, 'Cafe Dining Set');
       });
 
-      // Warm Pendant Lights above Island
-      [-1.4, 0, 1.4].forEach(lx => {
-        const shade = new THREE.Mesh(new THREE.ConeGeometry(0.26, 0.22, 16), new THREE.MeshBasicMaterial({ color: 0xfde68a }));
-        shade.position.set(lx, 2.8, 0);
-        cafeGroup.add(shade);
+      // Glowing Smart Beverage Refrigerator at world (x: -19.5, z: -8.5) -> local (-5.5, -4.5)
+      const fridge = new THREE.Group();
+      fridge.position.set(-5.5, 0, -4.5);
+      const fridgeBody = new THREE.Mesh(new THREE.BoxGeometry(0.95, 2.05, 0.78), new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.75, roughness: 0.25 }));
+      fridgeBody.position.y = 1.025;
+      fridge.add(fridgeBody);
+      const fridgeInteriorGlow = new THREE.Mesh(new THREE.PlaneGeometry(0.76, 1.55), new THREE.MeshBasicMaterial({ color: 0x0ea5e9 }));
+      fridgeInteriorGlow.position.set(0, 1.02, 0.40);
+      fridge.add(fridgeInteriorGlow);
+      const fridgeGlass = new THREE.Mesh(new THREE.BoxGeometry(0.80, 1.62, 0.04), new THREE.MeshStandardMaterial({ color: 0xe0f2fe, transparent: true, opacity: 0.35, roughness: 0.05 }));
+      fridgeGlass.position.set(0, 1.02, 0.41);
+      fridge.add(fridgeGlass);
+      [0.55, 0.95, 1.35].forEach(sy => {
+        for (let cx = -0.24; cx <= 0.24; cx += 0.16) {
+          const can = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.14, 8), new THREE.MeshBasicMaterial({ color: cx < 0 ? 0xf97316 : (cx > 0 ? 0x10b981 : 0x38bdf8) }));
+          can.position.set(cx, sy, 0.36);
+          fridge.add(can);
+        }
       });
+      cafeGroup.add(fridge);
+      registerCollider(-20.05, -18.95, -9.0, -8.0, 1, 'Cafe Smart Refrigerator');
+
+      // Recycling / Trash Bin Pair inside Cafeteria near south corner (world -8.2, 0.9 -> local +5.8, +4.9)
+      const cafeBins = new THREE.Group();
+      cafeBins.position.set(5.8, 0, 4.9);
+      [
+        { dx: -0.24, lidColor: 0x10b981 },
+        { dx: 0.24, lidColor: 0x3b82f6 }
+      ].forEach(b => {
+        const bin = new THREE.Mesh(new THREE.BoxGeometry(0.40, 0.76, 0.38), new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.7 }));
+        bin.position.set(b.dx, 0.38, 0);
+        cafeBins.add(bin);
+        const lid = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.08, 0.40), new THREE.MeshStandardMaterial({ color: b.lidColor, roughness: 0.4 }));
+        lid.position.set(b.dx, 0.80, 0);
+        cafeBins.add(lid);
+      });
+      cafeGroup.add(cafeBins);
+      registerCollider(-8.7, -7.7, 0.4, 1.4, 1, 'Cafe Recycling Bins');
+
+      // Warm Glowing Pendant Globes above Island & Dining Tables
+      [
+        { lx: -1.4, lz: 0 }, { lx: 0, lz: 0 }, { lx: 1.4, lz: 0 },
+        { lx: -3.5, lz: -3.2 }, { lx: 3.5, lz: -3.2 }
+      ].forEach(p => {
+        const cord = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 0.8, 8), chromeMat);
+        cord.position.set(p.lx, 3.15, p.lz);
+        cafeGroup.add(cord);
+        const globe = new THREE.Mesh(new THREE.SphereGeometry(0.18, 16, 12), new THREE.MeshBasicMaterial({ color: 0xfef3c7 }));
+        globe.position.set(p.lx, 2.74, p.lz);
+        cafeGroup.add(globe);
+      });
+      const cafeWarmLight = new THREE.PointLight(0xfde68a, 0.95, 16, 1.8);
+      cafeWarmLight.position.set(0, 2.6, -1.5);
+      cafeGroup.add(cafeWarmLight);
 
       const cafeSignCanvas = document.createElement('canvas');
       cafeSignCanvas.width = 512; cafeSignCanvas.height = 128;
@@ -3386,6 +3912,20 @@ export interface CandidateComparisonView {
       rug.rotation.x = -Math.PI / 2;
       rug.position.y = 0.025;
       mushollaGroup.add(rug);
+
+      // Individual Woven Sajadah Mats neatly aligned toward Qibla (-Z)
+      const indSajadahMat = new THREE.MeshStandardMaterial({ color: 0x047857, roughness: 0.92 });
+      const indBorderMat = new THREE.MeshStandardMaterial({ color: 0xfbbf24, roughness: 0.7 });
+      [-4.2, -2.5, -0.8, 1.6, 3.3, 5.0].forEach(sx => {
+        [-2.8, -0.3].forEach(sz => {
+          const mat = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.015, 1.25), indSajadahMat);
+          mat.position.set(sx, 0.034, sz);
+          mushollaGroup.add(mat);
+          const trim = new THREE.Mesh(new THREE.BoxGeometry(0.68, 0.018, 0.08), indBorderMat);
+          trim.position.set(sx, 0.036, sz - 0.52);
+          mushollaGroup.add(trim);
+        });
+      });
 
       // Musholla Glass Enclosure + Sliding Glass Doorway at (x: 7, z: -4)
       create3DGlassWall(0, -6, 14, 2.4, true, f1GlassMat, f1FrameMat, mushollaGroup, 0, { floor: 1, label: 'Musholla Wall N', worldX: 14, worldZ: -10 });
@@ -3418,6 +3958,69 @@ export interface CandidateComparisonView {
       mimbar.position.set(0, 0.45, -5.0);
       mushollaGroup.add(mimbar);
       registerCollider(13.2, 14.8, -9.5, -8.5, 1, 'Musholla Mimbar');
+
+      // Wooden Shoe Rack near Doorway at world (x: 8.2, z: -1.8) -> local (-5.8, +2.2)
+      const shoeRack = new THREE.Group();
+      shoeRack.position.set(-5.8, 0, 2.2);
+      const teakMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.6 });
+      [-0.5, 0.5].forEach(sx => {
+        const side = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.65, 0.36), teakMat);
+        side.position.set(sx, 0.325, 0);
+        shoeRack.add(side);
+      });
+      [0.14, 0.38, 0.62].forEach(sy => {
+        const tier = new THREE.Mesh(new THREE.BoxGeometry(1.02, 0.04, 0.36), teakMat);
+        tier.position.set(0, sy, 0);
+        shoeRack.add(tier);
+      });
+      mushollaGroup.add(shoeRack);
+      registerCollider(7.6, 8.8, -2.1, -1.5, 1, 'Musholla Shoe Rack');
+
+      // Quran & Tasbih Shelf at world (x: 19.5, z: -8.5) -> local (+5.5, -4.5)
+      const quranShelf = new THREE.Group();
+      quranShelf.position.set(5.5, 0, -4.5);
+      const qBack = new THREE.Mesh(new THREE.BoxGeometry(1.0, 1.55, 0.42), teakMat);
+      qBack.position.y = 0.775;
+      quranShelf.add(qBack);
+      [0.45, 0.95, 1.38].forEach((qy, rIdx) => {
+        const qShelf = new THREE.Mesh(new THREE.BoxGeometry(0.96, 0.04, 0.44), woodMat);
+        qShelf.position.set(0, qy, 0.02);
+        quranShelf.add(qShelf);
+        for (let b = -3; b <= 3; b++) {
+          const book = new THREE.Mesh(
+            new THREE.BoxGeometry(0.08, 0.22, 0.16),
+            new THREE.MeshStandardMaterial({ color: (b + rIdx) % 2 === 0 ? 0x065f46 : 0xfbbf24, roughness: 0.5 })
+          );
+          book.position.set(b * 0.11, qy + 0.13, 0.08);
+          quranShelf.add(book);
+        }
+      });
+      // Tasbih beads ring resting on top shelf
+      const tasbih = new THREE.Mesh(new THREE.TorusGeometry(0.08, 0.018, 8, 16), new THREE.MeshStandardMaterial({ color: 0x92400e }));
+      tasbih.rotation.x = Math.PI / 2;
+      tasbih.position.set(0, 1.58, 0.08);
+      quranShelf.add(tasbih);
+      mushollaGroup.add(quranShelf);
+      registerCollider(18.9, 20.1, -9.1, -7.9, 1, 'Quran & Tasbih Shelf');
+
+      // Warm Wall Sconces inside Musholla
+      [
+        { x: 6.86, y: 1.9, z: -3.5, rx: 0, ry: -Math.PI / 2 },
+        { x: 6.86, y: 1.9, z: 0.5, rx: 0, ry: -Math.PI / 2 },
+        { x: -3.5, y: 1.9, z: -5.86, rx: 0, ry: 0 },
+        { x: 3.5, y: 1.9, z: -5.86, rx: 0, ry: 0 }
+      ].forEach(sc => {
+        const sconceBody = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.32, 0.12), new THREE.MeshStandardMaterial({ color: 0x78350f, metalness: 0.4 }));
+        sconceBody.position.set(sc.x, sc.y, sc.z);
+        sconceBody.rotation.y = sc.ry;
+        const sconceGlow = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.05, 0.24, 12), new THREE.MeshBasicMaterial({ color: 0xfde68a }));
+        sconceGlow.position.set(0, 0.04, 0.08);
+        sconceBody.add(sconceGlow);
+        mushollaGroup.add(sconceBody);
+      });
+      const mushWarmLight = new THREE.PointLight(0xfef3c7, 0.85, 16, 1.8);
+      mushWarmLight.position.set(0, 2.5, -2.0);
+      mushollaGroup.add(mushWarmLight);
 
       const wudhuBasin = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.35, 1.2), new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.2 }));
       wudhuBasin.position.set(4.4, 0.175, 4.4);
@@ -4236,7 +4839,16 @@ export interface CandidateComparisonView {
         findPath: findGridPathAStar,
         elevatorState,
         doors: INTERACTIVE_DOORS,
-        colliders: STATIC_COLLIDERS
+        colliders: STATIC_COLLIDERS,
+        scene,
+        camera,
+        controls,
+        floorGroups,
+        roofGroup,
+        elevatorCabin,
+        agentAvatars,
+        getSelectedAgent: () => selectedAgent,
+        getCurrentPOV: () => currentPOV
       };
     }
 
@@ -4562,7 +5174,7 @@ export interface CandidateComparisonView {
         }
 
         if (!shouldOpen && camInWalkthrough) {
-          if (Math.abs((camera.position.y - 1.62) - door.center.y) < 1.8 || camFloor === door.floor) {
+          if (Math.abs((camera.position.y - 1.52) - door.center.y) < 1.8 || camFloor === door.floor) {
             const camDist = Math.hypot(camera.position.x - door.center.x, camera.position.z - door.center.z);
             if (camDist <= 2.8) {
               shouldOpen = true;
@@ -4586,17 +5198,6 @@ export interface CandidateComparisonView {
       const avatarList = Object.values(agentAvatars);
       const activeFloor = Math.round(elevatorState.currentY / 8) + 1;
       const isThresholdBusy = (fl) => {
-        if (elevatorState.playerPhase === 'AUTO_ENTERING') return true;
-        if (
-          currentPOV === 'walkthrough' &&
-          camera &&
-          (currentFloor || 1) === fl &&
-          Math.abs(camera.position.x) < 1.8 &&
-          camera.position.z >= -2.5 &&
-          camera.position.z <= 0.6
-        ) {
-          return true;
-        }
         return avatarList.some(av =>
           (av.elevPhase === 'BOARDING' || av.elevPhase === 'EXITING') &&
           Math.round(av.group.position.y / 8) + 1 === fl
@@ -4605,10 +5206,6 @@ export interface CandidateComparisonView {
 
       if (elevatorState.mode === 'IDLE') {
         elevatorState.currentFloor = activeFloor;
-        const playerNearOnSameFloor =
-          currentPOV === 'walkthrough' &&
-          isPlayerNearOrInElevator() &&
-          (currentFloor || 1) === activeFloor;
         const someoneWaitingHere = avatarList.some(
           av => av.elevPhase === 'WAIT_CABIN_BOARD' && av.floor === activeFloor
         );
@@ -4616,7 +5213,7 @@ export interface CandidateComparisonView {
           av => av.elevPhase === 'RIDING' && av.pendingDestFloor === activeFloor
         );
 
-        if (someoneWaitingHere || someoneExitingHere || playerNearOnSameFloor) {
+        if (someoneWaitingHere || someoneExitingHere) {
           elevatorState.doorsOpenFloor = activeFloor;
           elevatorState.mode = 'DOORS_OPEN';
           elevatorState.holdTimer = 0.75;
@@ -4651,16 +5248,8 @@ export interface CandidateComparisonView {
             elevatorState.doorsOpenFloor = null;
             elevatorState.mode = 'CLOSING';
           } else {
-            const playerNear =
-              currentPOV === 'walkthrough' &&
-              isPlayerNearOrInElevator() &&
-              (currentFloor || 1) === f;
-            if (!playerNear) {
-              elevatorState.doorsOpenFloor = null;
-              elevatorState.mode = 'IDLE';
-            } else {
-              elevatorState.holdTimer = 0.4;
-            }
+            elevatorState.doorsOpenFloor = null;
+            elevatorState.mode = 'IDLE';
           }
         }
       } else if (elevatorState.mode === 'CLOSING') {
@@ -4729,9 +5318,11 @@ export interface CandidateComparisonView {
     function updateWalkthroughElevatorHUD() {
       const hud = document.getElementById('elevator-hud');
       if (!hud) return;
+      const activeAv = selectedAgent ? agentAvatars[selectedAgent.id] : null;
+      const agentElevActive = activeAv && activeAv.elevPhase !== null;
       const shouldShow =
         currentPOV === 'walkthrough' &&
-        (isPlayerNearOrInElevator() || elevatorState.playerPhase !== null);
+        (isPlayerNearOrInElevator() || agentElevActive);
 
       if (!shouldShow) {
         hud.classList.add('hidden');
@@ -4739,7 +5330,9 @@ export interface CandidateComparisonView {
       }
       hud.classList.remove('hidden');
 
-      const playerFloor = currentFloor > 0 ? currentFloor : 1;
+      const agentFloor = activeAv
+        ? (activeAv.floor || Math.max(1, Math.min(3, Math.round(activeAv.group.position.y / 8) + 1)))
+        : (currentFloor > 0 ? currentFloor : 1);
       const cabinFloor = elevatorState.currentFloor || (Math.round(elevatorState.currentY / 8) + 1);
       const statusEl = document.getElementById('elevator-hud-status');
       const subEl = document.getElementById('elevator-hud-sub');
@@ -4749,28 +5342,29 @@ export interface CandidateComparisonView {
           const destFl = Math.round(elevatorState.targetY / 8) + 1;
           statusEl.innerText = `Bergerak → Lt. ${destFl}`;
         } else {
-          statusEl.innerText = `Kabin Lt. ${cabinFloor} • Anda Lt. ${playerFloor}`;
+          statusEl.innerText = `Kabin Lt. ${cabinFloor} • Agen Lt. ${agentFloor}`;
         }
       }
       if (subEl) {
-        if (elevatorState.playerPhase === 'WAITING_TO_BOARD') {
-          subEl.innerText = `Memanggil lift ke Lt. ${playerFloor} sebelum menuju Lt. ${elevatorState.playerTargetFloor}...`;
-        } else if (elevatorState.playerPhase === 'AUTO_ENTERING') {
-          subEl.innerText = 'Pintu terbuka — melangkah masuk ke kabin...';
-        } else if (elevatorState.playerPhase === 'RIDING') {
-          subEl.innerText = `Naik/turun di dalam kabin menuju Lt. ${elevatorState.playerTargetFloor}...`;
-        } else if (isPlayerInsideElevatorCabin()) {
-          subEl.innerText = 'Di dalam kabin: klik Lt. 1 / 2 / 3 atau tekan tombol 1-3';
+        if (activeAv && activeAv.elevPhase === 'WAIT_CABIN_BOARD') {
+          subEl.innerText = `${selectedAgent.shortName || selectedAgent.name} menunggu lift ke Lt. ${activeAv.pendingDestFloor}...`;
+        } else if (activeAv && activeAv.elevPhase === 'BOARDING') {
+          subEl.innerText = 'Pintu terbuka — masuk ke dalam kabin lift...';
+        } else if (activeAv && activeAv.elevPhase === 'RIDING') {
+          subEl.innerText = `Naik/turun di dalam kabin menuju Lt. ${activeAv.pendingDestFloor}...`;
+        } else if (activeAv && activeAv.elevPhase === 'EXITING') {
+          subEl.innerText = `Tiba di Lt. ${activeAv.pendingDestFloor} — keluar dari kabin...`;
         } else {
-          subEl.innerText = 'Klik lantai tujuan atau tekan 1 / 2 / 3 untuk naik lift:';
+          subEl.innerText = 'Klik Lt. 1 / 2 / 3 atau tekan 1-3 untuk kirim agen naik lift:';
         }
       }
 
+      const targetFl = activeAv && activeAv.elevPhase ? activeAv.pendingDestFloor : null;
       [1, 2, 3].forEach(fl => {
         const btn = document.getElementById(`btn-elev-${fl}`);
         if (!btn) return;
-        const isTarget = elevatorState.playerTargetFloor === fl;
-        const isCurrent = playerFloor === fl && elevatorState.playerPhase === null;
+        const isTarget = targetFl === fl;
+        const isCurrent = agentFloor === fl && !targetFl;
         if (isTarget) {
           btn.className = 'elev-btn py-2 px-2 rounded-lg font-mono font-bold bg-amber-500 text-zinc-950 border border-amber-300 shadow transition';
         } else if (isCurrent) {
@@ -4782,27 +5376,13 @@ export interface CandidateComparisonView {
     }
 
     function requestPlayerElevator(targetFloor) {
-      if (currentPOV !== 'walkthrough') return;
-      const playerFloor = currentFloor > 0 ? currentFloor : 1;
-      const inCabin = isPlayerInsideElevatorCabin();
-
-      if (inCabin) {
-        if (
-          targetFloor === playerFloor &&
-          Math.abs(elevatorState.currentY - (playerFloor - 1) * 8) < 0.25
-        ) {
-          elevatorState.playerPhase = null;
-          elevatorState.playerTargetFloor = null;
-          requestElevatorFloor(playerFloor);
-          return;
-        }
-        elevatorState.playerTargetFloor = targetFloor;
-        elevatorState.playerPhase = 'RIDING';
-        requestElevatorFloor(targetFloor);
-      } else {
-        elevatorState.playerTargetFloor = targetFloor;
-        elevatorState.playerPhase = targetFloor === playerFloor ? 'SUMMONING' : 'WAITING_TO_BOARD';
-        requestElevatorFloor(playerFloor);
+      if (currentPOV !== 'walkthrough' || !selectedAgent) return;
+      if (targetFloor === 1) {
+        triggerAgentActivity(selectedAgent.id, 'coffee');
+      } else if (targetFloor === 2) {
+        triggerAgentActivity(selectedAgent.id, selectedAgent.floor === 2 ? 'work' : 'meeting');
+      } else if (targetFloor === 3) {
+        triggerAgentActivity(selectedAgent.id, selectedAgent.floor === 3 ? 'work' : 'rest');
       }
       updateWalkthroughElevatorHUD();
     }
@@ -4929,8 +5509,9 @@ export interface CandidateComparisonView {
               av.floor = destF;
               av.floorY = destY;
               attachAvatarToFloor(av, destF);
-              if (currentPOV === 'follow' && selectedAgent && selectedAgent.id === av.agent.id) {
-                syncFloorUIAndCutaway(destF);
+              if ((currentPOV === 'follow' || currentPOV === 'walkthrough') && selectedAgent && selectedAgent.id === av.agent.id) {
+                povTrackedAgentFloor = destF;
+                syncFloorUIAndCutaway(destF, false);
               }
               av.elevPhase = null;
               const dest = av.pendingDestPos || av.homePos;
@@ -5149,128 +5730,135 @@ export interface CandidateComparisonView {
       }
     }
 
-    function handleWalkthroughControls(delta = 0.016) {
-      const floorNum = currentFloor > 0 ? currentFloor : 1;
-      const baseFloorY = (floorNum - 1) * 8;
+    function getAgentEyeHeightOffset(av) {
+      if (!av) return 1.52;
+      const isSeatedWorking = !av.isWalking && av.state === 'WORKING';
+      return isSeatedWorking ? 1.18 : 1.52;
+    }
 
-      // 1. Handle active elevator auto-boarding / riding state for 1st-person player
-      if (elevatorState.playerPhase === 'SUMMONING') {
-        if (
-          elevatorState.mode === 'DOORS_OPEN' &&
-          elevatorState.doorsOpenFloor === floorNum &&
-          elevatorState.doorOpenProgress[floorNum] >= 0.72
-        ) {
-          elevatorState.playerPhase = null;
-          elevatorState.playerTargetFloor = null;
+    function syncFirstPersonAvatarVisibility() {
+      if (!agentAvatars) return;
+      const activeId = (currentPOV === 'walkthrough' && selectedAgent) ? selectedAgent.id : null;
+      Object.values(agentAvatars).forEach(av => {
+        const isFirstPersonSelf = activeId !== null && av.agent && av.agent.id === activeId;
+        if (av.parts && av.parts.headGroup) {
+          av.parts.headGroup.visible = !isFirstPersonSelf;
         }
-      } else if (elevatorState.playerPhase === 'WAITING_TO_BOARD') {
-        if (
-          elevatorState.mode === 'DOORS_OPEN' &&
-          elevatorState.doorsOpenFloor === floorNum &&
-          Math.abs(elevatorState.currentY - baseFloorY) < 0.15 &&
-          elevatorState.doorOpenProgress[floorNum] >= 0.72
-        ) {
-          elevatorState.playerPhase = 'AUTO_ENTERING';
-        }
-      } else if (elevatorState.playerPhase === 'AUTO_ENTERING') {
-        const dx = 0 - camera.position.x;
-        const dz = -4.0 - camera.position.z;
-        const dist = Math.hypot(dx, dz);
-        const enterSpeed = 4.2 * Math.max(delta, 0.016);
-        if (dist <= enterSpeed + 0.12) {
-          camera.position.x = 0;
-          camera.position.z = -4.0;
-          camera.position.y = (elevatorCabin ? elevatorCabin.position.y : elevatorState.currentY) + 1.62;
-          if (elevatorState.playerTargetFloor && elevatorState.playerTargetFloor !== floorNum) {
-            elevatorState.playerPhase = 'RIDING';
-            requestElevatorFloor(elevatorState.playerTargetFloor);
-          } else {
-            elevatorState.playerPhase = null;
-          }
+        if (av.statusSprite) av.statusSprite.visible = !isFirstPersonSelf;
+        if (av.speechSprite) av.speechSprite.visible = !isFirstPersonSelf;
+      });
+    }
+
+    function updateWalkthroughHudText(av) {
+      const hudTextEl = document.getElementById('walkthrough-hud-text');
+      if (!hudTextEl || !selectedAgent) return;
+      const stateLabel = av
+        ? (av.elevPhase === 'RIDING' ? 'RIDING_ELEVATOR' : (av.isWalking ? 'WALKING' : (av.state || 'WORKING')))
+        : 'WORKING';
+      hudTextEl.innerText = `👁️ 1st-Person POV Agen: ${selectedAgent.name} (${stateLabel}) • Drag Mouse untuk menoleh`;
+    }
+
+    function beginFirstPersonSwitch(resetHeadLook = true) {
+      if (typeof TWEEN !== 'undefined') TWEEN.removeAll();
+      if (resetHeadLook) {
+        povHeadYaw = 0;
+        povHeadPitch = 0;
+      }
+      if (camera && typeof THREE !== 'undefined') {
+        povSwitchStartPos = camera.position.clone();
+        const dir = new THREE.Vector3();
+        camera.getWorldDirection(dir);
+        povSwitchStartLook = camera.position.clone().addScaledVector(dir, 4.0);
+        povSwitchBlend = 0;
+        povSwitchStartTime = performance.now();
+      } else {
+        povSwitchBlend = 1;
+      }
+
+      const av = selectedAgent ? agentAvatars[selectedAgent.id] : null;
+      if (av && av.group) {
+        povEyeOffset = getAgentEyeHeightOffset(av);
+        const isRiding = av.elevPhase === 'RIDING' || av.elevPhase === 'BOARDING' || av.elevPhase === 'EXITING';
+        if (isRiding) {
+          povTrackedAgentFloor = null;
+          if (floorGroups[1]) floorGroups[1].visible = true;
+          if (floorGroups[2]) floorGroups[2].visible = true;
+          if (floorGroups[3]) floorGroups[3].visible = true;
+          if (roofGroup) roofGroup.visible = true;
         } else {
-          camera.position.x += (dx / dist) * enterSpeed;
-          camera.position.z += (dz / dist) * enterSpeed;
-          camera.position.y = (elevatorCabin ? elevatorCabin.position.y : elevatorState.currentY) + 1.62;
+          const avFloor = av.floor || Math.max(1, Math.min(3, Math.round(av.group.position.y / 8) + 1));
+          povTrackedAgentFloor = avFloor;
+          syncFloorUIAndCutaway(avFloor, false);
         }
-        return;
-      } else if (elevatorState.playerPhase === 'RIDING') {
-        const cabinY = elevatorCabin ? elevatorCabin.position.y : elevatorState.currentY;
-        camera.position.y = cabinY + 1.62;
-        // Show all floors while looking out through glass shaft during ride
+      }
+      syncFirstPersonAvatarVisibility();
+      updateWalkthroughHudText(av);
+    }
+
+    function handleWalkthroughControls(delta = 0.016) {
+      if (!camera || !selectedAgent) return;
+      const av = agentAvatars[selectedAgent.id];
+      if (!av || !av.group) return;
+
+      syncFirstPersonAvatarVisibility();
+      updateWalkthroughHudText(av);
+
+      // Update floor visibility live as the agent rides the elevator across floors
+      const isRiding = av.elevPhase === 'RIDING' || av.elevPhase === 'BOARDING' || av.elevPhase === 'EXITING';
+      if (isRiding) {
         if (floorGroups[1]) floorGroups[1].visible = true;
         if (floorGroups[2]) floorGroups[2].visible = true;
         if (floorGroups[3]) floorGroups[3].visible = true;
-
-        // Allow looking & stepping gently inside the cabin
-        const moveSpeed = 3.2 * Math.max(delta, 0.016);
-        const forward = new THREE.Vector3();
-        camera.getWorldDirection(forward);
-        forward.y = 0;
-        forward.normalize();
-        const right = new THREE.Vector3();
-        right.crossVectors(camera.up, forward).normalize();
-        if (walkKeys['KeyW'] || walkKeys['ArrowUp']) camera.position.addScaledVector(forward, moveSpeed);
-        if (walkKeys['KeyS'] || walkKeys['ArrowDown']) camera.position.addScaledVector(forward, -moveSpeed);
-        if (walkKeys['KeyA'] || walkKeys['ArrowLeft']) camera.position.addScaledVector(right, moveSpeed);
-        if (walkKeys['KeyD'] || walkKeys['ArrowRight']) camera.position.addScaledVector(right, -moveSpeed);
-        camera.position.x = Math.max(-1.35, Math.min(1.35, camera.position.x));
-        camera.position.z = Math.max(-5.35, Math.min(-2.45, camera.position.z));
-
-        const targetFl = elevatorState.playerTargetFloor;
-        const targetFlY = (targetFl - 1) * 8;
-        if (
-          elevatorState.mode === 'DOORS_OPEN' &&
-          elevatorState.doorsOpenFloor === targetFl &&
-          Math.abs(elevatorState.currentY - targetFlY) < 0.15 &&
-          elevatorState.doorOpenProgress[targetFl] >= 0.72
-        ) {
-          elevatorState.playerPhase = null;
-          elevatorState.playerTargetFloor = null;
-          syncFloorUIAndCutaway(targetFl);
-          camera.position.y = targetFlY + 1.62;
-        }
-        return;
-      }
-
-      // 2. Standard 1st-Person Walking on Active Floor
-      const prevX = camera.position.x;
-      const prevZ = camera.position.z;
-      const moveSpeed = Math.min(0.24, 5.2 * Math.max(delta, 0.016));
-      const forward = new THREE.Vector3();
-      camera.getWorldDirection(forward);
-      forward.y = 0;
-      forward.normalize();
-
-      const right = new THREE.Vector3();
-      right.crossVectors(camera.up, forward).normalize();
-
-      if (walkKeys['KeyW'] || walkKeys['ArrowUp']) camera.position.addScaledVector(forward, moveSpeed);
-      if (walkKeys['KeyS'] || walkKeys['ArrowDown']) camera.position.addScaledVector(forward, -moveSpeed);
-      if (walkKeys['KeyA'] || walkKeys['ArrowLeft']) camera.position.addScaledVector(right, moveSpeed);
-      if (walkKeys['KeyD'] || walkKeys['ArrowRight']) camera.position.addScaledVector(right, -moveSpeed);
-
-      camera.position.x = Math.max(-25.0, Math.min(25.0, camera.position.x));
-      camera.position.z = Math.max(-30.0, Math.min(30.0, camera.position.z));
-      resolveXZCollisions(camera.position, floorNum, null);
-
-      // Guard elevator landing doors if cabin is absent or doors closed
-      const portalDoorsOpen =
-        elevatorState.doorsOpenFloor === floorNum &&
-        elevatorState.doorOpenProgress[floorNum] >= 0.55 &&
-        Math.abs(elevatorState.currentY - baseFloorY) < 0.25;
-
-      if (!portalDoorsOpen && Math.abs(camera.position.x) < 1.55) {
-        if (prevZ >= -1.6 && camera.position.z < -1.52) {
-          camera.position.z = -1.52;
-        } else if (prevZ <= -2.2 && camera.position.z > -2.35) {
-          camera.position.z = -2.35;
-        }
-      }
-
-      if (isPlayerInsideElevatorCabin() && Math.abs(elevatorState.currentY - baseFloorY) < 0.25) {
-        camera.position.y = (elevatorCabin ? elevatorCabin.position.y : baseFloorY) + 1.62;
+        if (roofGroup) roofGroup.visible = true;
+        povTrackedAgentFloor = null;
       } else {
-        camera.position.y = baseFloorY + 1.62;
+        const avFloor = Math.max(1, Math.min(3, Math.round(av.group.position.y / 8) + 1));
+        if (povTrackedAgentFloor !== avFloor) {
+          povTrackedAgentFloor = avFloor;
+          syncFloorUIAndCutaway(avFloor, false);
+        }
+      }
+
+      // Smoothly follow seated (+1.18) vs standing/walking (+1.52) eye elevation
+      const targetEyeOffset = getAgentEyeHeightOffset(av);
+      if (povSwitchBlend < 1) {
+        povEyeOffset = targetEyeOffset;
+      } else {
+        povEyeOffset += (targetEyeOffset - povEyeOffset) * Math.min(1, delta * 12.0);
+        if (Math.abs(targetEyeOffset - povEyeOffset) < 0.002) {
+          povEyeOffset = targetEyeOffset;
+        }
+      }
+
+      const eyeX = av.group.position.x;
+      const eyeY = av.group.position.y + povEyeOffset;
+      const eyeZ = av.group.position.z;
+
+      const totalYaw = (av.group.rotation.y || 0) + povHeadYaw;
+      const pitch = Math.max(-1.05, Math.min(1.05, povHeadPitch));
+      const cosP = Math.cos(pitch);
+      const lookX = eyeX + Math.sin(totalYaw) * cosP * 4.0;
+      const lookY = eyeY + Math.sin(pitch) * 4.0;
+      const lookZ = eyeZ + Math.cos(totalYaw) * cosP * 4.0;
+
+      if (povSwitchBlend < 1 && povSwitchStartPos && povSwitchStartLook) {
+        povSwitchBlend = Math.min(1, (performance.now() - povSwitchStartTime) / 200);
+        if (povSwitchBlend >= 1) {
+          camera.position.set(eyeX, eyeY, eyeZ);
+          camera.lookAt(lookX, lookY, lookZ);
+        } else {
+          const ease = 1 - Math.pow(1 - povSwitchBlend, 3);
+          camera.position.lerpVectors(povSwitchStartPos, new THREE.Vector3(eyeX, eyeY, eyeZ), ease);
+          const blendedLook = new THREE.Vector3().lerpVectors(
+            povSwitchStartLook,
+            new THREE.Vector3(lookX, lookY, lookZ),
+            ease
+          );
+          camera.lookAt(blendedLook);
+        }
+      } else {
+        camera.position.set(eyeX, eyeY, eyeZ);
+        camera.lookAt(lookX, lookY, lookZ);
       }
     }
 
@@ -5278,13 +5866,11 @@ export interface CandidateComparisonView {
     function switchFloor(floorNum) {
       elevatorState.playerPhase = null;
       elevatorState.playerTargetFloor = null;
-      syncFloorUIAndCutaway(floorNum, false);
+      syncFloorUIAndCutaway(floorNum, floorNum === 0);
 
       if (currentPOV === 'walkthrough') {
-        const baseFloorY = floorNum > 0 ? (floorNum - 1) * 8 : 0;
-        camera.rotation.order = 'YXZ';
-        camera.position.set(0, baseFloorY + 1.62, 10);
-        camera.lookAt(0, baseFloorY + 1.62, -4);
+        // Keep camera inside the active agent's eyes; update floor visibility only
+        return;
       } else if (floorNum === 0) {
         smoothCameraTo({ x: 34, y: 38, z: 50 }, { x: 0, y: 9, z: 2 });
       } else if (floorNum === 1) {
@@ -5314,23 +5900,34 @@ export interface CandidateComparisonView {
 
       if (povMode === 'orbit') {
         if (controls) controls.enabled = true;
-        if (camera) camera.rotation.order = 'XYZ';
+        if (camera) {
+          camera.rotation.order = 'XYZ';
+          camera.fov = 40;
+          camera.updateProjectionMatrix();
+        }
         if (walkthroughHud) walkthroughHud.classList.add('hidden');
         if (elevatorHud) elevatorHud.classList.add('hidden');
+        syncFirstPersonAvatarVisibility();
       } else if (povMode === 'walkthrough') {
         if (controls) controls.enabled = false;
-        if (camera) camera.rotation.order = 'YXZ';
+        if (!selectedAgent && AGENTS.length > 0) selectedAgent = AGENTS[0];
+        if (camera) {
+          camera.rotation.order = 'YXZ';
+          camera.fov = 58;
+          camera.updateProjectionMatrix();
+        }
         if (walkthroughHud) walkthroughHud.classList.remove('hidden');
-        const floorNum = currentFloor > 0 ? currentFloor : 1;
-        switchFloor(floorNum);
-        const baseFloorY = (floorNum - 1) * 8;
-        camera.position.set(0, baseFloorY + 1.62, 10);
-        camera.lookAt(0, baseFloorY + 1.62, -4);
+        beginFirstPersonSwitch(true);
       } else if (povMode === 'follow') {
         if (controls) controls.enabled = false;
-        if (camera) camera.rotation.order = 'XYZ';
+        if (camera) {
+          camera.rotation.order = 'XYZ';
+          camera.fov = 40;
+          camera.updateProjectionMatrix();
+        }
         if (walkthroughHud) walkthroughHud.classList.add('hidden');
         if (elevatorHud) elevatorHud.classList.add('hidden');
+        syncFirstPersonAvatarVisibility();
         if (selectedAgent) {
           const av = agentAvatars[selectedAgent.id];
           switchFloor((av && av.floor) || selectedAgent.floor || 2);
@@ -5338,9 +5935,14 @@ export interface CandidateComparisonView {
         }
       } else if (povMode === 'topdown') {
         if (controls) controls.enabled = true;
-        if (camera) camera.rotation.order = 'XYZ';
+        if (camera) {
+          camera.rotation.order = 'XYZ';
+          camera.fov = 40;
+          camera.updateProjectionMatrix();
+        }
         if (walkthroughHud) walkthroughHud.classList.add('hidden');
         if (elevatorHud) elevatorHud.classList.add('hidden');
+        syncFirstPersonAvatarVisibility();
         const floorNum = currentFloor > 0 ? currentFloor : 1;
         const baseFloorY = (floorNum - 1) * 8;
         smoothCameraTo({ x: 0, y: baseFloorY + 42, z: 0.1 }, { x: 0, y: baseFloorY, z: 0 });
@@ -5352,7 +5954,7 @@ export interface CandidateComparisonView {
       if (currentPOV === 'walkthrough') {
         const activeTag = document.activeElement && document.activeElement.tagName;
         if (activeTag !== 'INPUT' && activeTag !== 'TEXTAREA') {
-          if (isPlayerNearOrInElevator() || elevatorState.playerPhase !== null) {
+          if (isPlayerNearOrInElevator() || (selectedAgent && agentAvatars[selectedAgent.id]?.elevPhase)) {
             if (e.key === '1' || e.code === 'Digit1' || e.code === 'Numpad1') requestPlayerElevator(1);
             else if (e.key === '2' || e.code === 'Digit2' || e.code === 'Numpad2') requestPlayerElevator(2);
             else if (e.key === '3' || e.code === 'Digit3' || e.code === 'Numpad3') requestPlayerElevator(3);
@@ -5372,10 +5974,8 @@ export interface CandidateComparisonView {
         const deltaX = e.clientX - lastMousePos.x;
         const deltaY = e.clientY - lastMousePos.y;
         lastMousePos = { x: e.clientX, y: e.clientY };
-        camera.rotation.order = 'YXZ';
-        camera.rotation.y -= deltaX * 0.003;
-        camera.rotation.x -= deltaY * 0.003;
-        camera.rotation.x = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, camera.rotation.x));
+        povHeadYaw -= deltaX * 0.004;
+        povHeadPitch = Math.max(-1.05, Math.min(1.05, povHeadPitch - deltaY * 0.0035));
       }
     });
 
@@ -5426,6 +6026,11 @@ export interface CandidateComparisonView {
 
     function focusAgentCamera(agent = selectedAgent) {
       if (!agent) return;
+      if (currentPOV === 'walkthrough') {
+        beginFirstPersonSwitch(true);
+        return;
+      }
+      if (currentPOV === 'follow') return;
       const agentObj = typeof agent === 'number' ? AGENTS.find(a => a.id === agent) : agent;
       if (!agentObj) return;
 
@@ -5535,7 +6140,17 @@ export interface CandidateComparisonView {
       if (!agent) return;
       selectedAgent = agent;
       renderDossier(agent);
-      focusAgentCamera(agent);
+      if (currentPOV === 'walkthrough') {
+        beginFirstPersonSwitch(true);
+      } else if (currentPOV === 'follow') {
+        const av = agentAvatars[agent.id];
+        if (av && av.group) {
+          const avFloor = av.floor || Math.max(1, Math.min(3, Math.round(av.group.position.y / 8) + 1));
+          syncFloorUIAndCutaway(avFloor, false);
+        }
+      } else {
+        focusAgentCamera(agent);
+      }
     }
 
     function prevAgent() {
@@ -5565,6 +6180,11 @@ export interface CandidateComparisonView {
       }
       const div = DIVISIONS[divKey];
       if (div) {
+        if (currentPOV === 'walkthrough' || currentPOV === 'follow') {
+          const divAgent = AGENTS.find(a => a.division === divKey);
+          if (divAgent) selectAgent(divAgent);
+          return;
+        }
         switchFloor(div.floor);
         smoothCameraTo(div.cameraPos, div.cameraTarget);
       }
