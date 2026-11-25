@@ -163,10 +163,11 @@
 
         <!-- Floor Switcher Controls -->
         <div class="flex flex-wrap items-center max-w-full bg-zinc-900 border border-zinc-800 rounded-lg p-0.5 text-xs shadow-inner">
-          <button onclick="switchFloor(0)" id="btn-floor-0" class="floor-btn px-2.5 py-1 rounded font-semibold bg-teal-600 text-white transition shadow" title="Lihat Seluruh Gedung 3 Lantai">🏢 Semua Lt</button>
+          <button onclick="switchFloor(0)" id="btn-floor-0" class="floor-btn px-2.5 py-1 rounded font-semibold bg-teal-600 text-white transition shadow" title="Lihat Seluruh Gedung & Kawasan Kota (kantor-ai)">🏢 Semua Lt & Kota</button>
           <button onclick="switchFloor(1)" id="btn-floor-1" class="floor-btn px-2.5 py-1 rounded font-medium text-zinc-400 hover:text-white transition" title="Lantai 1: Lobi Utama, Kafetaria & Espresso Bar, Musholla & Wudhu">1️⃣ Lt. 1: Lobi/Kafe/Musholla</button>
           <button onclick="switchFloor(2)" id="btn-floor-2" class="floor-btn px-2.5 py-1 rounded font-medium text-zinc-400 hover:text-white transition" title="Lantai 2: Studio Core Engineering, QA Lab, Ruang Meeting Boardroom & UX Lounge">2️⃣ Lt. 2: Eng/QA/Meeting</button>
           <button onclick="switchFloor(3)" id="btn-floor-3" class="floor-btn px-2.5 py-1 rounded font-medium text-zinc-400 hover:text-white transition" title="Lantai 3: Suite Eksekutif, Pusat Riset AI, DevOps Command Center & Gym">3️⃣ Lt. 3: Exec/AI/DevOps/Gym</button>
+          <button onclick="switchFloor(4)" id="btn-floor-4" class="floor-btn px-2.5 py-1 rounded font-medium text-zinc-400 hover:text-white transition" title="Lantai 4: Rooftop Garden Terrace, Pergola Lounge & Meja Biliar (kantor-ai)">4️⃣ Lt. 4: Rooftop & Biliar</button>
         </div>
 
         <!-- Camera POV Mode Controls -->
@@ -177,14 +178,29 @@
           <button onclick="setCameraPOV('topdown')" id="btn-pov-topdown" class="pov-btn px-2 py-1 rounded font-medium text-zinc-400 hover:text-white transition" title="Denah Atas 2D">🗺️ Denah</button>
         </div>
 
+        <!-- Atmosphere & Weather Controls (kantor-ai inspired) -->
+        <div class="flex items-center bg-zinc-900 border border-zinc-800 rounded-lg p-0.5 text-xs shadow-inner">
+          <button onclick="setWeather('clear')" id="btn-weather-clear" class="weather-btn px-2 py-1 rounded font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/40 transition" title="Cuaca Cerah Siang Hari">☀️ Cerah</button>
+          <button onclick="setWeather('rain')" id="btn-weather-rain" class="weather-btn px-2 py-1 rounded font-medium text-zinc-400 hover:text-white transition" title="Hujan Gerimis Realtime & Audio Hujan Sintesis Web Audio">🌧️ Hujan</button>
+          <button onclick="setWeather('sunset')" id="btn-weather-sunset" class="weather-btn px-2 py-1 rounded font-medium text-zinc-400 hover:text-white transition" title="Sore Hari / Golden Sunset & Lampu Interior Hangat">🌅 Sunset</button>
+        </div>
+
+        <!-- Lo-Fi Relaxing Ambient Music Synthesizer (kantor-ai music.js) -->
+        <div class="flex items-center bg-zinc-900 border border-zinc-800 rounded-lg p-0.5 text-xs gap-1.5 px-2 shadow-inner">
+          <button onclick="toggleOfficeMusic()" id="btn-office-music" class="px-2 py-1 rounded font-medium text-zinc-400 hover:text-white transition flex items-center gap-1.5" title="Musik Santai Lo-Fi Procedural Web Audio (kantor-ai)">
+            <span>🎵</span><span id="label-office-music">Musik: OFF</span>
+          </button>
+          <input type="range" id="slider-music-volume" min="0" max="100" value="30" oninput="onMusicVolumeChange(this.value)" class="w-14 h-1 accent-teal-500 bg-zinc-700 rounded cursor-pointer" title="Volume Musik Lo-Fi" />
+        </div>
+
         <!-- Utility Controls -->
         <div class="flex items-center bg-zinc-900 border border-zinc-800 rounded-lg p-0.5 text-xs">
           <button onclick="toggleTour()" id="btn-tour" title="Tur Sinematik Otomatis (60 Detik Per Agen)" class="px-2.5 py-1 rounded font-medium text-zinc-300 hover:text-white transition flex items-center gap-1.5">
             <span>🎬</span><span>Tur 60s</span>
           </button>
           <button onclick="toggleLightingMode()" id="btn-light" title="Ganti Mode Pencahayaan (Siang/Malam)" class="px-2 py-1 rounded font-medium text-zinc-300 hover:text-white transition">🌙</button>
-          <button onclick="toggleAudio()" id="btn-audio" title="Audio Suara Kantor 3D" class="px-2.5 py-1 rounded font-medium text-zinc-400 hover:text-white transition flex items-center gap-1.5">
-            <span>🔇</span><span>Suara: OFF</span>
+          <button onclick="toggleAudio()" id="btn-audio" title="Audio Efek Kantor 3D" class="px-2.5 py-1 rounded font-medium text-zinc-400 hover:text-white transition flex items-center gap-1.5">
+            <span>🔇</span><span>SFX: OFF</span>
           </button>
         </div>
       </div>
@@ -213,6 +229,23 @@
         </button>
         <button onclick="focusDivision('lounge')" id="btn-div-lounge" class="div-btn px-2.5 py-1 rounded-md font-medium text-zinc-400 hover:text-white hover:bg-zinc-800/60 transition">
           ☕ Stakeholder Lounge (4)
+        </button>
+      </div>
+
+      <!-- Quick Commands Bar: Send instructions to agents (kantor-ai inspired) -->
+      <div class="inline-flex p-1 bg-zinc-900/90 rounded-lg border border-zinc-800 text-xs gap-1 items-center ml-2">
+        <span class="text-zinc-500 text-[11px] font-mono pl-1 uppercase tracking-wider">Perintah:</span>
+        <button onclick="sendTeamInstruction('meeting')" class="px-2.5 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-200 hover:text-white transition border border-zinc-700 text-[11px] font-medium" title="Kirim tim ke Ruang Meeting Boardroom Floor 2">
+          🤝 Kumpul Rapat
+        </button>
+        <button onclick="sendTeamInstruction('lunch')" class="px-2.5 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-200 hover:text-white transition border border-zinc-700 text-[11px] font-medium" title="Kirim tim ke Kafetaria & Espresso Bar Floor 1">
+          ☕ Makan Siang
+        </button>
+        <button onclick="sendTeamInstruction('rooftop')" class="px-2.5 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-200 hover:text-white transition border border-zinc-700 text-[11px] font-medium" title="Kirim tim rehat ke Rooftop Garden & Meja Biliar Floor 4">
+          🌿 Rehat Rooftop
+        </button>
+        <button onclick="sendTeamInstruction('work')" class="px-2.5 py-1 rounded bg-teal-900/40 hover:bg-teal-800/60 text-teal-300 transition border border-teal-700/50 text-[11px] font-semibold" title="Semua agen kembali fokus ke meja kerja masing-masing">
+          💻 Kembali Kerja
         </button>
       </div>
     </div>
@@ -2818,6 +2851,8 @@ export interface CandidateComparisonView {
       const roofSlabMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.3, metalness: 0.7 });
       const skylightMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.25, roughness: 0.1 });
       buildFloorSlabWithShaftCutout(roofGroup, 24.0, roofSlabMat, skylightMat, false, { slabThickness: 0.35, padInset: 3.0, padYOffset: 0.03 });
+      build3DRooftopGarden(roofGroup);
+      buildCityPlinthAndSkyline();
 
       // ── 4 HEAVY STEEL CORNER PILLARS (y = 0 to 24) ──
       const pillarGeo = new THREE.BoxGeometry(1.2, 24, 1.2);
@@ -5865,19 +5900,22 @@ export interface CandidateComparisonView {
         if (floorGroups[1]) floorGroups[1].visible = true;
         if (floorGroups[2]) floorGroups[2].visible = true;
         if (floorGroups[3]) floorGroups[3].visible = true;
+        if (roofGroup) roofGroup.visible = true;
       } else {
-        if (floorGroups[1]) floorGroups[1].visible = true;
-        if (floorGroups[2]) floorGroups[2].visible = (floorNum === 0 || floorNum >= 2);
+        if (floorGroups[1]) floorGroups[1].visible = (floorNum === 0 || floorNum === 1);
+        if (floorGroups[2]) floorGroups[2].visible = (floorNum === 0 || floorNum === 2);
         if (floorGroups[3]) floorGroups[3].visible = (floorNum === 0 || floorNum === 3);
+        if (roofGroup) roofGroup.visible = (floorNum === 0 || floorNum === 4);
       }
-      if (roofGroup) roofGroup.visible = (floorNum === 0);
+      if (skylineGroup) skylineGroup.visible = (floorNum === 0);
 
       const indicator = document.getElementById('active-room-indicator');
       if (indicator) {
-        if (floorNum === 0) indicator.innerText = '🏢 Seluruh Gedung 3 Lantai • 24 Agen Aktif';
-        else if (floorNum === 1) indicator.innerText = '1️⃣ Lantai 1: Lobi Utama, Kafetaria & Musholla As-Sakinah';
+        if (floorNum === 0) indicator.innerText = '🏢 Seluruh Gedung 4 Lantai & Kawasan Kota (kantor-ai) • 24 Agen Aktif';
+        else if (floorNum === 1) indicator.innerText = '1️⃣ Lantai 1: Lobi Utama, Kafetaria Espresso & Musholla As-Sakinah';
         else if (floorNum === 2) indicator.innerText = '2️⃣ Lantai 2: Core Engineering, QA Lab & Ruang Meeting Boardroom';
         else if (floorNum === 3) indicator.innerText = '3️⃣ Lantai 3: Suite Eksekutif, Pusat Riset AI, DevOps & Gym';
+        else if (floorNum === 4) indicator.innerText = '4️⃣ Lantai 4: Rooftop Garden Terrace, Pergola Lounge & Meja Biliar';
       }
     }
 
@@ -6045,6 +6083,35 @@ export interface CandidateComparisonView {
         const delta = Math.min(clock.getDelta(), 0.08);
         const elapsedTime = clock.getElapsedTime();
         if (typeof TWEEN !== 'undefined') TWEEN.update();
+
+        // Kantor-AI Upgrades: Update Clouds, Birds, and Rain
+        if (skylineClouds && skylineClouds.length > 0) {
+          skylineClouds.forEach(c => {
+            c.position.applyAxisAngle(new THREE.Vector3(0, 1, 0), delta * 0.015 * c.userData.speed);
+          });
+        }
+        if (skylineBirds && skylineBirds.length > 0) {
+          skylineBirds.forEach((b, i) => {
+            const t = elapsedTime * b.userData.speed + b.userData.phase;
+            b.position.x = Math.cos(t) * b.userData.radius;
+            b.position.z = Math.sin(t) * (b.userData.radius * 0.75);
+            b.rotation.y = -t + Math.PI / 2;
+            b.children[0].rotation.z = Math.sin(elapsedTime * 9.0) * 0.35;
+            b.children[1].rotation.z = -Math.sin(elapsedTime * 9.0) * 0.35;
+          });
+        }
+        if (isRaining && rainParticlesMesh) {
+          const pos = rainParticlesMesh.geometry.attributes.position.array;
+          for (let pi = 0; pi < pos.length; pi += 6) {
+            pos[pi + 1] -= delta * 38;
+            pos[pi + 4] -= delta * 38;
+            if (pos[pi + 1] < 0) {
+              pos[pi + 1] = 45;
+              pos[pi + 4] = 43.8;
+            }
+          }
+          rainParticlesMesh.geometry.attributes.position.needsUpdate = true;
+        }
 
         // 1. Multi-Floor Elevator Controller & Interactive Sliding Glass Doors
         updateElevatorSystem(delta);
@@ -6361,6 +6428,670 @@ export interface CandidateComparisonView {
     }
 
     // ─── 10. FLOOR SWITCHER & POV CONTROLLER FUNCTIONS ──────────────────────────
+
+    // ══════════════════════════════════════════════════════════════════════════════
+    // KANTOR-AI UPGRADE MODULE: ROOFTOP GARDEN, CITY PLINTH, WEATHER & LO-FI SYNTH
+    // ══════════════════════════════════════════════════════════════════════════════
+
+    let skylineGroup = null;
+    let skylineClouds = [];
+    let skylineBirds = [];
+    let rainParticlesMesh = null;
+    let isRaining = false;
+    let currentWeather = 'clear';
+
+    // ── 1. PROCEDURAL LO-FI MUSIC SYNTHESIZER (kantor-ai public/music.js) ─────────
+    let officeAudioCtx = null;
+    let officeMusicMaster = null;
+    let officeMusicTimer = null;
+    let officeMusicEnabled = false;
+    let officeMusicNextTime = 0;
+    let officeMusicBeat = 0;
+    let officeMusicVolume = 0.3;
+
+    const MUSIC_CHORDS = [
+      [48, 55, 59, 62], // Cmaj7
+      [45, 52, 55, 59], // Am7
+      [41, 48, 52, 57], // Fmaj7
+      [43, 50, 53, 57]  // G7
+    ];
+    const MUSIC_MELODY = [72, null, 74, 79, 76, null, 74, null, 71, null, 72, 76, 74, null, 71, null];
+    const MUSIC_TEMPO = 60 / 68;
+
+    function playSynthNote(midi, time, duration, loudness, type = 'sine') {
+      if (!officeAudioCtx) return;
+      const osc = officeAudioCtx.createOscillator();
+      const env = officeAudioCtx.createGain();
+      const filter = officeAudioCtx.createBiquadFilter();
+
+      osc.type = type;
+      osc.frequency.value = 440 * Math.pow(2, (midi - 69) / 12);
+      filter.type = 'lowpass';
+      filter.frequency.value = 1400;
+
+      env.gain.setValueAtTime(0, time);
+      env.gain.linearRampToValueAtTime(loudness * officeMusicVolume, time + 0.08);
+      env.gain.exponentialRampToValueAtTime(0.0001, time + duration);
+
+      osc.connect(filter);
+      filter.connect(env);
+      env.connect(officeMusicMaster);
+
+      osc.start(time);
+      osc.stop(time + duration + 0.02);
+      osc.onended = () => {
+        osc.disconnect();
+        filter.disconnect();
+        env.disconnect();
+      };
+    }
+
+    function scheduleOfficeMusic() {
+      if (!officeMusicEnabled || !officeAudioCtx || officeAudioCtx.state !== 'running') return;
+      if (officeMusicNextTime < officeAudioCtx.currentTime) {
+        officeMusicNextTime = officeAudioCtx.currentTime + 0.04;
+      }
+      while (officeMusicNextTime < officeAudioCtx.currentTime + 0.45) {
+        const chord = MUSIC_CHORDS[Math.floor(officeMusicBeat / 8) % MUSIC_CHORDS.length];
+        if (officeMusicBeat % 8 === 0) {
+          chord.forEach((m, i) => playSynthNote(m, officeMusicNextTime + i * 0.045, MUSIC_TEMPO * 7.5, 0.12, 'triangle'));
+          playSynthNote(chord[0] - 12, officeMusicNextTime, MUSIC_TEMPO * 4.0, 0.16, 'triangle');
+        }
+        const top = MUSIC_MELODY[officeMusicBeat % MUSIC_MELODY.length];
+        if (top !== null) {
+          playSynthNote(top, officeMusicNextTime, MUSIC_TEMPO * 1.8, 0.11, 'sine');
+        }
+        officeMusicBeat++;
+        officeMusicNextTime += MUSIC_TEMPO;
+      }
+    }
+
+    window.toggleOfficeMusic = async function() {
+      const btn = document.getElementById('btn-office-music');
+      const label = document.getElementById('label-office-music');
+      try {
+        if (!officeAudioCtx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          officeAudioCtx = new AudioCtx();
+          officeMusicMaster = officeAudioCtx.createGain();
+          officeMusicMaster.gain.value = officeMusicVolume;
+          officeMusicMaster.connect(officeAudioCtx.destination);
+        }
+        if (officeMusicEnabled) {
+          officeMusicEnabled = false;
+          clearInterval(officeMusicTimer);
+          await officeAudioCtx.suspend();
+          if (label) label.textContent = 'Musik: OFF';
+          if (btn) btn.className = 'px-2 py-1 rounded font-medium text-zinc-400 hover:text-white transition flex items-center gap-1.5';
+        } else {
+          await officeAudioCtx.resume();
+          officeMusicEnabled = true;
+          officeMusicNextTime = officeAudioCtx.currentTime + 0.05;
+          scheduleOfficeMusic();
+          officeMusicTimer = setInterval(scheduleOfficeMusic, 100);
+          if (label) label.textContent = 'Musik: ON';
+          if (btn) btn.className = 'px-2 py-1 rounded font-semibold bg-teal-500/20 text-teal-300 border border-teal-500/40 transition flex items-center gap-1.5 shadow-sm';
+        }
+      } catch (err) {
+        console.error('Office music audio error:', err);
+      }
+    };
+
+    window.onMusicVolumeChange = function(val) {
+      officeMusicVolume = Math.max(0, Math.min(1, val / 100));
+      if (officeMusicMaster && officeAudioCtx) {
+        officeMusicMaster.gain.setTargetAtTime(officeMusicVolume, officeAudioCtx.currentTime, 0.05);
+      }
+    };
+
+    // ── 2. WEATHER & RAIN AUDIO SYNTHESIZER ──────────────────────────────────────
+    let rainAudioSource = null;
+    let rainGain = null;
+
+    function startRainSound() {
+      try {
+        if (!officeAudioCtx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          officeAudioCtx = new AudioCtx();
+        }
+        if (rainAudioSource) return;
+        const bufferSize = officeAudioCtx.sampleRate * 2;
+        const buffer = officeAudioCtx.createBuffer(1, bufferSize, officeAudioCtx.sampleRate);
+        const data = buffer.getChannelData(0);
+        let lastOut = 0.0;
+        for (let i = 0; i < bufferSize; i++) {
+          const white = Math.random() * 2 - 1;
+          data[i] = (lastOut + 0.02 * white) / 1.02;
+          lastOut = data[i];
+          data[i] *= 3.5;
+        }
+        rainAudioSource = officeAudioCtx.createBufferSource();
+        rainAudioSource.buffer = buffer;
+        rainAudioSource.loop = true;
+        const filter = officeAudioCtx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.value = 1100;
+        rainGain = officeAudioCtx.createGain();
+        rainGain.gain.value = 0.16;
+        rainAudioSource.connect(filter);
+        filter.connect(rainGain);
+        rainGain.connect(officeAudioCtx.destination);
+        rainAudioSource.start();
+      } catch (e) {
+        console.warn('Rain audio unavailable:', e);
+      }
+    }
+
+    function stopRainSound() {
+      if (rainAudioSource) {
+        try { rainAudioSource.stop(); } catch(e){}
+        rainAudioSource.disconnect();
+        rainAudioSource = null;
+      }
+    }
+
+    window.setWeather = function(mode) {
+      currentWeather = mode;
+      document.querySelectorAll('.weather-btn').forEach(b => {
+        b.className = 'weather-btn px-2 py-1 rounded font-medium text-zinc-400 hover:text-white transition';
+      });
+      const activeBtn = document.getElementById(`btn-weather-${mode}`);
+      if (activeBtn) {
+        activeBtn.className = 'weather-btn px-2 py-1 rounded font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/40 transition shadow-sm';
+      }
+
+      if (mode === 'clear') {
+        isRaining = false;
+        if (rainParticlesMesh) rainParticlesMesh.visible = false;
+        stopRainSound();
+        if (mainDirLight) { mainDirLight.color.setHex(0xfff8ed); mainDirLight.intensity = isDayMode ? 1.35 : 1.2; }
+        if (ambientLight) { ambientLight.color.setHex(0xffffff); ambientLight.intensity = isDayMode ? 0.95 : 0.75; }
+        if (scene) scene.background.setHex(isDayMode ? 0xf8fafc : 0x090d16);
+      } else if (mode === 'rain') {
+        isRaining = true;
+        if (rainParticlesMesh) rainParticlesMesh.visible = true;
+        startRainSound();
+        if (mainDirLight) { mainDirLight.color.setHex(0xaec2d6); mainDirLight.intensity = 0.85; }
+        if (ambientLight) { ambientLight.color.setHex(0x64748b); ambientLight.intensity = 0.65; }
+        if (scene) scene.background.setHex(0x0a101d);
+      } else if (mode === 'sunset') {
+        isRaining = false;
+        if (rainParticlesMesh) rainParticlesMesh.visible = false;
+        stopRainSound();
+        if (mainDirLight) { mainDirLight.color.setHex(0xff944d); mainDirLight.intensity = 1.75; }
+        if (ambientLight) { ambientLight.color.setHex(0xffaa77); ambientLight.intensity = 0.9; }
+        if (scene) scene.background.setHex(0x1a0f24);
+      }
+    };
+
+    // ── 3. TEAM INSTRUCTION HANDLER (kantor-ai Send Instructions) ────────────────
+    window.sendTeamInstruction = function(type) {
+      if (!avatarGroups || avatarGroups.length === 0) return;
+      const toast = document.getElementById('live-event-toast');
+      const toastText = document.getElementById('live-event-toast-text');
+
+      if (type === 'meeting') {
+        if (toast && toastText) {
+          toastText.innerHTML = '🤝 <b>Instruksi:</b> Agen berkumpul di Ruang Meeting Boardroom Floor 2.';
+          toast.classList.remove('opacity-0', 'pointer-events-none');
+          setTimeout(() => toast.classList.add('opacity-0', 'pointer-events-none'), 3500);
+        }
+        avatarGroups.forEach((g, idx) => {
+          if (!g.userData || !g.userData.agent) return;
+          const av = g.userData;
+          if (idx < 8) {
+            av.pendingDestFloor = 2;
+            av.pendingState = 'MEETING';
+            g.position.set(-6 + (idx % 4) * 2.2, 8, -4 + Math.floor(idx / 4) * 2.4);
+            if (window.spawnAgentSpeechBubble) window.spawnAgentSpeechBubble(g, ['💡', '📊', '🤝', '📈'][idx % 4]);
+          }
+        });
+      } else if (type === 'lunch') {
+        if (toast && toastText) {
+          toastText.innerHTML = '☕ <b>Instruksi:</b> Agen rehat makan siang & espresso di Kafetaria Floor 1.';
+          toast.classList.remove('opacity-0', 'pointer-events-none');
+          setTimeout(() => toast.classList.add('opacity-0', 'pointer-events-none'), 3500);
+        }
+        avatarGroups.forEach((g, idx) => {
+          if (!g.userData || !g.userData.agent) return;
+          const av = g.userData;
+          if (idx < 12) {
+            av.pendingDestFloor = 1;
+            av.pendingState = 'COFFEE';
+            g.position.set(-8 + (idx % 6) * 2.8, 0, 10 + Math.floor(idx / 6) * 3.0);
+            if (window.spawnAgentSpeechBubble) window.spawnAgentSpeechBubble(g, ['☕', '🥪', '😋', '🥤'][idx % 4]);
+          }
+        });
+      } else if (type === 'rooftop') {
+        if (toast && toastText) {
+          toastText.innerHTML = '🌿 <b>Instruksi:</b> Agen rehat di Rooftop Garden, Pergola Lounge & Meja Biliar Floor 4.';
+          toast.classList.remove('opacity-0', 'pointer-events-none');
+          setTimeout(() => toast.classList.add('opacity-0', 'pointer-events-none'), 3500);
+        }
+        avatarGroups.forEach((g, idx) => {
+          if (!g.userData || !g.userData.agent) return;
+          const av = g.userData;
+          if (idx < 10) {
+            av.pendingDestFloor = 4;
+            av.pendingState = 'ROOFTOP';
+            g.position.set(-10 + (idx % 5) * 3.5, 24, -2 + Math.floor(idx / 5) * 4.0);
+            if (window.spawnAgentSpeechBubble) window.spawnAgentSpeechBubble(g, ['🌿', '🎱', '🍹', '🌤️'][idx % 4]);
+          }
+        });
+      } else if (type === 'work') {
+        if (toast && toastText) {
+          toastText.innerHTML = '💻 <b>Instruksi:</b> Seluruh 24 agen kembali bekerja di meja divisi masing-masing.';
+          toast.classList.remove('opacity-0', 'pointer-events-none');
+          setTimeout(() => toast.classList.add('opacity-0', 'pointer-events-none'), 3500);
+        }
+        avatarGroups.forEach(g => {
+          if (!g.userData || !g.userData.agent) return;
+          const agent = g.userData.agent;
+          const floorY = DIVISIONS[agent.division].floorY || 8;
+          g.position.set(agent.pos.x, floorY, agent.pos.z);
+          g.userData.state = 'WORKING';
+          if (window.spawnAgentSpeechBubble) window.spawnAgentSpeechBubble(g, '💻');
+        });
+      }
+    };
+
+    // ── 4. BUILD ROOFTOP GARDEN TERRACE (Floor 4) ─────────────────────────────────
+    function build3DRooftopGarden(targetParent) {
+      if (!targetParent) return;
+
+      // Timber Parquet Deck Floor
+      const deckMat = new THREE.MeshStandardMaterial({ color: 0x5c4033, roughness: 0.65, metalness: 0.1 });
+      const deckMesh = new THREE.Mesh(new THREE.PlaneGeometry(54, 64), deckMat);
+      deckMesh.rotation.x = -Math.PI / 2;
+      deckMesh.position.set(0, 24.02, 0);
+      deckMesh.receiveShadow = true;
+      targetParent.add(deckMesh);
+
+      // Outdoor area rugs
+      const sageRugMat = new THREE.MeshStandardMaterial({ color: 0x3f5c4d, roughness: 0.8 });
+      const sageRug = new THREE.Mesh(new THREE.PlaneGeometry(16, 14), sageRugMat);
+      sageRug.rotation.x = -Math.PI / 2;
+      sageRug.position.set(-10, 24.03, -6);
+      targetParent.add(sageRug);
+
+      const terraRugMat = new THREE.MeshStandardMaterial({ color: 0x9c5132, roughness: 0.8 });
+      const terraRug = new THREE.Mesh(new THREE.PlaneGeometry(16, 12), terraRugMat);
+      terraRug.rotation.x = -Math.PI / 2;
+      terraRug.position.set(10, 24.03, -6);
+      targetParent.add(terraRug);
+
+      // A. Timber Pergola with Overhead Trellis (x: -10, z: -6)
+      const pergolaWoodMat = new THREE.MeshStandardMaterial({ color: 0x4a3525, roughness: 0.6 });
+      const pillarGeo = new THREE.BoxGeometry(0.35, 3.6, 0.35);
+      [
+        { x: -17, z: -12 }, { x: -3, z: -12 },
+        { x: -17, z: -6 },  { x: -3, z: -6 },
+        { x: -17, z: 0 },   { x: -3, z: 0 }
+      ].forEach(pos => {
+        const pillar = new THREE.Mesh(pillarGeo, pergolaWoodMat);
+        pillar.position.set(pos.x, 24.0 + 1.8, pos.z);
+        pillar.castShadow = true;
+        targetParent.add(pillar);
+      });
+
+      // Pergola Rafters / Trellis Slats
+      for (let rx = -17.5; rx <= -2.5; rx += 1.2) {
+        const rafter = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.25, 13.5), pergolaWoodMat);
+        rafter.position.set(rx, 24.0 + 3.6, -6);
+        rafter.castShadow = true;
+        targetParent.add(rafter);
+      }
+
+      // Warm Pendant Lanterns under Pergola
+      [-14, -6].forEach(lx => {
+        const lanternGeo = new THREE.BoxGeometry(0.3, 0.45, 0.3);
+        const lanternMat = new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.8 });
+        const lanternMesh = new THREE.Mesh(lanternGeo, lanternMat);
+        lanternMesh.position.set(lx, 24.0 + 3.1, -6);
+        const lanternGlow = new THREE.Mesh(new THREE.SphereGeometry(0.12, 12, 12), new THREE.MeshBasicMaterial({ color: 0xffb347 }));
+        lanternMesh.add(lanternGlow);
+        targetParent.add(lanternMesh);
+
+        const lanternLight = new THREE.PointLight(0xffb347, 0.8, 14, 1.8);
+        lanternLight.position.set(lx, 24.0 + 2.8, -6);
+        targetParent.add(lanternLight);
+      });
+
+      // B. Modular Lounge Sofa under Pergola (Sage & Terracotta)
+      const sofaSageMat = new THREE.MeshStandardMaterial({ color: 0x4d6b53, roughness: 0.7 });
+      const sofaBase = new THREE.Mesh(new THREE.BoxGeometry(6.4, 0.45, 2.2), sofaSageMat);
+      sofaBase.position.set(-10, 24.0 + 0.225, -10);
+      sofaBase.castShadow = true;
+      targetParent.add(sofaBase);
+
+      const sofaBack = new THREE.Mesh(new THREE.BoxGeometry(6.4, 0.65, 0.35), sofaSageMat);
+      sofaBack.position.set(-10, 24.0 + 0.65, -10.9);
+      sofaBack.castShadow = true;
+      targetParent.add(sofaBack);
+
+      const coffeeTableMat = new THREE.MeshStandardMaterial({ color: 0xd4a373, roughness: 0.5 });
+      const coffeeTable = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.38, 1.8), coffeeTableMat);
+      coffeeTable.position.set(-10, 24.0 + 0.19, -7.5);
+      coffeeTable.castShadow = true;
+      targetParent.add(coffeeTable);
+
+      // C. 3D Billiards / Pool Table (kantor-ai flagship feature) (x: 10, z: -6)
+      const billiardsGroup = new THREE.Group();
+      billiardsGroup.position.set(10, 24.0, -6);
+
+      const tableFrameMat = new THREE.MeshStandardMaterial({ color: 0x2b1d0c, roughness: 0.4, metalness: 0.2 });
+      const tableFrame = new THREE.Mesh(new THREE.BoxGeometry(4.8, 0.82, 2.6), tableFrameMat);
+      tableFrame.position.y = 0.41;
+      tableFrame.castShadow = true;
+      billiardsGroup.add(tableFrame);
+
+      const baizeMat = new THREE.MeshStandardMaterial({ color: 0x1b4332, roughness: 0.6 });
+      const baizeMesh = new THREE.Mesh(new THREE.BoxGeometry(4.3, 0.05, 2.1), baizeMat);
+      baizeMesh.position.y = 0.84;
+      billiardsGroup.add(baizeMesh);
+
+      // 6 Billiard Pockets
+      const pocketMat = new THREE.MeshBasicMaterial({ color: 0x050505 });
+      [
+        { x: -2.05, z: -0.95 }, { x: 0, z: -0.98 }, { x: 2.05, z: -0.95 },
+        { x: -2.05, z: 0.95 },  { x: 0, z: 0.98 },  { x: 2.05, z: 0.95 }
+      ].forEach(pos => {
+        const pocket = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.06, 12), pocketMat);
+        pocket.position.set(pos.x, 0.87, pos.z);
+        billiardsGroup.add(pocket);
+      });
+
+      // Billiard balls racked in a triangle
+      const ballColors = [0xfef08a, 0x38bdf8, 0xf87171, 0xc084fc, 0xfb923c, 0x4ade80, 0x881337, 0x111111, 0xfde047, 0xffffff];
+      ballColors.forEach((col, bIdx) => {
+        const ballMat = new THREE.MeshStandardMaterial({ color: col, roughness: 0.1, metalness: 0.3 });
+        const ball = new THREE.Mesh(new THREE.SphereGeometry(0.065, 12, 12), ballMat);
+        const row = Math.floor(bIdx / 3);
+        const colIdx = bIdx % 3;
+        ball.position.set(-0.6 + row * 0.13, 0.92, -0.15 + colIdx * 0.14);
+        billiardsGroup.add(ball);
+      });
+
+      // 2 Billiards Overhead Lamps
+      [-1.0, 1.0].forEach(lx => {
+        const bLamp = new THREE.Mesh(new THREE.ConeGeometry(0.4, 0.35, 16), new THREE.MeshStandardMaterial({ color: 0x1b4332, metalness: 0.5 }));
+        bLamp.position.set(lx, 2.2, 0);
+        billiardsGroup.add(bLamp);
+        const bLight = new THREE.PointLight(0xfff3d6, 0.9, 8, 1.8);
+        bLight.position.set(lx, 1.9, 0);
+        billiardsGroup.add(bLight);
+      });
+      targetParent.add(billiardsGroup);
+
+      // D. Rooftop Coffee Bar & Counter (x: -12, z: 14)
+      const barMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.3 });
+      const barTopMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.15, metalness: 0.2 });
+      const barBase = new THREE.Mesh(new THREE.BoxGeometry(5.4, 1.05, 1.4), barMat);
+      barBase.position.set(-12, 24.0 + 0.525, 14);
+      barBase.castShadow = true;
+      targetParent.add(barBase);
+
+      const barTop = new THREE.Mesh(new THREE.BoxGeometry(5.7, 0.08, 1.6), barTopMat);
+      barTop.position.set(-12, 24.0 + 1.09, 14);
+      targetParent.add(barTop);
+
+      // Espresso Machine on Rooftop Bar
+      const espressoMat = new THREE.MeshStandardMaterial({ color: 0xd1d5db, metalness: 0.9, roughness: 0.15 });
+      const espressoMesh = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.65, 0.7), espressoMat);
+      espressoMesh.position.set(-13, 24.0 + 1.45, 14);
+      targetParent.add(espressoMesh);
+
+      // 3 Bar Stools
+      [-14, -12, -10].forEach(sx => {
+        const stoolMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.75, 16), new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.4 }));
+        stoolMesh.position.set(sx, 24.0 + 0.375, 12.4);
+        stoolMesh.castShadow = true;
+        targetParent.add(stoolMesh);
+      });
+
+      // E. Communal Dining & Discussion Table (x: 10, z: 14)
+      const picnicMat = new THREE.MeshStandardMaterial({ color: 0x6b4f3b, roughness: 0.7 });
+      const picnicTable = new THREE.Mesh(new THREE.BoxGeometry(5.4, 0.85, 1.6), picnicMat);
+      picnicTable.position.set(10, 24.0 + 0.425, 14);
+      picnicTable.castShadow = true;
+      targetParent.add(picnicTable);
+
+      const benchGeo = new THREE.BoxGeometry(5.4, 0.45, 0.6);
+      const bench1 = new THREE.Mesh(benchGeo, picnicMat);
+      bench1.position.set(10, 24.0 + 0.225, 12.6);
+      targetParent.add(bench1);
+      const bench2 = new THREE.Mesh(benchGeo, picnicMat);
+      bench2.position.set(10, 24.0 + 0.225, 15.4);
+      targetParent.add(bench2);
+
+      // F. Edge Planter Boxes with Foliage along Perimeter
+      const planterBoxMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.8 });
+      const hedgeMat = new THREE.MeshStandardMaterial({ color: 0x2d6a4f, roughness: 0.85 });
+      [
+        { x: -24, z: -15, w: 1.2, d: 8 },
+        { x: -24, z: 0,   w: 1.2, d: 8 },
+        { x: -24, z: 15,  w: 1.2, d: 8 },
+        { x: 24,  z: -15, w: 1.2, d: 8 },
+        { x: 24,  z: 0,   w: 1.2, d: 8 },
+        { x: 24,  z: 15,  w: 1.2, d: 8 },
+        { x: -12, z: -28, w: 8,   d: 1.2 },
+        { x: 12,  z: -28, w: 8,   d: 1.2 }
+      ].forEach(boxPos => {
+        const pBox = new THREE.Mesh(new THREE.BoxGeometry(boxPos.w, 0.65, boxPos.d), planterBoxMat);
+        pBox.position.set(boxPos.x, 24.0 + 0.325, boxPos.z);
+        pBox.castShadow = true;
+        targetParent.add(pBox);
+
+        const hedge = new THREE.Mesh(new THREE.BoxGeometry(boxPos.w * 0.9, 0.8, boxPos.d * 0.9), hedgeMat);
+        hedge.position.set(boxPos.x, 24.0 + 0.8, boxPos.z);
+        targetParent.add(hedge);
+      });
+
+      // G. Tempered Glass Perimeter Balustrades
+      const balustradeMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, transparent: true, opacity: 0.35, roughness: 0.1 });
+      const postMat = new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.9, roughness: 0.2 });
+      [
+        { x: 0, z: -30.5, w: 52, d: 0.08 },
+        { x: 0, z: 30.5,  w: 52, d: 0.08 },
+        { x: -25.5, z: 0, w: 0.08, d: 60 },
+        { x: 25.5, z: 0,  w: 0.08, d: 60 }
+      ].forEach(bPos => {
+        const balustrade = new THREE.Mesh(new THREE.BoxGeometry(bPos.w, 1.15, bPos.d), balustradeMat);
+        balustrade.position.set(bPos.x, 24.0 + 0.575, bPos.z);
+        targetParent.add(balustrade);
+      });
+
+      // H. Signboard for Rooftop Garden
+      const roofCanvas = document.createElement('canvas');
+      roofCanvas.width = 512; roofCanvas.height = 128;
+      const rCtx = roofCanvas.getContext('2d');
+      rCtx.fillStyle = '#064e3b'; rCtx.fillRect(0, 0, 512, 128);
+      rCtx.strokeStyle = '#34d399'; rCtx.lineWidth = 4; rCtx.strokeRect(4, 4, 504, 120);
+      rCtx.fillStyle = '#34d399'; rCtx.font = 'bold 32px sans-serif'; rCtx.textAlign = 'center';
+      rCtx.fillText('🌿 ROOFTOP GARDEN TERRACE', 256, 52);
+      rCtx.fillStyle = '#a7f3d0'; rCtx.font = 'bold 18px monospace';
+      rCtx.fillText('PERGOLA LOUNGE • BILLIARDS • COFFEE BAR', 256, 92);
+      const roofSign = new THREE.Mesh(new THREE.PlaneGeometry(3.6, 0.9), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(roofCanvas) }));
+      roofSign.position.set(0, 24.0 + 2.4, -28.5);
+      targetParent.add(roofSign);
+    }
+
+    // ── 5. BUILD CITY PLINTH, ROADS, BUILDINGS, CLOUDS & BIRDS (kantor-ai) ─────────
+    function buildCityPlinthAndSkyline() {
+      skylineGroup = new THREE.Group();
+      scene.add(skylineGroup);
+
+      // Circular Architectural Maket Base Plinth
+      const plinthMat = new THREE.MeshStandardMaterial({ color: 0x111622, roughness: 0.85 });
+      const plinthMesh = new THREE.Mesh(new THREE.CylinderGeometry(140, 140, 0.8, 64), plinthMat);
+      plinthMesh.position.y = -1.0;
+      plinthMesh.receiveShadow = true;
+      skylineGroup.add(plinthMesh);
+
+      // Surrounding Office Lawn
+      const lawnMat = new THREE.MeshStandardMaterial({ color: 0x1b2838, roughness: 0.9 });
+      const lawnMesh = new THREE.Mesh(new THREE.PlaneGeometry(74, 84), lawnMat);
+      lawnMesh.rotation.x = -Math.PI / 2;
+      lawnMesh.position.set(0, -0.58, 0);
+      lawnMesh.receiveShadow = true;
+      skylineGroup.add(lawnMesh);
+
+      // Two Intersecting City Asphalt Roadways (kantor-ai layout)
+      const roadMat = new THREE.MeshStandardMaterial({ color: 0x090d14, roughness: 0.7 });
+      const stripeMat = new THREE.MeshBasicMaterial({ color: 0xe2e8f0 });
+
+      // North-South Avenue (x: 44)
+      const nsRoad = new THREE.Mesh(new THREE.PlaneGeometry(8, 260), roadMat);
+      nsRoad.rotation.x = -Math.PI / 2;
+      nsRoad.position.set(44, -0.57, 0);
+      skylineGroup.add(nsRoad);
+
+      // East-West Avenue (z: 44)
+      const ewRoad = new THREE.Mesh(new THREE.PlaneGeometry(260, 8), roadMat);
+      ewRoad.rotation.x = -Math.PI / 2;
+      ewRoad.position.set(0, -0.57, 44);
+      skylineGroup.add(ewRoad);
+
+      // Dashed lane stripes
+      for (let z = -120; z <= 120; z += 9) {
+        if (Math.abs(z - 44) > 5) {
+          const stripe = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 4.5), stripeMat);
+          stripe.rotation.x = -Math.PI / 2;
+          stripe.position.set(44, -0.56, z);
+          skylineGroup.add(stripe);
+        }
+      }
+      for (let x = -120; x <= 120; x += 9) {
+        if (Math.abs(x - 44) > 5) {
+          const stripe = new THREE.Mesh(new THREE.PlaneGeometry(4.5, 0.3), stripeMat);
+          stripe.rotation.x = -Math.PI / 2;
+          stripe.position.set(x, -0.56, 44);
+          skylineGroup.add(stripe);
+        }
+      }
+
+      // Driveway Ramp Connecting to Building Front
+      const driveMat = new THREE.MeshStandardMaterial({ color: 0x1f2937, roughness: 0.7 });
+      const driveMesh = new THREE.Mesh(new THREE.PlaneGeometry(16, 12), driveMat);
+      driveMesh.rotation.x = -Math.PI / 2;
+      driveMesh.position.set(0, -0.57, 38);
+      skylineGroup.add(driveMesh);
+
+      // Minimalist Architectural Neighbouring Blocks (kantor-ai city blocks)
+      const buildingTones = [0x1e293b, 0x162235, 0x223247, 0x1a2638];
+      const windowBandMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
+
+      for (let i = 0; i < 28; i++) {
+        const angle = (i / 28) * Math.PI * 2 + 0.15;
+        const dist = 52 + (i % 5) * 14;
+        const bx = Math.cos(angle) * dist;
+        const bz = Math.sin(angle) * dist;
+
+        // Skip if too close to office or on top of roads
+        if (Math.abs(bx - 44) < 7 || Math.abs(bz - 44) < 7) continue;
+
+        const bw = 8 + (i % 4) * 3;
+        const bd = 8 + ((i + 2) % 4) * 3;
+        const bh = dist < 70 ? (6 + (i % 3) * 4) : (14 + (i % 5) * 6);
+
+        const bMat = new THREE.MeshStandardMaterial({ color: buildingTones[i % buildingTones.length], roughness: 0.6 });
+        const bMesh = new THREE.Mesh(new THREE.BoxGeometry(bw, bh, bd), bMat);
+        bMesh.position.set(bx, -0.6 + bh / 2, bz);
+        bMesh.castShadow = true;
+        bMesh.receiveShadow = true;
+        skylineGroup.add(bMesh);
+
+        // Window bands
+        for (let wy = 3; wy < bh - 2; wy += 3.5) {
+          const wBand = new THREE.Mesh(new THREE.BoxGeometry(bw + 0.05, 0.55, bd + 0.05), windowBandMat);
+          wBand.position.set(bx, -0.6 + wy, bz);
+          skylineGroup.add(wBand);
+        }
+      }
+
+      // Instanced Trees around Perimeter & Sidewalks
+      const trunkMat = new THREE.MeshStandardMaterial({ color: 0x4a3728, roughness: 0.8 });
+      const leafMat = new THREE.MeshStandardMaterial({ color: 0x2d6a4f, roughness: 0.7 });
+      for (let t = 0; t < 36; t++) {
+        const a = (t / 36) * Math.PI * 2;
+        const d = 36 + (t % 3) * 6;
+        const tx = Math.cos(a) * d;
+        const tz = Math.sin(a) * d;
+        if (Math.abs(tx - 44) < 6 || Math.abs(tz - 44) < 6) continue;
+
+        const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.25, 2.2, 8), trunkMat);
+        trunk.position.set(tx, -0.6 + 1.1, tz);
+        trunk.castShadow = true;
+        skylineGroup.add(trunk);
+
+        const puff = new THREE.Mesh(new THREE.IcosahedronGeometry(1.2, 1), leafMat);
+        puff.position.set(tx, -0.6 + 2.4, tz);
+        puff.castShadow = true;
+        skylineGroup.add(puff);
+      }
+
+      // Circling Low-Poly Clouds Ring (kantor-ai clouds)
+      skylineClouds = [];
+      const cloudPuffMat = new THREE.MeshStandardMaterial({ color: 0xf1f5f9, roughness: 0.9 });
+      for (let c = 0; c < 8; c++) {
+        const cAngle = (c / 8) * Math.PI * 2;
+        const cDist = 115 + (c % 3) * 15;
+        const cloudGroup = new THREE.Group();
+        cloudGroup.position.set(Math.cos(cAngle) * cDist, 28 + (c % 3) * 4, Math.sin(cAngle) * cDist);
+
+        for (let cp = 0; cp < 4; cp++) {
+          const cPuff = new THREE.Mesh(new THREE.IcosahedronGeometry(3.5 + cp * 0.8, 1), cloudPuffMat);
+          cPuff.position.set(cp * 3.5 - 5, (cp % 2) * 1.2, (cp % 3) * 1.5 - 2);
+          cPuff.scale.y = 0.55;
+          cloudGroup.add(cPuff);
+        }
+        cloudGroup.userData = { speed: 0.8 + (c % 3) * 0.4 };
+        skylineGroup.add(cloudGroup);
+        skylineClouds.push(cloudGroup);
+      }
+
+      // Circling Low-Poly Birds Flocks
+      skylineBirds = [];
+      const birdMat = new THREE.MeshBasicMaterial({ color: 0x94a3b8, side: THREE.DoubleSide });
+      for (let b = 0; b < 6; b++) {
+        const birdGroup = new THREE.Group();
+        const wing1 = new THREE.Mesh(new THREE.BufferGeometry(), birdMat);
+        const wing2 = new THREE.Mesh(new THREE.BufferGeometry(), birdMat);
+        // Simple V-wing geometry
+        const vertices = new Float32Array([0, 0, 0,  -0.6, 0.25, -0.3,  0, 0, -0.6]);
+        wing1.geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+        const vertices2 = new Float32Array([0, 0, 0,  0.6, 0.25, -0.3,  0, 0, -0.6]);
+        wing2.geometry.setAttribute('position', new THREE.BufferAttribute(vertices2, 3));
+        birdGroup.add(wing1);
+        birdGroup.add(wing2);
+        birdGroup.position.set(0, 32 + b * 1.5, 0);
+        birdGroup.userData = { phase: b * 1.05, radius: 24 + b * 3, speed: 0.75 + b * 0.1 };
+        skylineGroup.add(birdGroup);
+        skylineBirds.push(birdGroup);
+      }
+
+      // Rain Particles System (BufferGeometry Lines)
+      const rainCount = 450;
+      const rainGeo = new THREE.BufferGeometry();
+      const rainPositions = new Float32Array(rainCount * 6);
+      for (let r = 0; r < rainCount; r++) {
+        const rx = (Math.random() - 0.5) * 120;
+        const rz = (Math.random() - 0.5) * 120;
+        const ry = Math.random() * 45;
+        rainPositions[r * 6 + 0] = rx;
+        rainPositions[r * 6 + 1] = ry;
+        rainPositions[r * 6 + 2] = rz;
+        rainPositions[r * 6 + 3] = rx;
+        rainPositions[r * 6 + 4] = ry - 1.2;
+        rainPositions[r * 6 + 5] = rz;
+      }
+      rainGeo.setAttribute('position', new THREE.BufferAttribute(rainPositions, 3));
+      const rainMat = new THREE.LineBasicMaterial({ color: 0x93c5fd, transparent: true, opacity: 0.5 });
+      rainParticlesMesh = new THREE.LineSegments(rainGeo, rainMat);
+      rainParticlesMesh.visible = false;
+      scene.add(rainParticlesMesh);
+    }
+
     function switchFloor(floorNum) {
       elevatorState.playerPhase = null;
       elevatorState.playerTargetFloor = null;
@@ -6377,6 +7108,8 @@ export interface CandidateComparisonView {
         smoothCameraTo({ x: 24, y: 24, z: 32 }, { x: 0, y: 9.5, z: 2 });
       } else if (floorNum === 3) {
         smoothCameraTo({ x: 24, y: 32, z: 32 }, { x: 0, y: 17.5, z: 2 });
+      } else if (floorNum === 4) {
+        smoothCameraTo({ x: 26, y: 40, z: 36 }, { x: 0, y: 25.5, z: 2 });
       }
     }
 
