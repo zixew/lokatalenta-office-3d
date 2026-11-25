@@ -147,8 +147,8 @@
         <div class="min-w-0">
           <div class="flex items-center gap-2 flex-wrap">
             <h1 class="text-base font-bold text-white tracking-tight">LokaTalenta Office</h1>
-            <span class="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-teal-500/20 text-teal-300 border border-teal-500/30">SPRINT 20 LIVE</span>
-            <span class="px-2 py-0.5 rounded text-[11px] font-mono bg-purple-500/20 text-purple-300 border border-purple-500/30">Talent Marketplace & Psychometrics Active</span>
+            <span class="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-teal-500/20 text-teal-300 border border-teal-500/30">SPRINT 21 LIVE</span>
+            <span class="px-2 py-0.5 rounded text-[11px] font-mono bg-purple-500/20 text-purple-300 border border-purple-500/30">LMS v2.0.0 Major Anti-Slop Revamp Active</span>
           </div>
           <p class="text-xs text-zinc-400">Living 3D Headquarter: Simulasi aktivitas otonom 24 agen, interaksi kolaborasi, pantry ngopi, gym, lounge, monitor actual real-time, dan tur sinematik non-intrusif.</p>
         </div>
@@ -6311,11 +6311,11 @@ export interface CandidateComparisonView {
       // Sprint Goal
       ctx.fillStyle = "#38bdf8";
       ctx.font = "bold 15px sans-serif";
-      ctx.fillText(sprint.name ? sprint.name.slice(0, 48) : "Candidate Talent Marketplace & Psychometrics", 16, 68);
+      ctx.fillText(sprint.name ? sprint.name.slice(0, 48) : "LMS v2.0.0 Major Anti-Slop UI Revamp", 16, 68);
 
       ctx.fillStyle = "#94a3b8";
       ctx.font = "12px sans-serif";
-      const goalStr = sprint.goal || "Implement profile caching, marketplace directory, and psychometric engine.";
+      const goalStr = sprint.goal || "Total elimination of AI slop across LMS client with Industrial Precision tokens.";
       ctx.fillText(goalStr.slice(0, 58), 16, 92);
       if (goalStr.length > 58) {
         ctx.fillText(goalStr.slice(58, 116), 16, 110);
@@ -6335,10 +6335,10 @@ export interface CandidateComparisonView {
       const displayItems = items.slice(0, 3).map(it => `[${it.itemId}] ${it.title?.slice(0, 22)} (${it.storyPoints}SP)`).join("  ");
       ctx.fillStyle = "#e2e8f0";
       ctx.font = "11px monospace";
-      ctx.fillText(displayItems || "ARC-201 (13SP)  BL-201 (8SP)  BL-202 (8SP)", 28, 172);
+      ctx.fillText(displayItems || "ARC-211 (13SP)  BL-211 (8SP)  BL-212 (8SP)", 28, 172);
 
       const remItems = items.slice(3, 6).map(it => `[${it.itemId}] ${it.title?.slice(0, 22)} (${it.storyPoints}SP)`).join("  ");
-      ctx.fillText(remItems || "OFC-201 (5SP)  QAE-201 (8SP)  REC-201 (5SP)", 28, 192);
+      ctx.fillText(remItems || "QAE-211 (8SP)  OFC-211 (8SP)  ECO-211 (6SP)", 28, 192);
 
       // Footer status
       ctx.fillStyle = "#10b981";
