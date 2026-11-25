@@ -193,6 +193,13 @@
           <input type="range" id="slider-music-volume" min="0" max="100" value="30" oninput="onMusicVolumeChange(this.value)" class="w-14 h-1 accent-teal-500 bg-zinc-700 rounded cursor-pointer" title="Volume Musik Lo-Fi" />
         </div>
 
+        <!-- Performance / Quality Switcher (60 FPS / Balanced / Ultra) -->
+        <div class="flex items-center bg-zinc-900 border border-zinc-800 rounded-lg p-0.5 text-xs shadow-inner">
+          <button onclick="setPerformanceMode('fast')" id="btn-perf-fast" class="perf-btn px-2 py-1 rounded font-semibold bg-emerald-600/30 text-emerald-300 border border-emerald-500/50 transition" title="Mode Performa 60 FPS (DPR 1.0, Shadow 512, PCF Shadow) — Sangat Ringan & Dingin untuk Laptop & GPU Terintegrasi">⚡ 60 FPS</button>
+          <button onclick="setPerformanceMode('balanced')" id="btn-perf-balanced" class="perf-btn px-2 py-1 rounded font-medium text-zinc-400 hover:text-white transition" title="Mode Seimbang (DPR 1.25, Shadow 1024, Keseimbangan Grafis & FPS)">⚖️ Seimbang</button>
+          <button onclick="setPerformanceMode('ultra')" id="btn-perf-ultra" class="perf-btn px-2 py-1 rounded font-medium text-zinc-400 hover:text-white transition" title="Mode Grafis Ultra (DPR 2.0 Native Retina, Soft Shadows)">💎 Ultra</button>
+        </div>
+
         <!-- Utility Controls -->
         <div class="flex items-center bg-zinc-900 border border-zinc-800 rounded-lg p-0.5 text-xs">
           <button onclick="toggleTour()" id="btn-tour" title="Tur Sinematik Otomatis (60 Detik Per Agen)" class="px-2.5 py-1 rounded font-medium text-zinc-300 hover:text-white transition flex items-center gap-1.5">
@@ -3063,15 +3070,24 @@ export interface CandidateComparisonView {
       av.coffeeMugProp = mugGroup;
     }
 
+    let sharedKudosStarMat = null;
+    let sharedKudosStarGeo = null;
+
     function spawn3DKudosParticles(av) {
       if (!av || !av.group) return;
-      const starMat = new THREE.MeshStandardMaterial({
-        color: 0xfbbf24,
-        emissive: 0xf59e0b,
-        emissiveIntensity: 0.8,
-        roughness: 0.1
-      });
-      const starGeo = new THREE.OctahedronGeometry(0.075);
+      if (!sharedKudosStarMat) {
+        sharedKudosStarMat = new THREE.MeshStandardMaterial({
+          color: 0xfbbf24,
+          emissive: 0xf59e0b,
+          emissiveIntensity: 0.8,
+          roughness: 0.1
+        });
+      }
+      if (!sharedKudosStarGeo) {
+        sharedKudosStarGeo = new THREE.OctahedronGeometry(0.075);
+      }
+      const starMat = sharedKudosStarMat;
+      const starGeo = sharedKudosStarGeo;
 
       for (let i = 0; i < 14; i++) {
         const star = new THREE.Mesh(starGeo, starMat);
@@ -3187,6 +3203,68 @@ export interface CandidateComparisonView {
 
 
     // ─── 4. THREE.JS WEBGL ENGINE SETUP ──────────────────────────────────────────
+    // ─── 3.1 PERFORMANCE / QUALITY PRESET MANAGER ──────────────────────────────
+    let currentPerfMode = 'fast';
+
+    function setPerformanceMode(mode) {
+      currentPerfMode = mode;
+      document.querySelectorAll('.perf-btn').forEach(b => {
+        b.className = 'perf-btn px-2 py-1 rounded font-medium text-zinc-400 hover:text-white transition';
+      });
+      const activeBtn = document.getElementById(`btn-perf-${mode}`);
+      if (activeBtn) {
+        activeBtn.className = 'perf-btn px-2 py-1 rounded font-semibold bg-emerald-600/30 text-emerald-300 border border-emerald-500/50 transition';
+      }
+
+      if (!renderer) return;
+
+      const container = document.getElementById('canvas-container');
+      const width = container ? container.clientWidth || 800 : window.innerWidth;
+      const height = container ? container.clientHeight || 720 : window.innerHeight;
+
+      if (mode === 'fast') {
+        renderer.setPixelRatio(1.0);
+        if (renderer.shadowMap) {
+          renderer.shadowMap.enabled = true;
+          renderer.shadowMap.type = THREE.PCFShadowMap;
+        }
+        if (mainDirLight && mainDirLight.shadow) {
+          mainDirLight.shadow.mapSize.set(512, 512);
+          if (mainDirLight.shadow.map) {
+            mainDirLight.shadow.map.dispose();
+            mainDirLight.shadow.map = null;
+          }
+        }
+      } else if (mode === 'balanced') {
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25));
+        if (renderer.shadowMap) {
+          renderer.shadowMap.enabled = true;
+          renderer.shadowMap.type = THREE.PCFShadowMap;
+        }
+        if (mainDirLight && mainDirLight.shadow) {
+          mainDirLight.shadow.mapSize.set(1024, 1024);
+          if (mainDirLight.shadow.map) {
+            mainDirLight.shadow.map.dispose();
+            mainDirLight.shadow.map = null;
+          }
+        }
+      } else if (mode === 'ultra') {
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2.0));
+        if (renderer.shadowMap) {
+          renderer.shadowMap.enabled = true;
+          renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        }
+        if (mainDirLight && mainDirLight.shadow) {
+          mainDirLight.shadow.mapSize.set(2048, 2048);
+          if (mainDirLight.shadow.map) {
+            mainDirLight.shadow.map.dispose();
+            mainDirLight.shadow.map = null;
+          }
+        }
+      }
+      renderer.setSize(width, height);
+    }
+
     function initWebGL() {
       const container = document.getElementById('canvas-container');
       if (typeof THREE === 'undefined') {
@@ -3208,13 +3286,15 @@ export interface CandidateComparisonView {
         renderer = new THREE.WebGLRenderer({
           antialias: true,
           alpha: true,
-          logarithmicDepthBuffer: true,
           powerPreference: "high-performance"
         });
         renderer.setSize(width, height);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        // Default to 1.0 (or currentPerfMode) for 60 FPS zero-lag rendering
+        const targetDPR = currentPerfMode === 'ultra' ? Math.min(window.devicePixelRatio || 1, 2.0)
+          : currentPerfMode === 'balanced' ? Math.min(window.devicePixelRatio || 1, 1.25) : 1.0;
+        renderer.setPixelRatio(targetDPR);
         renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.shadowMap.type = currentPerfMode === 'ultra' ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
         renderer.outputEncoding = THREE.sRGBEncoding;
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
         renderer.toneMappingExposure = 1.15;
@@ -3270,9 +3350,16 @@ export interface CandidateComparisonView {
       mainDirLight = new THREE.DirectionalLight(0xfff8ed, isDayMode ? 1.35 : 1.2);
       mainDirLight.position.set(38, 56, 32);
       mainDirLight.castShadow = true;
-      mainDirLight.shadow.mapSize.width = 2048;
-      mainDirLight.shadow.mapSize.height = 2048;
-      mainDirLight.shadow.bias = -0.0003;
+      const initShadowRes = currentPerfMode === 'ultra' ? 2048 : (currentPerfMode === 'balanced' ? 1024 : 512);
+      mainDirLight.shadow.mapSize.width = initShadowRes;
+      mainDirLight.shadow.mapSize.height = initShadowRes;
+      mainDirLight.shadow.camera.left = -40;
+      mainDirLight.shadow.camera.right = 40;
+      mainDirLight.shadow.camera.top = 40;
+      mainDirLight.shadow.camera.bottom = -40;
+      mainDirLight.shadow.camera.near = 10;
+      mainDirLight.shadow.camera.far = 140;
+      mainDirLight.shadow.bias = -0.0004;
       scene.add(mainDirLight);
 
       const fillLight = new THREE.DirectionalLight(0x60a5fa, isDayMode ? 0.55 : 0.5);
@@ -6171,34 +6258,41 @@ export interface CandidateComparisonView {
       tex.needsUpdate = true;
     }
 
+    const emojiTextureCache = {};
+
     function triggerAgentEmote(agentId, emoji) {
       const av = agentAvatars[agentId];
       if (!av || !av.group) return;
 
-      const canvas = document.createElement("canvas");
-      canvas.width = 128; canvas.height = 128;
-      const ctx = canvas.getContext("2d");
-      ctx.fillStyle = "rgba(15, 23, 42, 0.9)";
-      ctx.beginPath();
-      ctx.arc(64, 64, 58, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = "#14b8a6";
-      ctx.lineWidth = 6;
-      ctx.stroke();
+      let tex = emojiTextureCache[emoji];
+      if (!tex) {
+        const canvas = document.createElement("canvas");
+        canvas.width = 128; canvas.height = 128;
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = "rgba(15, 23, 42, 0.9)";
+        ctx.beginPath();
+        ctx.arc(64, 64, 58, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#14b8a6";
+        ctx.lineWidth = 6;
+        ctx.stroke();
 
-      ctx.font = "64px serif";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(emoji, 64, 68);
+        ctx.font = "64px serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(emoji, 64, 68);
 
-      const tex = new THREE.CanvasTexture(canvas);
+        tex = new THREE.CanvasTexture(canvas);
+        emojiTextureCache[emoji] = tex;
+      }
+
       const spriteMat = new THREE.SpriteMaterial({ map: tex, transparent: true, opacity: 1.0 });
       const sprite = new THREE.Sprite(spriteMat);
       sprite.position.set(0, 2.45, 0);
       sprite.scale.set(0.65, 0.65, 1.0);
       av.group.add(sprite);
 
-      activeFloatingEmotes.push({ sprite, age: 0 });
+      activeFloatingEmotes.push({ sprite, spriteMat, age: 0 });
     }
 
     function updateBoardroomScreenWithLiveSprint(sprint) {
@@ -6535,19 +6629,28 @@ export interface CandidateComparisonView {
     function updateInteractiveDoors(delta) {
       if (!INTERACTIVE_DOORS || INTERACTIVE_DOORS.length === 0) return;
       const avatarList = Object.values(agentAvatars);
+      // Perf optimization: only walking avatars trigger sliding doors!
+      const walkingAvs = avatarList.filter(a => a && a.isWalking);
       const camInWalkthrough = currentPOV === 'walkthrough' && camera;
       const camFloor = currentFloor > 0 ? currentFloor : 1;
 
       for (let i = 0; i < INTERACTIVE_DOORS.length; i++) {
         const door = INTERACTIVE_DOORS[i];
+
+        // Skip animating door on hidden floor if door is already closed
+        if (currentFloor !== 0 && door.floor !== currentFloor && door.openAmount <= 0.01) {
+          continue;
+        }
+
         let shouldOpen = false;
 
-        for (let j = 0; j < avatarList.length; j++) {
-          const av = avatarList[j];
-          if (!av || !av.group) continue;
+        for (let j = 0; j < walkingAvs.length; j++) {
+          const av = walkingAvs[j];
+          if (!av.group) continue;
           if (Math.abs(av.group.position.y - door.center.y) > 1.5) continue;
-          const d = Math.hypot(av.group.position.x - door.center.x, av.group.position.z - door.center.z);
-          if (d <= 2.8) {
+          const dx = av.group.position.x - door.center.x;
+          const dz = av.group.position.z - door.center.z;
+          if (dx * dx + dz * dz <= 7.84) { // 2.8^2 = 7.84 avoids Math.hypot
             shouldOpen = true;
             break;
           }
@@ -6555,8 +6658,9 @@ export interface CandidateComparisonView {
 
         if (!shouldOpen && camInWalkthrough) {
           if (Math.abs((camera.position.y - 1.52) - door.center.y) < 1.8 || camFloor === door.floor) {
-            const camDist = Math.hypot(camera.position.x - door.center.x, camera.position.z - door.center.z);
-            if (camDist <= 2.8) {
+            const cx = camera.position.x - door.center.x;
+            const cz = camera.position.z - door.center.z;
+            if (cx * cx + cz * cz <= 7.84) {
               shouldOpen = true;
             }
           }
@@ -6956,32 +7060,37 @@ export interface CandidateComparisonView {
       }
     }
 
+    let webglFrameCount = 0;
+
     function animateWebGL() {
       if (currentEngine !== 'webgl') return;
       requestAnimationFrame(animateWebGL);
+      webglFrameCount++;
 
       if (clock) {
         const delta = Math.min(clock.getDelta(), 0.08);
         const elapsedTime = clock.getElapsedTime();
         if (typeof TWEEN !== 'undefined') TWEEN.update();
 
-        // Kantor-AI Upgrades: Update Clouds, Birds, and Rain
-        if (skylineClouds && skylineClouds.length > 0) {
-          skylineClouds.forEach(c => {
-            c.position.applyAxisAngle(new THREE.Vector3(0, 1, 0), delta * 0.015 * c.userData.speed);
-          });
+        // Kantor-AI Upgrades: Update Clouds and Birds ONLY when skyline is visible
+        if (skylineGroup && skylineGroup.visible) {
+          if (skylineClouds && skylineClouds.length > 0) {
+            skylineClouds.forEach(c => {
+              c.position.applyAxisAngle(new THREE.Vector3(0, 1, 0), delta * 0.015 * c.userData.speed);
+            });
+          }
+          if (skylineBirds && skylineBirds.length > 0) {
+            skylineBirds.forEach((b) => {
+              const t = elapsedTime * b.userData.speed + b.userData.phase;
+              b.position.x = Math.cos(t) * b.userData.radius;
+              b.position.z = Math.sin(t) * (b.userData.radius * 0.75);
+              b.rotation.y = -t + Math.PI / 2;
+              b.children[0].rotation.z = Math.sin(elapsedTime * 9.0) * 0.35;
+              b.children[1].rotation.z = -Math.sin(elapsedTime * 9.0) * 0.35;
+            });
+          }
         }
-        if (skylineBirds && skylineBirds.length > 0) {
-          skylineBirds.forEach((b, i) => {
-            const t = elapsedTime * b.userData.speed + b.userData.phase;
-            b.position.x = Math.cos(t) * b.userData.radius;
-            b.position.z = Math.sin(t) * (b.userData.radius * 0.75);
-            b.rotation.y = -t + Math.PI / 2;
-            b.children[0].rotation.z = Math.sin(elapsedTime * 9.0) * 0.35;
-            b.children[1].rotation.z = -Math.sin(elapsedTime * 9.0) * 0.35;
-          });
-        }
-        if (isRaining && rainParticlesMesh) {
+        if (isRaining && rainParticlesMesh && rainParticlesMesh.visible) {
           const pos = rainParticlesMesh.geometry.attributes.position.array;
           for (let pi = 0; pi < pos.length; pi += 6) {
             pos[pi + 1] -= delta * 38;
@@ -7027,7 +7136,7 @@ export interface CandidateComparisonView {
           }
         });
 
-        // Update active floating 3D emotes
+        // Update active floating 3D emotes (with proper sprite material disposal)
         if (activeFloatingEmotes && activeFloatingEmotes.length > 0) {
           for (let eIdx = activeFloatingEmotes.length - 1; eIdx >= 0; eIdx--) {
             const em = activeFloatingEmotes[eIdx];
@@ -7036,6 +7145,7 @@ export interface CandidateComparisonView {
             em.sprite.material.opacity = Math.max(0, 1.0 - (em.age / 3.0));
             if (em.age >= 3.0) {
               if (em.sprite.parent) em.sprite.parent.remove(em.sprite);
+              if (em.spriteMat) em.spriteMat.dispose();
               activeFloatingEmotes.splice(eIdx, 1);
             }
           }
@@ -7079,30 +7189,41 @@ export interface CandidateComparisonView {
 
           if (activelyStepping) {
             const curFloorNum = Math.max(1, Math.min(3, Math.round(av.group.position.y / 8) + 1));
-            avatarList.forEach(other => {
-              if (other === av) return;
-              if (Math.abs(other.group.position.y - av.group.position.y) > 1.5) return;
+            for (let oi = 0; oi < avatarList.length; oi++) {
+              const other = avatarList[oi];
+              if (other === av) continue;
+              if (Math.abs(other.group.position.y - av.group.position.y) > 1.5) continue;
               const ox = av.group.position.x - other.group.position.x;
               const oz = av.group.position.z - other.group.position.z;
-              const d = Math.sqrt(ox * ox + oz * oz);
-              if (d > 0.01 && d < 0.78) {
+              const d2 = ox * ox + oz * oz;
+              if (d2 > 0.0001 && d2 < 0.6084) { // 0.78^2 avoids Math.sqrt unless colliding
+                const d = Math.sqrt(d2);
                 const push = (0.78 - d) * 0.12;
                 av.group.position.x += (ox / d) * push;
                 av.group.position.z += (oz / d) * push;
               }
-            });
+            }
             resolveXZCollisions(av.group.position, curFloorNum, `Desk #${av.agent.id}`);
 
-            // Proximity hallway encounter check with nearby colleagues
-            avatarList.forEach(otherAv => {
-              if (otherAv === av) return;
-              if (Math.abs(otherAv.group.position.y - av.group.position.y) < 1.2) {
-                const distToColleague = Math.hypot(av.group.position.x - otherAv.group.position.x, av.group.position.z - otherAv.group.position.z);
-                if (distToColleague < 2.6) {
-                  triggerHallwaySocialEncounter(av, otherAv);
+            // Proximity hallway encounter check with nearby colleagues (throttled to every 24 frames ~400ms)
+            if (webglFrameCount % 24 === 0) {
+              for (let ci = 0; ci < avatarList.length; ci++) {
+                const otherAv = avatarList[ci];
+                if (otherAv === av) continue;
+                if (Math.abs(otherAv.group.position.y - av.group.position.y) < 1.2) {
+                  const dx = av.group.position.x - otherAv.group.position.x;
+                  const dz = av.group.position.z - otherAv.group.position.z;
+                  if (dx * dx + dz * dz < 6.76) { // 2.6^2 = 6.76 avoids Math.hypot
+                    triggerHallwaySocialEncounter(av, otherAv);
+                  }
                 }
               }
-            });
+            }
+          }
+
+          // Skip limb animation calculations for seated avatars on hidden floors
+          if (currentFloor !== 0 && av.floor !== currentFloor && !av.isWalking) {
+            return;
           }
 
           const walkingPose =
@@ -8180,8 +8301,13 @@ export interface CandidateComparisonView {
       renderer.setSize(width, height);
     }
 
+    let last3DMouseMoveTime = 0;
     function on3DMouseMove(event) {
       if (currentEngine !== 'webgl') return;
+      const now = performance.now();
+      if (now - last3DMouseMoveTime < 32) return; // Throttle raycasting cursor check to ~30Hz
+      last3DMouseMoveTime = now;
+
       const rect = renderer.domElement.getBoundingClientRect();
       mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
       mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
