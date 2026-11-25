@@ -7027,35 +7027,60 @@ export interface CandidateComparisonView {
         }
       }
       for (let x = -120; x <= 120; x += 9) {
-        if (Math.abs(x - 44) > 5) {
+        // Exclude stripes near NS road intersection (x: 44) AND in front of main entrance driveway (x: 0)
+        if (Math.abs(x - 44) > 5 && Math.abs(x) > 10) {
           const stripe = new THREE.Mesh(new THREE.PlaneGeometry(4.5, 0.3), stripeMat);
           stripe.rotation.x = -Math.PI / 2;
-          stripe.position.set(x, -0.56, 44);
+          stripe.position.set(x, -0.55, 44);
           skylineGroup.add(stripe);
         }
       }
 
-      // Entrance Porch Landing at Front of Office (z: 32.5 to 34.5)
-      const porchStep = new THREE.Mesh(
-        new THREE.BoxGeometry(20, 0.18, 2.8),
-        new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.45, metalness: 0.3 })
-      );
-      porchStep.position.set(0, -0.09, 33.4);
-      porchStep.receiveShadow = true;
-      skylineGroup.add(porchStep);
+      // Grand Architectural Entrance Stairs & Landing (z: 32.0 to 35.6, zero coplanar z-fighting)
+      const stairMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.45, metalness: 0.3 });
+      
+      // Top Porch Landing (z: 32.0..34.0, top at y = +0.06, cleanly elevated above groundSlab y = 0.0)
+      const porchLanding = new THREE.Mesh(new THREE.BoxGeometry(18, 0.06, 2.0), stairMat);
+      porchLanding.position.set(0, 0.03, 33.0);
+      porchLanding.receiveShadow = true;
+      skylineGroup.add(porchLanding);
 
-      // Driveway Ramp Connecting to Avenue without coplanar overlap (z: 34.8 to 39.8, depth: 5.0)
+      // Mid Stair Step (z: 34.0..34.8, top at y = 0.00)
+      const porchMidStep = new THREE.Mesh(new THREE.BoxGeometry(19, 0.24, 0.8), stairMat);
+      porchMidStep.position.set(0, -0.12, 34.4);
+      porchMidStep.receiveShadow = true;
+      skylineGroup.add(porchMidStep);
+
+      // Bottom Stair Step (z: 34.8..35.6, top at y = -0.24)
+      const porchBotStep = new THREE.Mesh(new THREE.BoxGeometry(20, 0.24, 0.8), stairMat);
+      porchBotStep.position.set(0, -0.36, 35.2);
+      porchBotStep.receiveShadow = true;
+      skylineGroup.add(porchBotStep);
+
+      // Driveway Plaza Pad Connecting Steps to Avenue (z: 35.6 to 39.9, depth: 4.3, top at y = -0.50)
       const driveMat = new THREE.MeshStandardMaterial({
-        color: 0x1f2937,
-        roughness: 0.7,
-        polygonOffset: true,
-        polygonOffsetFactor: -1.0,
-        polygonOffsetUnits: -4.0
+        color: 0x1e293b,
+        roughness: 0.65,
+        metalness: 0.25
       });
-      const driveMesh = new THREE.Mesh(new THREE.PlaneGeometry(16, 5.2), driveMat);
-      driveMesh.rotation.x = -Math.PI / 2;
-      driveMesh.position.set(0, -0.56, 37.4);
+      const driveMesh = new THREE.Mesh(new THREE.BoxGeometry(16, 0.08, 4.3), driveMat);
+      driveMesh.position.set(0, -0.54, 37.75);
+      driveMesh.receiveShadow = true;
       skylineGroup.add(driveMesh);
+
+      // Granite Curbing along Driveway Edges
+      const curbMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.4 });
+      const leftCurb = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.12, 4.3), curbMat);
+      leftCurb.position.set(-8.15, -0.52, 37.75);
+      skylineGroup.add(leftCurb);
+
+      const rightCurb = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.12, 4.3), curbMat);
+      rightCurb.position.set(8.15, -0.52, 37.75);
+      skylineGroup.add(rightCurb);
+
+      const frontCurb = new THREE.Mesh(new THREE.BoxGeometry(16.6, 0.06, 0.2), curbMat);
+      frontCurb.position.set(0, -0.55, 39.95);
+      skylineGroup.add(frontCurb);
 
       // Minimalist Architectural Neighbouring Blocks (kantor-ai city blocks)
       const buildingTones = [0x1e293b, 0x162235, 0x223247, 0x1a2638];
@@ -7097,7 +7122,9 @@ export interface CandidateComparisonView {
         const d = 36 + (t % 3) * 6;
         const tx = Math.cos(a) * d;
         const tz = Math.sin(a) * d;
+        // Skip trees on roadways and clear the front entrance walkway corridor (x: -14..14, z: 26..52)
         if (Math.abs(tx - 44) < 6 || Math.abs(tz - 44) < 6) continue;
+        if (Math.abs(tx) < 14 && tz > 26 && tz < 52) continue;
 
         const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.25, 2.2, 8), trunkMat);
         trunk.position.set(tx, -0.6 + 1.1, tz);
