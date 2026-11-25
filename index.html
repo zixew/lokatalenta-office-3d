@@ -147,8 +147,8 @@
         <div class="min-w-0">
           <div class="flex items-center gap-2 flex-wrap">
             <h1 class="text-base font-bold text-white tracking-tight">LokaTalenta Office</h1>
-            <span class="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-teal-500/20 text-teal-300 border border-teal-500/30">SPRINT 19 LIVE</span>
-            <span class="px-2 py-0.5 rounded text-[11px] font-mono bg-purple-500/20 text-purple-300 border border-purple-500/30">AI Evaluation Stream Active</span>
+            <span class="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-teal-500/20 text-teal-300 border border-teal-500/30">SPRINT 20 LIVE</span>
+            <span class="px-2 py-0.5 rounded text-[11px] font-mono bg-purple-500/20 text-purple-300 border border-purple-500/30">Talent Marketplace & Psychometrics Active</span>
           </div>
           <p class="text-xs text-zinc-400">Living 3D Headquarter: Simulasi aktivitas otonom 24 agen, interaksi kolaborasi, pantry ngopi, gym, lounge, monitor actual real-time, dan tur sinematik non-intrusif.</p>
         </div>
@@ -183,6 +183,9 @@
             <span>🎬</span><span>Tur 60s</span>
           </button>
           <button onclick="toggleLightingMode()" id="btn-light" title="Ganti Mode Pencahayaan (Siang/Malam)" class="px-2 py-1 rounded font-medium text-zinc-300 hover:text-white transition">🌙</button>
+          <button onclick="toggleAudio()" id="btn-audio" title="Audio Suara Kantor 3D" class="px-2.5 py-1 rounded font-medium text-zinc-400 hover:text-white transition flex items-center gap-1.5">
+            <span>🔇</span><span>Suara: OFF</span>
+          </button>
         </div>
       </div>
     </div>
@@ -235,6 +238,12 @@
 
   <!-- 3D Viewport Area -->
   <main class="relative w-full">
+    <!-- Floating Realtime Event Toast Overlay -->
+    <div id="live-event-toast" class="hidden pointer-events-none fixed top-24 left-1/2 -translate-x-1/2 z-50 glass-card border border-teal-500/80 px-4 py-2.5 rounded-2xl text-xs font-mono text-teal-300 shadow-2xl flex items-center gap-2.5 backdrop-blur-xl transition-all duration-300">
+      <span class="w-2.5 h-2.5 rounded-full bg-teal-400 animate-ping"></span>
+      <span id="live-event-toast-text">⚡ [REALTIME EVENT] In-Memory Cache Initialized</span>
+    </div>
+
     <div id="canvas-container" class="h-[460px] sm:h-[720px]">
       <!-- Floating First-Person Agent Eyes POV HUD Overlay -->
       <div id="walkthrough-hud" class="hidden absolute bottom-14 left-4 right-4 sm:right-auto max-w-[calc(100vw-2rem)] z-40 glass-card border border-teal-500/60 px-3.5 py-2 rounded-xl text-xs flex flex-wrap items-center gap-2.5 backdrop-blur-md shadow-2xl animate-fade-in">
@@ -2066,6 +2075,85 @@ export interface CandidateComparisonView {
     let clock = null;
     let agentAvatars = {};
 
+    // ─── REALTIME DATA REPOSITORIES & AUDIO SYNTHESIZER ───────────────────────
+    let liveDivisionDisplays = {};
+    let liveBoardroomScreenTexture = null;
+    let liveBoardroomScreenCanvas = null;
+    let liveBoardroomScreenCtx = null;
+    let liveAgentWorkstationMonitors = {};
+    let activeFloatingEmotes = [];
+    let isAudioEnabled = false;
+    let audioCtx = null;
+
+    function initAudio() {
+      if (!audioCtx && typeof window.AudioContext !== "undefined") {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+    }
+
+    function playNotificationChime() {
+      if (!isAudioEnabled || !audioCtx) return;
+      try {
+        if (audioCtx.state === "suspended") audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
+        osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.15); // A5
+        gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.45);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.45);
+      } catch (_) {}
+    }
+
+    function playElevatorChime() {
+      if (!isAudioEnabled || !audioCtx) return;
+      try {
+        if (audioCtx.state === "suspended") audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = "triangle";
+        osc.frequency.setValueAtTime(659.25, audioCtx.currentTime); // E5
+        gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.35);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.35);
+      } catch (_) {}
+    }
+
+    function toggleAudio() {
+      initAudio();
+      if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+      isAudioEnabled = !isAudioEnabled;
+      const btn = document.getElementById("btn-audio");
+      if (btn) {
+        btn.innerHTML = isAudioEnabled ? "<span>🔊</span><span>Suara: ON</span>" : "<span>🔇</span><span>Suara: OFF</span>";
+        btn.className = isAudioEnabled
+          ? "px-2.5 py-1 rounded font-medium bg-teal-600 text-white transition flex items-center gap-1.5 shadow"
+          : "px-2.5 py-1 rounded font-medium text-zinc-400 hover:text-white transition flex items-center gap-1.5";
+      }
+      if (isAudioEnabled) playNotificationChime();
+    }
+
+    function showLiveEventToast(text) {
+      const toast = document.getElementById("live-event-toast");
+      const toastText = document.getElementById("live-event-toast-text");
+      if (toast && toastText) {
+        toastText.innerText = text;
+        toast.classList.remove("hidden");
+        toast.style.opacity = "1";
+        setTimeout(() => {
+          toast.style.opacity = "0";
+          setTimeout(() => toast.classList.add("hidden"), 300);
+        }, 4000);
+      }
+    }
+
     // ─── HUMANIZED PERSONALITY, NEEDS, EMOTIONS & CRITICAL THINKING ENGINE ──────
     const MOOD_META = {
       senang: { label: '😊 Senang', cls: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' },
@@ -3241,6 +3329,7 @@ export interface CandidateComparisonView {
 
       screenMesh.position.set(cx, yOffset + 2.4, cz - div.bounds.depth / 2 + 0.05);
       parent.add(screenMesh);
+      liveDivisionDisplays[div.id] = { canvas, ctx, texture, div };
     }
 
     function buildMobileWhiteboard(parent, x, yOffset, z, rotY, floorNum, titleText, label) {
@@ -3351,9 +3440,12 @@ export interface CandidateComparisonView {
         rack.position.set(outerX, cy + 1.05, cz);
         parent.add(rack);
         for (let b = 0; b < 4; b++) {
-          const led = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.05, 0.45), new THREE.MeshBasicMaterial({ color: b % 2 === 0 ? 0x06b6d4 : 0x10b981 }));
+          const baseCol = b % 2 === 0 ? 0x06b6d4 : 0x10b981;
+          const ledMat = new THREE.MeshBasicMaterial({ color: baseCol });
+          const led = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.05, 0.45), ledMat);
           led.position.set(outerX + (cx < 0 ? 0.41 : -0.41), cy + 0.5 + b * 0.4, cz);
           parent.add(led);
+          animatedMeshes.push({ type: "server-led", mat: ledMat, baseColor: baseCol, seed: b * 1.5 + (div.floor || 1) });
         }
         registerCollider(outerX - 0.55, outerX + 0.55, cz - 0.85, cz + 0.85, div.floor, 'Server Rack');
       } else {
@@ -3415,6 +3507,56 @@ export interface CandidateComparisonView {
       const screen = new THREE.Mesh(new THREE.PlaneGeometry(5.2, 2.6), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(canvas) }));
       screen.position.set(0, 2.1, -5.9);
       meetingGroup.add(screen);
+      liveBoardroomScreenCanvas = canvas;
+      liveBoardroomScreenCtx = ctx;
+      liveBoardroomScreenTexture = screen.material.map;
+
+      // ── OFC-201: Floor 2 Boardroom Holographic Interview Simulator & Candidate Avatar ──
+      const holoDaisGroup = new THREE.Group();
+      holoDaisGroup.position.set(0, 0.84, 0);
+
+      // Glowing circular dais ring
+      const daisMat = new THREE.MeshBasicMaterial({ color: 0x14b8a6, transparent: true, opacity: 0.85 });
+      const dais = new THREE.Mesh(new THREE.CylinderGeometry(0.85, 0.95, 0.04, 32), daisMat);
+      holoDaisGroup.add(dais);
+
+      // Holographic concentric scanning rings
+      const holoRingMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, wireframe: true, transparent: true, opacity: 0.6 });
+      const holoRing = new THREE.Mesh(new THREE.TorusGeometry(0.75, 0.015, 8, 32), holoRingMat);
+      holoRing.rotation.x = Math.PI / 2;
+      holoRing.position.y = 0.08;
+      holoDaisGroup.add(holoRing);
+
+      // Rotating translucent holographic candidate avatar silhouette
+      const holoMat = new THREE.MeshBasicMaterial({ color: 0x22d3ee, wireframe: true, transparent: true, opacity: 0.5 });
+      const holoBody = new THREE.Group();
+      holoBody.position.y = 0.55;
+
+      const holoTorso = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.12, 0.55, 12), holoMat);
+      holoBody.add(holoTorso);
+      const holoHead = new THREE.Mesh(new THREE.SphereGeometry(0.14, 12, 10), holoMat);
+      holoHead.position.y = 0.42;
+      holoBody.add(holoHead);
+      holoDaisGroup.add(holoBody);
+
+      // Floating mini holographic telemetry card
+      const holoCardCanvas = document.createElement("canvas");
+      holoCardCanvas.width = 384; holoCardCanvas.height = 128;
+      const hcCtx = holoCardCanvas.getContext("2d");
+      hcCtx.fillStyle = "rgba(14, 16, 21, 0.9)"; hcCtx.fillRect(0, 0, 384, 128);
+      hcCtx.strokeStyle = "#14b8a6"; hcCtx.lineWidth = 3; hcCtx.strokeRect(2, 2, 380, 124);
+      hcCtx.fillStyle = "#2dd4bf"; hcCtx.font = "bold 16px monospace"; hcCtx.fillText("● INTERVIEW SIMULATOR (OFC-201)", 16, 28);
+      hcCtx.fillStyle = "#ffffff"; hcCtx.font = "bold 18px sans-serif"; hcCtx.fillText("Kandidat #KND-0842 (Senior FE)", 16, 58);
+      hcCtx.fillStyle = "#94a3b8"; hcCtx.font = "13px monospace"; hcCtx.fillText("AI Match: 96.4% • DISC: High-D • MBTI: INTJ", 16, 84);
+      hcCtx.fillStyle = "#38bdf8"; hcCtx.font = "12px monospace"; hcCtx.fillText("Stream: Evaluasi Psikometri Aktif", 16, 110);
+      const holoCardTex = new THREE.CanvasTexture(holoCardCanvas);
+      const holoCardMat = new THREE.MeshBasicMaterial({ map: holoCardTex, transparent: true, opacity: 0.95 });
+      const holoCard = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.55), holoCardMat);
+      holoCard.position.set(0, 1.35, 0.45);
+      holoDaisGroup.add(holoCard);
+
+      meetingGroup.add(holoDaisGroup);
+      animatedMeshes.push({ type: "holo-interview-simulator", body: holoBody, ring: holoRing, dais: holoDaisGroup });
 
       // Warm Hanging Pendant Lamp over Boardroom Table
       const lampBar = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.08, 0.25), new THREE.MeshBasicMaterial({ color: 0xfef3c7 }));
@@ -3795,6 +3937,21 @@ export interface CandidateComparisonView {
       espressoBody.position.set(-1.2, 1.25, 0);
       cafeGroup.add(espressoBody);
 
+      // Coffee Steam Particle System
+      const steamGroup = new THREE.Group();
+      steamGroup.position.set(-1.2, 1.55, 0);
+      const steamParticles = [];
+      const steamMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.25 });
+      for (let s = 0; s < 10; s++) {
+        const steamMesh = new THREE.Mesh(new THREE.SphereGeometry(0.04 + s * 0.005, 8, 8), steamMat.clone());
+        steamMesh.position.set((Math.random() - 0.5) * 0.12, s * 0.08, (Math.random() - 0.5) * 0.12);
+        steamMesh.userData = { baseY: s * 0.08, speed: 0.15 + Math.random() * 0.1, phase: s * 0.6 };
+        steamGroup.add(steamMesh);
+        steamParticles.push(steamMesh);
+      }
+      cafeGroup.add(steamGroup);
+      animatedMeshes.push({ type: "coffee-steam", particles: steamParticles });
+
       // Pastry Display Case on Counter
       const pastryCase = new THREE.Mesh(
         new THREE.BoxGeometry(1.1, 0.42, 0.55),
@@ -4168,6 +4325,7 @@ export interface CandidateComparisonView {
       }
       const scrTex = new THREE.CanvasTexture(scrCanvas);
       const screenMat = new THREE.MeshBasicMaterial({ map: scrTex });
+      liveAgentWorkstationMonitors[agent.id] = { canvas: scrCanvas, ctx: sCtx, texture: scrTex, agent: agent };
 
       [-0.42, 0.42].forEach((mx, idx) => {
         const mon = new THREE.Mesh(new THREE.BoxGeometry(0.74, 0.44, 0.04), monitorMat);
@@ -4443,6 +4601,7 @@ export interface CandidateComparisonView {
       const sprite = new THREE.Sprite(spriteMat);
       sprite.position.set(0, 1.85, 0);
       sprite.scale.set(1.4, 0.35, 1.0);
+      sprite.userData = { canvas, ctx, tex };
       group.add(sprite);
       return sprite;
     }
@@ -4461,6 +4620,7 @@ export interface CandidateComparisonView {
       const sprite = new THREE.Sprite(spriteMat);
       sprite.position.set(0, 2.3, 0);
       sprite.scale.set(2.2, 0.55, 1.0);
+      sprite.userData = { canvas, ctx, tex };
       group.add(sprite);
       return sprite;
     }
@@ -5074,20 +5234,307 @@ export interface CandidateComparisonView {
       }
     }
 
+    // ─── REAL-TIME DATA REPOSITORIES & MULTI-REPO SYNC ─────────────────────────
+    const SPRINT_PLANNER_API = "https://lokatalenta-sprint-planner.vercel.app/api";
+    const BACKLOG_API = "https://lokatalenta-backlog.vercel.app/api";
+
+    function updateSpeechBubble(sprite, badge, text, strokeColor = "#38bdf8") {
+      if (!sprite || !sprite.userData || !sprite.userData.ctx) return;
+      const { canvas, ctx, tex } = sprite.userData;
+      ctx.fillStyle = "#0f172a";
+      ctx.fillRect(0, 0, 384, 96);
+      ctx.strokeStyle = strokeColor;
+      ctx.lineWidth = 3;
+      ctx.strokeRect(2, 2, 380, 92);
+      ctx.fillStyle = strokeColor;
+      ctx.font = "bold 18px monospace";
+      ctx.fillText(badge || "💬 AKTIF", 16, 32);
+      ctx.fillStyle = "#f8fafc";
+      ctx.font = "16px sans-serif";
+      ctx.fillText(text.slice(0, 34), 16, 68);
+      tex.needsUpdate = true;
+    }
+
+    function triggerAgentEmote(agentId, emoji) {
+      const av = agentAvatars[agentId];
+      if (!av || !av.group) return;
+
+      const canvas = document.createElement("canvas");
+      canvas.width = 128; canvas.height = 128;
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "rgba(15, 23, 42, 0.9)";
+      ctx.beginPath();
+      ctx.arc(64, 64, 58, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#14b8a6";
+      ctx.lineWidth = 6;
+      ctx.stroke();
+
+      ctx.font = "64px serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(emoji, 64, 68);
+
+      const tex = new THREE.CanvasTexture(canvas);
+      const spriteMat = new THREE.SpriteMaterial({ map: tex, transparent: true, opacity: 1.0 });
+      const sprite = new THREE.Sprite(spriteMat);
+      sprite.position.set(0, 2.45, 0);
+      sprite.scale.set(0.65, 0.65, 1.0);
+      av.group.add(sprite);
+
+      activeFloatingEmotes.push({ sprite, age: 0 });
+    }
+
+    function updateBoardroomScreenWithLiveSprint(sprint) {
+      if (!liveBoardroomScreenCtx || !liveBoardroomScreenTexture) return;
+      const ctx = liveBoardroomScreenCtx;
+      ctx.fillStyle = "#090d16";
+      ctx.fillRect(0, 0, 512, 256);
+
+      // Top header bar
+      ctx.fillStyle = "#0d9488";
+      ctx.fillRect(0, 0, 512, 38);
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 20px monospace";
+      ctx.fillText(`● BOARDROOM 2F: ${sprint.id || "SPR-20"} (${(sprint.status || "ACTIVE").toUpperCase()})`, 16, 26);
+
+      // Sprint Goal
+      ctx.fillStyle = "#38bdf8";
+      ctx.font = "bold 15px sans-serif";
+      ctx.fillText(sprint.name ? sprint.name.slice(0, 48) : "Candidate Talent Marketplace & Psychometrics", 16, 68);
+
+      ctx.fillStyle = "#94a3b8";
+      ctx.font = "12px sans-serif";
+      const goalStr = sprint.goal || "Implement profile caching, marketplace directory, and psychometric engine.";
+      ctx.fillText(goalStr.slice(0, 58), 16, 92);
+      if (goalStr.length > 58) {
+        ctx.fillText(goalStr.slice(58, 116), 16, 110);
+      }
+
+      // Active items summary
+      ctx.fillStyle = "#1e293b";
+      ctx.fillRect(16, 126, 480, 80);
+      ctx.strokeStyle = "#334155";
+      ctx.strokeRect(16, 126, 480, 80);
+
+      ctx.fillStyle = "#2dd4bf";
+      ctx.font = "bold 13px monospace";
+      ctx.fillText(`COMMITTED: ${sprint.metrics?.committedPoints || 47} SP • CAPACITY: ${sprint.metrics?.totalCapacityPoints || 140} SP`, 28, 148);
+
+      const items = sprint.items || [];
+      const displayItems = items.slice(0, 3).map(it => `[${it.itemId}] ${it.title?.slice(0, 22)} (${it.storyPoints}SP)`).join("  ");
+      ctx.fillStyle = "#e2e8f0";
+      ctx.font = "11px monospace";
+      ctx.fillText(displayItems || "ARC-201 (13SP)  BL-201 (8SP)  BL-202 (8SP)", 28, 172);
+
+      const remItems = items.slice(3, 6).map(it => `[${it.itemId}] ${it.title?.slice(0, 22)} (${it.storyPoints}SP)`).join("  ");
+      ctx.fillText(remItems || "OFC-201 (5SP)  QAE-201 (8SP)  REC-201 (5SP)", 28, 192);
+
+      // Footer status
+      ctx.fillStyle = "#10b981";
+      ctx.font = "bold 12px monospace";
+      ctx.fillText("⚡ REALTIME EVENT GATEWAY STREAM ACTIVE • 24 AGENTS AUTONOMOUS", 16, 236);
+
+      liveBoardroomScreenTexture.needsUpdate = true;
+    }
+
+    function updateDivisionTargetScreensWithLiveSprint(sprint) {
+      if (!sprint || !liveDivisionDisplays) return;
+      const items = sprint.items || [];
+
+      for (const divId in liveDivisionDisplays) {
+        const disp = liveDivisionDisplays[divId];
+        if (!disp || !disp.ctx || !disp.texture) continue;
+        const ctx = disp.ctx;
+        const div = disp.div;
+
+        ctx.fillStyle = "#090d16";
+        ctx.fillRect(0, 0, 1024, 384);
+
+        ctx.fillStyle = div.color || "#14b8a6";
+        ctx.fillRect(0, 0, 1024, 48);
+
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "bold 26px sans-serif";
+        ctx.fillText(div.name.toUpperCase(), 32, 34);
+
+        ctx.fillStyle = "#94a3b8";
+        ctx.font = "italic 18px sans-serif";
+        ctx.fillText(`"${div.motto}"`, 32, 90);
+
+        const divCap = sprint.divisionCapacities?.[divId] || 25;
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "bold 20px monospace";
+        ctx.fillText(`SPRINT ${sprint.id?.replace("SPR-", "") || "20"} COMMITMENTS (${divCap} SP CAPACITY):`, 32, 135);
+
+        const divItems = items.filter(it => it.ownerDivision === divId);
+        const targetsToRender = divItems.length > 0
+          ? divItems.map(it => ({ code: it.itemId, text: it.title, status: it.status.toUpperCase() }))
+          : (div.targets || []);
+
+        targetsToRender.slice(0, 4).forEach((tgt, i) => {
+          const y = 175 + i * 46;
+          ctx.fillStyle = "#1e293b";
+          ctx.fillRect(32, y - 26, 960, 38);
+
+          const isDone = tgt.status === "DONE" || tgt.status === "VERIFIED";
+          ctx.fillStyle = isDone ? "#34d399" : "#38bdf8";
+          ctx.font = "bold 16px monospace";
+          ctx.fillText(`[${tgt.code}]`, 48, y);
+
+          ctx.fillStyle = "#f8fafc";
+          ctx.font = "16px sans-serif";
+          ctx.fillText(tgt.text ? tgt.text.slice(0, 56) : "", 160, y);
+
+          ctx.fillStyle = isDone ? "#059669" : "#0284c7";
+          ctx.fillRect(860, y - 20, 110, 26);
+          ctx.fillStyle = "#ffffff";
+          ctx.font = "bold 12px monospace";
+          ctx.textAlign = "center";
+          ctx.fillText(tgt.status, 915, y - 2);
+          ctx.textAlign = "left";
+        });
+
+        disp.texture.needsUpdate = true;
+      }
+    }
+
+    function updateAgentMonitorsWithLiveBacklog(items) {
+      if (!items || !liveAgentWorkstationMonitors) return;
+      const itemsByAgent = {};
+      items.forEach(it => {
+        if (typeof it.ownerAgentId === "number") {
+          itemsByAgent[it.ownerAgentId] = it;
+        }
+      });
+
+      for (const agentIdStr in liveAgentWorkstationMonitors) {
+        const agentId = Number(agentIdStr);
+        const mon = liveAgentWorkstationMonitors[agentId];
+        if (!mon || !mon.ctx || !mon.texture) continue;
+        const ctx = mon.ctx;
+        const agent = mon.agent;
+        const item = itemsByAgent[agentId];
+
+        ctx.fillStyle = "#090d16";
+        ctx.fillRect(0, 0, 256, 128);
+
+        ctx.fillStyle = "#" + (agent.color || 0x10b981).toString(16).padStart(6, "0");
+        ctx.fillRect(0, 0, 256, 16);
+
+        ctx.fillStyle = "#e2e8f0";
+        ctx.font = "bold 10px monospace";
+        const ticketLabel = item ? `${item.id} • ${(item.status || "IN_SPRINT").toUpperCase()}` : (agent.status?.ticket || "SPR-20");
+        ctx.fillText(ticketLabel, 8, 12);
+
+        ctx.fillStyle = "#38bdf8";
+        const taskTitle = item ? item.title : (agent.status?.file || "module.ts");
+        ctx.fillText("> " + taskTitle.slice(0, 28), 8, 34);
+
+        ctx.fillStyle = item?.status === "done" ? "#10b981" : "#38bdf8";
+        const metricStr = item ? `${item.storyPoints} SP • P95 <50ms` : "✔ tests passing • 0 errors";
+        ctx.fillText(metricStr, 8, 54);
+
+        ctx.fillStyle = "#64748b";
+        for (let ln = 0; ln < 4; ln++) {
+          ctx.fillRect(10, 68 + ln * 12, 110 + ((agentId * 29 + ln * 37) % 100), 6);
+        }
+
+        mon.texture.needsUpdate = true;
+      }
+    }
+
+    function updateAgentBadgesWithLiveBacklog(items) {
+      if (!items || !agentAvatars) return;
+      const itemsByAgent = {};
+      items.forEach(it => {
+        if (typeof it.ownerAgentId === "number") {
+          itemsByAgent[it.ownerAgentId] = it;
+        }
+      });
+
+      for (const agentIdStr in agentAvatars) {
+        const agentId = Number(agentIdStr);
+        const av = agentAvatars[agentId];
+        if (!av) continue;
+        const item = itemsByAgent[agentId];
+        if (item && av.speechSprite) {
+          updateSpeechBubble(av.speechSprite, `⚡ ${item.id}`, item.title || "In Progress", "#14b8a6");
+        }
+      }
+    }
+
+    async function fetchAndApplyRealtimeData() {
+      try {
+        const sprintRes = await fetch(`${SPRINT_PLANNER_API}/sprints`);
+        if (sprintRes.ok) {
+          const sData = await sprintRes.json();
+          const sprints = sData.sprints || [];
+          const activeSprint = sprints.find(s => s.status === "active") || sprints[0];
+          if (activeSprint) {
+            window.__liveSprintData = activeSprint;
+            updateBoardroomScreenWithLiveSprint(activeSprint);
+            updateDivisionTargetScreensWithLiveSprint(activeSprint);
+          }
+        }
+
+        const backlogRes = await fetch(`${BACKLOG_API}/items`);
+        if (backlogRes.ok) {
+          const bData = await backlogRes.json();
+          const items = bData.items || [];
+          window.__liveBacklogItems = items;
+          updateAgentMonitorsWithLiveBacklog(items);
+          updateAgentBadgesWithLiveBacklog(items);
+        }
+      } catch (err) {
+        console.warn("[3D-OFFICE] Realtime data sync fallback:", err);
+      }
+    }
+
+    function triggerAgentLiveEventReaction(agentId, eventData) {
+      const av = agentAvatars[agentId];
+      if (!av) return;
+
+      triggerAgentEmote(agentId, "🚀");
+
+      if (av.parts && av.parts.upperBody) {
+        const origY = av.parts.upperBody.position.y;
+        av.parts.upperBody.position.y = origY + 0.14;
+        setTimeout(() => {
+          if (av.parts && av.parts.upperBody) av.parts.upperBody.position.y = origY;
+        }, 450);
+      }
+
+      if (av.speechSprite) {
+        updateSpeechBubble(av.speechSprite, "⚡ [EVENT]", eventData.summary || eventData.title || "Live Action", "#38bdf8");
+      }
+    }
+
     function connectEventGatewaySSE() {
       try {
-        if (typeof EventSource === 'undefined') return;
+        if (typeof EventSource === "undefined") return;
         const es = new EventSource(`${EVENT_GATEWAY_URL}/events/stream`);
         es.onmessage = (evt) => {
           try {
             const data = JSON.parse(evt.data);
-            if (data && data.summary) {
-              const tickerEl = document.getElementById('live-activity-ticker-text');
-              if (tickerEl) tickerEl.innerText = `⚡ [LIVE GATEWAY] ${data.summary}`;
+            if (data && (data.summary || data.title)) {
+              const summaryText = data.summary || data.title;
+              const tickerEl = document.getElementById("live-activity-ticker-text");
+              if (tickerEl) tickerEl.innerText = `⚡ [LIVE GATEWAY] ${summaryText}`;
+
+              showLiveEventToast(`⚡ [EVENT] ${summaryText.slice(0, 52)}`);
+
+              if (typeof data.agentId === "number" && agentAvatars[data.agentId]) {
+                triggerAgentLiveEventReaction(data.agentId, data);
+              }
+
+              playNotificationChime();
+              fetchAndApplyRealtimeData();
             }
           } catch (_) {}
         };
         es.onerror = () => {
+          setTimeout(connectEventGatewaySSE, 5000);
           es.close();
         };
       } catch (_) {}
@@ -5096,15 +5543,17 @@ export interface CandidateComparisonView {
     function initAgentAutonomousSim() {
       clock = new THREE.Clock();
       connectEventGatewaySSE();
+      fetchAndApplyRealtimeData();
+      setInterval(fetchAndApplyRealtimeData, 15000);
       setInterval(tickHumanNeeds, 4000);
 
       // Trigger initial realistic company routine so the office immediately feels alive!
       setTimeout(() => {
-        triggerAgentActivity(1, 'coffee');
-        triggerAgentActivity(14, 'meeting');
-        triggerAgentActivity(9, 'sholat');
-        triggerAgentActivity(16, 'gym');
-        triggerAgentActivity(6, 'collaborate');
+        triggerAgentActivity(1, "coffee");
+        triggerAgentActivity(14, "meeting");
+        triggerAgentActivity(9, "sholat");
+        triggerAgentActivity(16, "gym");
+        triggerAgentActivity(6, "collaborate");
       }, 1200);
 
       setInterval(() => {
@@ -5114,9 +5563,14 @@ export interface CandidateComparisonView {
         const actor = agentList[Math.floor(Math.random() * agentList.length)];
         if (!actor || actor.isWalking) return;
 
-        const activities = ['coffee', 'sholat', 'meeting', 'rest', 'gym', 'collaborate', 'work', 'work'];
+        const activities = ["coffee", "sholat", "meeting", "rest", "gym", "collaborate", "work", "work"];
         const chosen = activities[Math.floor(Math.random() * activities.length)];
         triggerAgentActivity(actor.agent.id, chosen);
+
+        // Periodically pop cute 3D emoji badge
+        const emojis = ["☕", "💻", "💡", "🚀", "🔍", "📈", "🕌", "🏃", "⚡"];
+        const em = emojis[Math.floor(Math.random() * emojis.length)];
+        triggerAgentEmote(actor.agent.id, em);
       }, 5500);
     }
 
@@ -5596,14 +6050,48 @@ export interface CandidateComparisonView {
         updateElevatorSystem(delta);
         updateInteractiveDoors(delta);
 
-        // 2. Treadmill & Office Clocks
+        // 2. Treadmill, Office Clocks, Holographic Dais, Coffee Steam & Server LEDs
         animatedMeshes.forEach(item => {
-          if (item.type === 'treadmill-belt' && item.mesh) {
+          if (item.type === "treadmill-belt" && item.mesh) {
             item.mesh.position.z = Math.sin(elapsedTime * item.speed) * 0.05;
-          } else if (item.type === 'clock-hand' && item.mesh) {
+          } else if (item.type === "clock-hand" && item.mesh) {
             item.mesh.rotation.z = -elapsedTime * 0.25;
+          } else if (item.type === "holo-interview-simulator") {
+            if (item.body) {
+              item.body.rotation.y += delta * 0.85;
+              item.body.position.y = 0.55 + Math.sin(elapsedTime * 2.2) * 0.04;
+            }
+            if (item.ring) item.ring.rotation.z += delta * 1.4;
+          } else if (item.type === "coffee-steam" && item.particles) {
+            item.particles.forEach(p => {
+              p.position.y += delta * p.userData.speed;
+              p.position.x += Math.sin(elapsedTime * 2.0 + p.userData.phase) * 0.002;
+              p.material.opacity = Math.max(0, 0.35 - (p.position.y / 0.8) * 0.35);
+              if (p.position.y > 0.8) {
+                p.position.y = 0;
+                p.position.x = (Math.random() - 0.5) * 0.12;
+                p.position.z = (Math.random() - 0.5) * 0.12;
+              }
+            });
+          } else if (item.type === "server-led" && item.mat) {
+            const blink = Math.sin(elapsedTime * 8.0 + item.seed);
+            item.mat.color.setHex(blink > 0.25 ? item.baseColor : 0x050810);
           }
         });
+
+        // Update active floating 3D emotes
+        if (activeFloatingEmotes && activeFloatingEmotes.length > 0) {
+          for (let eIdx = activeFloatingEmotes.length - 1; eIdx >= 0; eIdx--) {
+            const em = activeFloatingEmotes[eIdx];
+            em.age += delta;
+            em.sprite.position.y += delta * 0.18;
+            em.sprite.material.opacity = Math.max(0, 1.0 - (em.age / 3.0));
+            if (em.age >= 3.0) {
+              if (em.sprite.parent) em.sprite.parent.remove(em.sprite);
+              activeFloatingEmotes.splice(eIdx, 1);
+            }
+          }
+        }
 
         // 3. Avatar Physical Movement, Collision Separation & Seated/Standing Articulation
         const avatarList = Object.values(agentAvatars);
